@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block page_content %}
+
+<h1> Projects </h1>
+{% if not object_list %}
+<p>There are no projects yet.</p>
+
+{% else %}
+{% for project in object_list %}
+    <ul>{{project.language_name}}</ul>
+{% endfor %}
+{% endif %}
+
+{% endblock %}
