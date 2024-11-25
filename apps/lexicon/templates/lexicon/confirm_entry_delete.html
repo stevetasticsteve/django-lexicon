@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% include 'includes/project_header.html' %}
+{% endblock %}
+
+{% block page_content %}
+<form action="" method="post">
+    {% csrf_token %}
+    <div class="container p-4">
+       
+        <p>Are you sure you want to delete <b>{{object.tok_ples}} </b>? </p>
+
+
+    <button type="input" id="submit-btn" class="btn btn-danger">Yes, delete it</button>
+</div>
+
+{% endblock %}

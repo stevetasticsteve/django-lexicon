@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block header %}
+{% include 'includes/project_header.html' %}
+{% endblock %}
+{% block page_content %}
+
+<div class="container">
+
+    <div class="btn-group my-4" role="group">
+    <a href="{% url 'lexicon:entry_list' object.project.language_code %}"><button type="button" class="btn btn-primary">Return to Lexicon</button></a>
+    <a href="{% url 'lexicon:update_entry' object.project.language_code object.pk %}"><button type="button" class="btn btn-secondary">Update entry</button></a>
+    <a href="{% url 'lexicon:delete_entry' object.project.language_code object.pk %}"><button type="button" class="btn btn-danger">Delete word</button></a> 
+    </div>
+
+    <h1 class="my-2">{{object.tok_ples}}</h1>
+
+    <div class="container p-2">
+        <table class="table table-striped">
+        <thead>
+            <tr>
+            <th scope="col">Details</th>
+            <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            <tr>
+            <th scope="row">English</th>
+            <td>{{object.eng}}</td>
+            </tr>
+
+            {% if object.oth_lang %}
+            <tr>
+            <th scope="row">2nd language</th>
+            <td>{{object.secondary_language}}</td>
+            </tr>
+            {% endif %}
+
+            {% if object.pos %}
+            <tr>
+            <th scope="row">POS</th>
+            <td>{{object.pos}}</td>
+            </tr>
+            {% endif %}
+
+
+            {% if object.comments %}
+            <tr>
+            <th scope="row">Comments</th>
+            <td>{{object.comments}}</td>
+            </tr>
+            {% endif %}
+
+            <tr>
+            <th scope="row">Created</th>
+            <td>{{object.created}}</td>
+            </tr>
+
+            <tr>
+            <th scope="row">Last modified by</th>
+            <td>{{object.modified_by}}, {{object.modified}}</td>
+            </tr>
+
+            <tr>
+            <th scope="row">Spelling checked</th>
+            {% if object.checked %}
+            <td>{% include 'lexicon/partial/green_tick.html' %}</td>
+            {% else %}
+            <td>Nope</td>
+            {% endif %}
+            </tr>
+
+            {% if object.review != "0" %}
+            <tr>
+            <th scope="row">Review</th>
+            <td><ul class="list-unstyled">
+                <li>{{object.get_review_display}}</li>
+                <li>{{object.review_comments}}</li>
+            </ul></td>
+            </tr>
+            {% endif %}
+
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% endblock %}

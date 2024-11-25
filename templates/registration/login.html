@@ -1,10 +1,18 @@
 {% extends 'base.html' %}
+{% block header %}
+{% include 'includes/header.html' %}
+{% endblock %}
 
 {% block page_content %}
+{% load crispy_forms_tags %}
+
 <h2>Log In</h2>
 <form method="post">
   {% csrf_token %}
-  {{ form }}
-  <button type="submit">Log In</button>
+  {{form|crispy}}
+  <button type="input" id="submit-btn" class="btn btn-primary">Login</button>
 </form>
+
+<h2 class="mt-4">Not registered?</h2>
+<a href="{% url 'to_do' %}">Register</a>
 {% endblock %}

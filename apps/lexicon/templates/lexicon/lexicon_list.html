@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block header %}
+{% include 'includes/project_header.html' %}
+{% endblock %}
+{% block page_content %}
+
+<div class="btn-group p-4" role="group">
+<a href="{% url 'lexicon:create_entry' project %}"><button type="button" class="btn btn-secondary">Add a word</button></a>
+</div>
+
+<div class="container-fluid mb-4 pb-4" id="entries">
+
+    <div class="main_pane_letter">
+        <div class="container-fluid letter text-center bg-light">
+            <hr>
+                <h1 id="{{letter}}">{{letter}}</h1>
+            <hr>    
+        </div>
+
+        <div class="row">
+        {% for word in object_list %}
+            <!-- If the counter is even close the last <div> and make a new row -->
+            {% if forloop.counter0|divisibleby:2 %}</div> <div class="row">{% endif %}
+            <div class="entry col-sm-6 border-right border-bottom my-auto">
+            {% include 'lexicon/includes/lexicon_entry.html' %}
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<footer class="footer text-center bg-dark fixed-bottom py-2">
+    <a class="text-light" href="#top">Jump to top</a>
+</footer>
+
+{% endblock %}  

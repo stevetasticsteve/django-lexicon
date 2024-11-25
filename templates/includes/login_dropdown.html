@@ -1,0 +1,25 @@
+ <!-- Login options --> 
+        <div class="navbar-item ml-md-auto text-center p-2 mx-4">
+            {% if user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn btn-light dropdown-toggle" type="button" id="logged-in-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{user.username}}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="logged-in-dropdown">
+                    {% if user.is_superuser %}
+                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin</a></li>
+                    {% endif %}
+                    <li><a class="dropdown-item" href="{% url 'password_change' %}">Change password</a></li>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <li><button type="submit" class="btn btn-light">Log Out</button></li>
+                    </form>
+                </ul>
+            </div>
+
+            {% else %}
+            <p id="login-status" class="text-white">You are not logged in</p>
+            <p>
+            <a href="{% url 'login' %}" class="btn btn-light" >Login</a>
+            {% endif %}
+        </div>

@@ -9,7 +9,8 @@
   </head>
 
   <body>
-    {% include 'includes/header.html' %}
+    {% block header %}
+    {% endblock %}
 
     <div class="container my-4">
     {% block page_content %}

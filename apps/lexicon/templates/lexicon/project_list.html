@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% block header %}
+{% include 'includes/header.html' %}
+{% endblock %}
 {% block page_content %}
 
 <h1> Projects </h1>
@@ -7,7 +10,7 @@
 
 {% else %}
 {% for project in object_list %}
-    <ul>{{project.language_name}}</ul>
+    <ul><a href="{% url 'lexicon:entry_list' project.language_code %}">{{project.language_name}}</a></ul>
 {% endfor %}
 {% endif %}
 
