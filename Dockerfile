@@ -10,7 +10,7 @@ WORKDIR /app
 RUN chown django:django /app
 
 RUN pip install psycopg2-binary gunicorn
-COPY requirements.txt /
+COPY ./requirements.txt /
 RUN pip install -r /requirements.txt
 COPY --chown=django:django . .
 
