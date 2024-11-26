@@ -11,7 +11,7 @@ services:
     environment:
      - POSTGRES_DB=lexicon_app_db
      - POSTGRES_USER=django
-     - POSTGRES_PASSWORD=1234
+     - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
   
    web1:
     image: stevetasticsteve/lexicon
@@ -20,9 +20,9 @@ services:
       - 8000:8000
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.prod
-      - ALLOWED_HOSTS=$ALLOWED_HOSTS
-      - SECRET_KEY=$SECRET_KEY
-      - DATABASE_PASSWORD=$DATABASEPASSWORD
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
     depends_on:
       - db
 
