@@ -12,7 +12,7 @@ DATABASES = {
     }
 }
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("HTTPS", "False").lower() in ("true", "yes", "1")
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "yes", "1")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv(
     "SECRET_KEY", "django-insecure-24#+mypq*=1v77s(37v+_$t!p7+iwdnq)$q&djz85vo$9f5sym"
