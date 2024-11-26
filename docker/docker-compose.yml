@@ -14,13 +14,16 @@ services:
      - POSTGRES_PASSWORD=1234
   
    web1:
-    image: lexicon_app
+    image: stevetasticsteve/lexicon
     container_name: lexicon_app1
     ports:
       - 8000:8000
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.prod
-    depends on:
+      - ALLOWED_HOSTS=$ALLOWED_HOSTS
+      - SECRET_KEY=$SECRET_KEY
+      - DATABASE_PASSWORD=$DATABASEPASSWORD
+    depends_on:
       - db
 
 volumes:
