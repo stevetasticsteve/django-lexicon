@@ -1,6 +1,4 @@
-from typing import Any
-from django.shortcuts import render
-from django.views import View
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
 from django.views.generic import DetailView
@@ -34,8 +32,8 @@ class LexiconView(ListView):
     def get_context_data(self, **kwargs):
         """Data added to the context used in the template."""
         context = super().get_context_data(**kwargs)
-        project = models.LexiconProject.objects.get(
-            language_code=self.kwargs.get("lang_code")
+        project = get_object_or_404(
+            models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
         # lang code is used to set urls
         context["lang_code"] = self.kwargs.get("lang_code")
@@ -58,8 +56,8 @@ class ProjectSingleMixin(SingleObjectMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["lang_code"] = self.kwargs.get("lang_code")
-        context["project"] = models.LexiconProject.objects.get(
-            language_code=self.kwargs.get("lang_code")
+        context["project"] = get_object_or_404(
+            models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
         return context
 
@@ -93,8 +91,8 @@ class CreateEntry(LoginRequiredMixin, ProjectSingleMixin, CreateView):
         """When the form saves run this code."""
         obj = form.save(commit=False)
         obj.modified_by = self.request.user.username
-        obj.project = models.LexiconProject.objects.get(
-            language_code=self.kwargs.get("lang_code")
+        obj.project = get_object_or_404(
+            models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
         obj.save()
         return super().form_valid(form, **kwargs)
