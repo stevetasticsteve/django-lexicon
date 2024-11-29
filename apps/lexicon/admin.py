@@ -7,3 +7,10 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.LexiconProject, ProjectAdmin)
+
+
+class LexiconEntriesAdmin(admin.ModelAdmin):
+    pass
+
+
+admin.site.register(models.LexiconEntry, LexiconEntriesAdmin)

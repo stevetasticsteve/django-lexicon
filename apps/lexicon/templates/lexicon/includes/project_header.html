@@ -1,0 +1,14 @@
+{% extends 'includes/header.html' %}
+
+{% block project_links %}
+<li class="nav-item">
+    <a class="nav-link mx-1" href="{% url 'lexicon:entry_list' lang_code %}">{{project.language_name}} lexicon</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link mx-1" href="{% url 'lexicon:import_page' lang_code %}">Import</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link mx-1" href="{% url 'to_do' %}">Export</a>
+</li>
+
+{% endblock %}x

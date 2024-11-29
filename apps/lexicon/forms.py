@@ -1,3 +1,5 @@
+from django import forms
+
 editable_fields = [
     "tok_ples",
     "eng",
@@ -8,3 +10,7 @@ editable_fields = [
     "review",
     "review_comments",
 ]
+
+
+class ImportDicForm(forms.Form):
+    dic_file = forms.FileField()

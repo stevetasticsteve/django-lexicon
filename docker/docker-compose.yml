@@ -23,6 +23,8 @@ services:
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - SECRET_KEY=${SECRET_KEY}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DEBUG=${DEBUG}
+      - HTTPS=${HTTPS}
     depends_on:
       - db
 

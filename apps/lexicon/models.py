@@ -44,12 +44,13 @@ class LexiconProject(models.Model):
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"{self.language_name}lexicon project"
+        return f"{self.language_name} lexicon project"
 
 
 # Lexicon entry models
 class LexiconEntry(models.Model):
     "A base class other models can inherit from."
+
     project = models.ForeignKey(
         LexiconProject,
         on_delete=models.CASCADE,
@@ -133,7 +134,8 @@ class LexiconEntry(models.Model):
         """Code that runs whenever a Lexicon entry is saved."""
         # Make all entries lower case
         self.tok_ples = self.tok_ples.lower()
-        self.eng = self.eng.lower()
+        if self.eng:  # imports may be lacking, avoid a None type error
+            self.eng = self.eng.lower()
         if self.oth_lang:  # this field is optional, avoid a None type error
             self.oth_lang = self.oth_lang.lower()
         # Increment the project's version number
