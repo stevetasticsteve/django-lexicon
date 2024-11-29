@@ -1,4 +1,7 @@
 import os
+
+import sentry_sdk
+
 from config.settings.base import *
 
 DATABASES = {
@@ -26,3 +29,17 @@ if os.getenv("HTTPS", "False").lower() in ("true", "yes", "1"):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+
+
+sentry_sdk.init(
+    dsn="https://b8b8bd5d2c65ec1485776d07ec1e1c90@o538547.ingest.us.sentry.io/4508379059453952",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    _experiments={
+        # Set continuous_profiling_auto_start to True
+        # to automatically start the profiler on when
+        # possible.
+        "continuous_profiling_auto_start": True,
+    },
+)

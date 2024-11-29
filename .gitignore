@@ -1,5 +1,6 @@
-venv
 data/
 __pycache__
 .ruff_cache
 .env
+apps/lexicon/utils/upload.py
+.venv

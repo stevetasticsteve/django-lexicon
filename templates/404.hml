@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% include 'includes/header.html' %}
+{% endblock %}
+
+{% block page_content %}
+
+<h2>Page not found</h2>
+{% load static %}
+<img class="mt-4" src="{% static 'img/404.png' %}">
+{% endblock %}

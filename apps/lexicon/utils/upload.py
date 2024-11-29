@@ -9,8 +9,10 @@ def import_dic(dic_data: bytes, project: models.LexiconProject) -> dict:
 
     The data gets imported into the project specified. The dict that returns is used in
     the success url template context."""
-
-    words = dic_data.decode("utf-8").split("\n")
+    try:
+        words = dic_data.decode("utf-8").split("\n")
+    except UnicodeDecodeError:
+        words = dic_data.decode("utf-16").split("\n")
     imported_words = 0
     skipped_words = 0
     for w in words:
