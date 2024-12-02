@@ -224,9 +224,8 @@ class ExportPage(FormView):
             form.cleaned_data["checked"],
             self.request,
         )
-        response = FileResponse(open(file, "rb"))
-        response["Content-Disposition"] = (
-            f"attachment; filename={os.path.basename(file)}"
+        response = FileResponse(
+            open(file, "rb"), as_attachment=True, filename=os.path.basename(file)
         )
         return response
 
@@ -238,8 +237,8 @@ def latest_oxt(request, lang_code):
         True,
         request,
     )
-    response = FileResponse(open(file, "rb"))
-    response["Content-Disposition"] = f"attachment; filename={os.path.basename(file)}"
+    response = FileResponse(
+        open(file, "rb"), as_attachment=False)
     return response
 
 
@@ -257,6 +256,5 @@ def oxt_update_service(request, lang_code):
     xml = xml.replace("$IDENTIFIER", f"NTMPNG {lang_code} extension")
     xml = xml.replace(
         "$DOWNLOAD_URL",
-        request.build_absolute_uri(reverse("lexicon:latest-oxt", args=[lang_code])),
-    )
+        request.build_absolute_uri(reverse("lexicon:latest-oxt", args=[lang_code])))
     return HttpResponse(xml, content_type="text/xml")
