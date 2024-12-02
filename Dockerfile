@@ -8,7 +8,6 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000
 WORKDIR /app
 RUN chown django:django /app
-RUN mkdir -p /app/data/exports
 
 RUN pip install psycopg2-binary gunicorn
 COPY ./requirements.txt /
@@ -16,5 +15,6 @@ RUN pip install -r /requirements.txt
 COPY --chown=django:django . .
 
 USER django
+RUN mkdir -p /app/data/exports
 RUN python manage.py collectstatic --noinput --clear --settings config.settings.prod
 CMD set -xe; python manage.py  migrate --settings config.settings.prod; gunicorn config.wsgi:application --timeout 60
