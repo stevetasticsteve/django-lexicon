@@ -22,10 +22,13 @@ urlpatterns = [
         views.DeleteEntry.as_view(),
         name="delete_entry",
     ),
-    path("<str:lang_code>/import", views.ImportView.as_view(), name="import_page"),
+    path("<str:lang_code>/import", views.ImportPage.as_view(), name="import_page"),
     path(
         "<str:lang_code>/import-result",
         views.ImportSuccess.as_view(),
         name="import-success",
     ),
+    path("<str:lang_code>/export", views.ExportPage.as_view(), name="export_page"),
+    path("<str:lang_code>/latest-oxt", views.latest_oxt, name="latest-oxt"),
+    path("<str:lang_code>/oxt-update", views.oxt_update_service, name="update-oxt")
 ]

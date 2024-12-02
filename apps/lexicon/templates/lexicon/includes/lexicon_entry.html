@@ -1,12 +1,12 @@
 <div class="container pt-2">
 <h3 class="headword" id="{{word.tok_ples}}">
     <a href="{% url 'lexicon:entry_detail' word.project.language_code word.pk %}">{{word.tok_ples}}</a>
-    {% if word.checked %} {% include "lexicon/partial/green_tick.html" %} {% endif %}</h3>
+    {% if word.checked %} Checked {% endif %}</h3>
 
     <p>
     {% if word.pos %} <strong>{{word.get_pos_display}}</strong> {% endif %}
-    <strong class="english"><em style="color:dodgerblue">{{word.eng}}</em></strong>
-    <strong style="color:gray">{{word.oth_lang}}</strong>
+    {% if word.eng %}<strong class="english"><em style="color:dodgerblue">{{word.eng}}</em></strong>{% endif %}
+   {% if word.oth_lang %} <strong style="color:gray">{{word.oth_lang}}</strong>{% endif %}
     </p>
     {% if word.comment %}
         <ul>{{word.comment}}</ul>

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block header %}
+{% include 'lexicon/includes/project_header.html' %}
+{% endblock %}
+{% block page_content %}
+{% load crispy_forms_tags %}
+
+
+<div class="container">
+    <h1>Export</h1>
+
+    <h4>Current lexicon version </h4>
+    <p>{{project.version}}</p>
+
+    <form action="" method="post">
+        {% csrf_token %}
+        {{form|crispy}}
+
+        <button type="input" id="submit-btn" class="btn btn-primary">Download</button></form>
+</div>
+
+{% endblock %}

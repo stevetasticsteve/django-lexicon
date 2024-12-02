@@ -4,7 +4,6 @@ from django.urls import reverse
 
 
 import re
-from decimal import Decimal
 
 
 class LexiconProject(models.Model):
@@ -26,13 +25,11 @@ class LexiconProject(models.Model):
         null=True,
         help_text="An optional 2nd language, Tok Pisin for PNG langages",
     )
-    version = models.DecimalField(
+    version = models.IntegerField(
         verbose_name="version",
         blank=False,
         null=False,
-        decimal_places=3,
-        max_digits=5,
-        default=0.0,
+        default=0,
     )
     tok_ples_validator = models.CharField(
         verbose_name="Regex Tok ples validator",
@@ -40,6 +37,17 @@ class LexiconProject(models.Model):
         blank=True,
         null=True,
         max_length=25,
+    )
+    affix_file = models.TextField(
+        blank=False,
+        null=False,
+        help_text="See https://www.systutorials.com/docs/linux/man/4-hunspell/",
+        default="""# Hunspell affix file for Kovol by NTMPNG
+SET UTF-8
+TRY aeiouAEIOUpbtdkgjmnfsvhlrwyPBTDKGJMNFSVHLRWY
+WORDCHARS -
+
+NOSUGGEST !""",
     )
 
     def __str__(self):
@@ -139,7 +147,7 @@ class LexiconEntry(models.Model):
         if self.oth_lang:  # this field is optional, avoid a None type error
             self.oth_lang = self.oth_lang.lower()
         # Increment the project's version number
-        self.project.version += Decimal("0.001")
+        self.project.version += 1
         self.project.save()
 
         return super(LexiconEntry, self).save(*args, **kwargs)
