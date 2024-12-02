@@ -8,6 +8,7 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000
 WORKDIR /app
 RUN chown django:django /app
+RUN mkdir -p /app/data/exports
 
 RUN pip install psycopg2-binary gunicorn
 COPY ./requirements.txt /
