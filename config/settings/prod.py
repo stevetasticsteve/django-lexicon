@@ -43,3 +43,21 @@ sentry_sdk.init(
         "continuous_profiling_auto_start": True,
     },
 )
+
+# Celery task manager
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Pacific/Port_Moresby"
+# CELERY_WORKER_LOGFILE = os.path.join(LOGGING_DIR, "scheduled_tasks.log")
+# CELERY_BEAT_SCHEDULE = {
+#     "update_users management command": {
+#         "task": "eStatement.tasks.update_users",
+#         "schedule": crontab(minute=0, hour=0),
+#         "options": {
+#             "expires": 15.0,
+#         },
+#     },
+# }

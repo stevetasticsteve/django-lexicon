@@ -28,3 +28,11 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
+      
+      - name: Build and push celery image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: CeleryDockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_CELERY_REPO }}:latest

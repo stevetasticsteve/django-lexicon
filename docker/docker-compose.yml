@@ -4,6 +4,7 @@ services:
    db:
     image: postgres:17
     container_name: database_lexicon_app
+    restart: always
     ports:
       - 5432:5432
     volumes:
@@ -16,6 +17,7 @@ services:
    web1:
     image: stevetasticsteve/lexicon
     container_name: lexicon_app1
+    restart: always
     ports:
       - 8000:8000
     environment:
@@ -27,6 +29,26 @@ services:
       - HTTPS=${HTTPS}
     depends_on:
       - db
+   
+   celery:
+    image: stevetasticsteve/lexicon_celery
+    container_name: celery_lexicon
+    restart: always
+    command: celery -A config worker
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.prod
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - web1
+      - redis
+      - db
+    
+   redis:
+    image: redis
+    container_name: redis_lexicon
+    restart: always
    
    watchtower:
     image: containrrr/watchtower

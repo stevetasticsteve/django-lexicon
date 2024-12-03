@@ -1,31 +1,27 @@
-# These utils take bytes from a file upload and add them to the db
-
+from celery import shared_task
 from django.db import IntegrityError
-from .. import models
+
+from apps.lexicon import models
 
 
-def import_dic(dic_data: bytes, project: models.LexiconProject) -> dict:
+@shared_task
+def import_dic(dic_data: bytes, lang_code: str) -> dict:
     """Import the data from a .dic file into the database.
 
     The data gets imported into the project specified. The dict that returns is used in
     the success url template context."""
     try:
+        project = models.LexiconProject.objects.get(language_code=lang_code)
+    except models.LexiconProject.DoesNotExist:
+        return
+    try:
         words = dic_data.decode("utf-8").split("\n")
     except UnicodeDecodeError:
         words = dic_data.decode("utf-16").split("\n")
-    imported_words = 0
-    skipped_words = 0
     for w in words:
         if not w:
             continue
         try:
             models.LexiconEntry.objects.create(tok_ples=w, project=project)
-            imported_words += 1
         except IntegrityError:
-            skipped_words += 1
-
-    return {
-        "words": len(words),
-        "words_imported": str(imported_words),
-        "words_skipped": str(skipped_words),
-    }
+            pass

@@ -13,7 +13,8 @@ from django.http import HttpResponse
 
 from apps.lexicon import models
 from apps.lexicon import forms
-from apps.lexicon.utils import upload, db_requests, export
+from apps.lexicon.utils import db_requests, export
+from apps.lexicon import tasks
 
 import datetime
 import os
@@ -168,12 +169,7 @@ class ImportPage(FormView):
 
     def form_valid(self, form, **kwargs):
         file = form.cleaned_data["dic_file"]
-        self.result_context = upload.import_dic(
-            file.read(),
-            project=models.LexiconProject.objects.get(
-                language_code=self.kwargs.get("lang_code")
-            ),
-        )
+        tasks.import_dic.delay(file.read(), self.kwargs.get("lang_code"))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -237,8 +233,7 @@ def latest_oxt(request, lang_code):
         True,
         request,
     )
-    response = FileResponse(
-        open(file, "rb"), as_attachment=False)
+    response = FileResponse(open(file, "rb"), as_attachment=False)
     return response
 
 
@@ -256,5 +251,6 @@ def oxt_update_service(request, lang_code):
     xml = xml.replace("$IDENTIFIER", f"NTMPNG {lang_code} extension")
     xml = xml.replace(
         "$DOWNLOAD_URL",
-        request.build_absolute_uri(reverse("lexicon:latest-oxt", args=[lang_code])))
+        request.build_absolute_uri(reverse("lexicon:latest-oxt", args=[lang_code])),
+    )
     return HttpResponse(xml, content_type="text/xml")
