@@ -10,7 +10,7 @@ class LexiconProject(models.Model):
     """Represents a unique language to build a lexicon for."""
 
     language_name = models.CharField(
-        max_length=25, blank=False, null=False, verbose_name="Language name"
+        max_length=45, blank=False, null=False, verbose_name="Language name"
     )
     language_code = models.CharField(
         max_length=4,
@@ -20,7 +20,7 @@ class LexiconProject(models.Model):
         verbose_name="3 Digit ethnologue language code",
     )
     secondary_language = models.CharField(
-        max_length=25,
+        max_length=45,
         blank=True,
         null=True,
         help_text="An optional 2nd language, Tok Pisin for PNG langages",
@@ -36,7 +36,7 @@ class LexiconProject(models.Model):
         help_text="An optional regex to represent which characters are allowed in Tok Ples entries. If set entries can only be saved if they only contain these characters. [abc] for example only allows the characters a, b and c.",
         blank=True,
         null=True,
-        max_length=25,
+        max_length=60,
     )
     affix_file = models.TextField(
         blank=False,
@@ -69,7 +69,7 @@ class LexiconEntry(models.Model):
     tok_ples = models.CharField(
         verbose_name="Tok Ples",
         help_text="The language the project is focussed on.",
-        max_length=45,
+        max_length=60,
         null=False,
         blank=False,
         unique=True,
@@ -81,13 +81,13 @@ class LexiconEntry(models.Model):
     )
     eng = models.CharField(
         verbose_name="English",
-        max_length=45,
+        max_length=60,
         null=True,
         blank=False,
     )
     oth_lang = models.CharField(
         verbose_name="Other language",
-        max_length=45,
+        max_length=60,
         null=True,
         blank=True,
         help_text="Translation in project 2nd language.",
@@ -113,11 +113,11 @@ class LexiconEntry(models.Model):
         blank=True,
         null=True,
     )
-    review_user = models.CharField(max_length=10, editable=False, blank=True, null=True)
+    review_user = models.CharField(max_length=45, editable=False, blank=True, null=True)
     review_time = models.DateField(editable=False, null=True)
     created = models.DateField(editable=False, auto_now_add=True)
     modified = models.DateField(editable=False, auto_now=True)
-    modified_by = models.CharField(editable=False, blank=True, null=True, max_length=10)
+    modified_by = models.CharField(editable=False, blank=True, null=True, max_length=45)
 
     pos = models.CharField(
         verbose_name="part of speech",
@@ -173,7 +173,7 @@ class SpellingVariation(models.Model):
     )
     spelling_variation = models.CharField(
         verbose_name="spelling variation",
-        max_length=45,
+        max_length=60,
         blank=False,
         null=False,
         help_text="write the spelling variation here",
@@ -206,7 +206,7 @@ class IgnoreWord(models.Model):
     """
 
     word = models.CharField(
-        max_length=25,
+        max_length=60,
         blank=False,
         null=False,
         unique=True,
@@ -225,7 +225,7 @@ class IgnoreWord(models.Model):
         help_text="Type of word to add to spell check.",
     )
     eng = models.CharField(
-        max_length=25,
+        max_length=60,
         blank=False,
         null=False,
         help_text="English",
