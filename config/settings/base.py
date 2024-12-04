@@ -15,7 +15,7 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-version = "0.1.2"
+version = "0.1.3"
 
 # Application definition
 
