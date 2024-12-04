@@ -1,7 +1,7 @@
 import csv
 
 from celery import shared_task
-from django.db import IntegrityError
+from django.db import IntegrityError, DataError
 
 from apps.lexicon import models
 
@@ -59,6 +59,8 @@ def import_csv(csv_data: bytes, lang_code: str) -> None:
         except IntegrityError:
             pass
         except IndexError:
+            pass
+        except DataError:
             pass
 
 
