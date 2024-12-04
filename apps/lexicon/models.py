@@ -128,6 +128,7 @@ class LexiconEntry(models.Model):
             ("n", "noun"),
             ("pn", "proper noun"),
             ("adj", "adjective"),
+            ("v", "verb"),
             ("adv", "adverb"),
             ("com", "compound verb"),
             ("prn", "pronoun"),

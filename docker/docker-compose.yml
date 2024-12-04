@@ -31,7 +31,7 @@ services:
       - db
    
    celery:
-    image: stevetasticsteve/lexicon_celery
+    image: stevetasticsteve/celery_lexicon
     container_name: celery_lexicon
     restart: always
     command: celery -A config worker

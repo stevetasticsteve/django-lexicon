@@ -10,11 +10,11 @@ from django.urls import reverse
 from django.http import FileResponse
 from django.http import HttpResponse
 
-
 from apps.lexicon import models
 from apps.lexicon import forms
 from apps.lexicon.utils import db_requests, export
 from apps.lexicon import tasks
+from django.conf import settings
 
 import datetime
 import os
@@ -42,9 +42,11 @@ class LexiconView(ListView):
         # lang code is used to set urls
         context["lang_code"] = self.kwargs.get("lang_code")
         # object list is the lexicon entries
-        context["lexicon"] = db_requests.group_lexicon_entries_by_letter(
+        lexicon = db_requests.group_lexicon_entries_by_letter(
             models.LexiconEntry.objects.filter(project=project)
         )
+        context["lexicon"] = lexicon
+
         # project is used in the search bar
         context["project"] = project
         return context
@@ -52,6 +54,20 @@ class LexiconView(ListView):
 
 class ProjectSingleMixin(SingleObjectMixin):
     """A base class to handle common context passing to templates with Single Mixin.
+
+    All project pages need access to the lang_code context variable."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["lang_code"] = self.kwargs.get("lang_code")
+        context["project"] = get_object_or_404(
+            models.LexiconProject, language_code=self.kwargs.get("lang_code")
+        )
+        return context
+
+
+class ProjectTemplateMixin(TemplateView):
+    """A base class to handle common context passing to templates.
 
     All project pages need access to the lang_code context variable."""
 
@@ -161,15 +177,20 @@ class DeleteEntry(LoginRequiredMixin, ProjectSingleMixin, DeleteView):
         return reverse("lexicon:entry_list", args=(self.kwargs.get("lang_code"),))
 
 
-class ImportPage(FormView):
+class ImportPage(FormView, ProjectTemplateMixin):
     """The view ate url <lang code>/import. Provides an import form."""
 
     template_name = "lexicon/import_page.html"
-    form_class = forms.ImportDicForm
+    form_class = forms.ImportForm
 
     def form_valid(self, form, **kwargs):
-        file = form.cleaned_data["dic_file"]
-        tasks.import_dic.delay(file.read(), self.kwargs.get("lang_code"))
+        file = form.cleaned_data["file"]
+        format = form.cleaned_data["format"]
+        match format:
+            case "dic":
+                tasks.import_dic.delay(file.read(), self.kwargs.get("lang_code"))
+            case "csv":
+                tasks.import_csv.delay(file.read(), self.kwargs.get("lang_code"))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -184,7 +205,7 @@ class ImportPage(FormView):
         return context
 
 
-class ImportSuccess(TemplateView):
+class ImportSuccess(ProjectTemplateMixin):
     """A simple page to inform user of import results <lang code>/import-result"""
 
     template_name = "lexicon/upload_result.html"
@@ -195,7 +216,7 @@ class ImportSuccess(TemplateView):
         return context
 
 
-class ExportPage(FormView):
+class ExportPage(FormView, ProjectTemplateMixin):
     """Lists the export options at <lang code>/export.
 
     The response is a http file attachment, so no success url is required."""

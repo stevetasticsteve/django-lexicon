@@ -1,6 +1,6 @@
 <div class="container pt-2">
 <h3 class="headword" id="{{word.tok_ples}}">
-    <a href="{% url 'lexicon:entry_detail' word.project.language_code word.pk %}">{{word.tok_ples}}</a>
+    <a href="{% url 'lexicon:entry_detail' word.project.language_code word.pk %}"class="text-decoration-none">{{word.tok_ples}}</a>
     {% if word.checked %} Checked {% endif %}</h3>
 
     <p>

@@ -12,8 +12,9 @@ editable_fields = [
 ]
 
 
-class ImportDicForm(forms.Form):
-    dic_file = forms.FileField()
+class ImportForm(forms.Form):
+    file = forms.FileField()
+    format = forms.ChoiceField(choices=(("dic", ".dic"), ("csv", ".csv")))
 
 
 class ExportForm(forms.Form):
