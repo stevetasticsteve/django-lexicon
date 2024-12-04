@@ -148,8 +148,7 @@ class LexiconEntry(models.Model):
         if self.oth_lang:  # this field is optional, avoid a None type error
             self.oth_lang = self.oth_lang.lower()
         # Increment the project's version number
-        if self.tok_ples != self.__original_tok_ples:
-            self.project.version += 1
+        self.project.version += 1
         self.project.save()
 
         return super(LexiconEntry, self).save(*args, **kwargs)
