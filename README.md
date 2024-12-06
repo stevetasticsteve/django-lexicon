@@ -16,12 +16,12 @@ https://dev.codebysteve.com
 - A way to automate the updating of a paratext spellingstatus file.
 
 ## Performance
-- Large projects (like Mibu) have no chance of showing the whole lexicon in 1 page. It has to be paginated somehow. The filter search will need to work with alongside pagination somehow.
 - Docker volume should be a bind mount rather than a named docker volume so it is easier for people to administer?
   
 ## Bugs
 - Libre office can contact the update server and see updated oxt packages, but downloading them fails.
 - The save method on the models that updates the version number should only change if the tok ples changes, and it should only go up a single version number on import
+- Pagination doesn't work in main view, htmx request doesn't have pagination info attached.
 
 ## UI
 - The header looks off on mobile

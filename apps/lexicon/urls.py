@@ -32,4 +32,6 @@ urlpatterns = [
     path("<str:lang_code>/latest-oxt", views.latest_oxt, name="latest-oxt"),
     path("<str:lang_code>/oxt-update", views.oxt_update_service, name="update-oxt"),
     path("<str:lang_code>/search", views.SearchResults.as_view(), name="search"),
+    path("<str:lang_code>/review", views.ReviewList.as_view(), name="review_list"),
+    path("<str:lang_code>/ignore", views.IgnoreList.as_view(), name="ignore_list"),
 ]

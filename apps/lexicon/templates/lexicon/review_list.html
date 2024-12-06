@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block header %}
+{% include 'lexicon/includes/project_header.html' %}
+
+{% endblock %}
+{% block page_content %}
+
+    <div class="container">
+
+        {% if review_time == "now" %}
+            <h1 class="p-4">Words to review now</h1>
+        {% elif review_time == "later" %}
+            <h1 class="p-4">Words to review after literacy</h1>
+        {% endif %}
+
+         <div class="container p-2">
+        <table class="table table-striped">
+        <thead>
+            <tr>
+            <th scope="col">Word</th>
+            <th scope="col">Review comments</th>
+            <th scope="col">Review requested by</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for word in object_list %}
+            <tr>
+            <th scope="row">
+            <a href="{% url 'lexicon:entry_detail' lang_code word.pk %}">{{word.tok_ples}}</a>
+               
+
+            <td>
+                {{word.review_comments}}
+            </td>
+            <td>
+                {{word.review_user}}, {{word.review_time}}
+            </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+    </div>
+
+{% endblock %}

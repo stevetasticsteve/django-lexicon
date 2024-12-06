@@ -4,7 +4,7 @@
     {% csrf_token %}
     <input class="form-control" type="search"
            name="search" placeholder="Begin typing to search entries..."
-           hx-get="{% url 'lexicon:search' lang_code %}?page={{page_obj.number}}&search={{ query }}"
+           hx-get="{% url 'lexicon:search' lang_code %}"
            hx-trigger="keyup changed, search, load"
            hx-target="#search-results"
            hx-indicator=".htmx-indicator">

@@ -63,12 +63,11 @@ class SearchResults(ListView):
         self.project = get_object_or_404(
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
+        queryset = models.LexiconEntry.objects.filter(project=self.project)
         if search:
-            return models.LexiconEntry.objects.filter(
-                project=self.project, tok_ples__icontains=search
-            )
+            queryset = queryset.filter(tok_ples__icontains=search)
         else:
-            return models.LexiconEntry.objects.filter(project=self.project)
+            return queryset
 
 
 class ProjectSingleMixin(SingleObjectMixin):
@@ -282,3 +281,27 @@ def oxt_update_service(request, lang_code):
         request.build_absolute_uri(reverse("lexicon:latest-oxt", args=[lang_code])),
     )
     return HttpResponse(xml, content_type="text/xml")
+
+
+class ReviewList(ListView):
+    """Shows entries marked for review <lang code>/review."""
+
+    model = models.LexiconEntry
+    template_name = "lexicon/review_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["lang_code"] = self.lang_code
+        context["project"] = self.project
+        return context
+
+    def get_queryset(self):
+        self.lang_code = self.kwargs.get("lang_code")
+        self.project = get_object_or_404(
+            models.LexiconProject, language_code=self.lang_code
+        )
+        return models.LexiconEntry.objects.filter(project=self.project, review__gt=0)
+
+
+class IgnoreList(ListView):
+    pass
