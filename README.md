@@ -48,7 +48,6 @@ https://dev.codebysteve.com
 - Import from .xml (paratext)
 - Some way to undo an import. Users may have junk data they don't realise and mix it in with the database, making a huge mess to manually clean up.
 - Imports currently accept any file and it'd be easy to cause an error
-- Mibu .dic import times out. File needs to be uploaded and passed to a celery scheduler
 - Imports need to take the username who requested the import and add that to the database to avoid None.
 - Users can exceed the database's max length restrictions. Currently on csv import this is passed over. Need to truncate the strings before adding them to the db.
 

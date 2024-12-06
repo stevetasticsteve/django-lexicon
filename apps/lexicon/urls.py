@@ -30,5 +30,6 @@ urlpatterns = [
     ),
     path("<str:lang_code>/export", views.ExportPage.as_view(), name="export_page"),
     path("<str:lang_code>/latest-oxt", views.latest_oxt, name="latest-oxt"),
-    path("<str:lang_code>/oxt-update", views.oxt_update_service, name="update-oxt")
+    path("<str:lang_code>/oxt-update", views.oxt_update_service, name="update-oxt"),
+    path("<str:lang_code>/search", views.SearchResults.as_view(), name="search"),
 ]

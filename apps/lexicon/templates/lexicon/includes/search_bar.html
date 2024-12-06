@@ -1,74 +1,12 @@
-<!-- Filterable search using Jquery-->
+<!-- Filterable search using htmx-->
+<div class="container-fluid w-75" >
 <form>
-    <div class="row p-4 bg-light">
-        <div class="col-11" id="radio-group">
-             <input type="text" class="form-control" id="filter" placeholder="Search">
-        </div>
-        <div class="col-1">
-             <div class="form-check">
-                <input class="form-check-input" type="radio" name="radio_select" id="tok_ples_radio" value="tok_ples" checked>
-                <label class="form-check-label" for="tok_ples_radio">
-                    {{project.language_name}}
-                </label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="radio_select" id="english_radio" value="English">
-                <label class="form-check-label" for="english_radio">
-                    English
-                </label>
-           </div>
-
-        </div>
-    </div>
+    {% csrf_token %}
+    <input class="form-control" type="search"
+           name="search" placeholder="Begin typing to search entries..."
+           hx-get="{% url 'lexicon:search' lang_code %}?page={{page_obj.number}}&search={{ query }}"
+           hx-trigger="keyup changed, search, load"
+           hx-target="#search-results"
+           hx-indicator=".htmx-indicator">
 </form>
-
-{% load static %}
-<script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
-<script>
-    $('#filter, #small_filter').keyup(my_filter);
-    $('#tok_ples_radio, #english_radio').click(my_filter);
-
-    function my_filter() {
-        if ( $(this).hasClass("form-control") ) {
-            $( '#filter, #small_filter' ).val(this.value);
-            var filter = this.value.toLowerCase();
-        } else {
-            var filter = $('#filter').val().toLowerCase();
-        }
-
-        $('.entry').each(function() {
-            var _this = $(this);
-            if ($('#tok_ples_radio').is(':checked')) {
-            var headword = _this.find('.headword').text().toLowerCase();
-            } else if ($('#english_radio').is(':checked')) {
-            var headword = _this.find('.english').text().toLowerCase();
-            }
-
-            if (headword.indexOf(filter) < 0) {
-                _this.hide();
-                }
-                else if(filter == ""){
-                    _this.show();
-                }
-                else{
-                    _this.show();
-                    }
-             });
-
-       $('.main_pane_letter').each(function() {
-            var _this = $(this);
-            _this.show();
-            if ( _this.find(".entry:visible").length < 1 ) {
-                _this.hide();
-            } else {
-            _this.show();
-            }
-        });
-        }
-</script>
-
-<script>
-    $(".verb_box").click(function () {
-        $(this).parent().find("i").toggleClass("fa fa-chevron-up fa fa-chevron-down");
-    });
-</script>
+</div>

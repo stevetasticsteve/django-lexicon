@@ -1,3 +1,4 @@
+<div>
 <nav class="navbar navbar-dark navbar-expand-lg navbar-light bg-dark">
     <div class="container-fluid">
 
@@ -9,9 +10,7 @@
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        
-
-
+    
         <!-- Links --> reverse_lazy
          <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 p-2 mx-4">
@@ -20,9 +19,8 @@
                 </li>
                 {% block project_links %}{% endblock %}
             </ul>
+            {% include 'includes/login_dropdown.html' %}
         </div>
-
-        {% include 'includes/login_dropdown.html' %}
-       
     </div>
 </nav>
+</div>

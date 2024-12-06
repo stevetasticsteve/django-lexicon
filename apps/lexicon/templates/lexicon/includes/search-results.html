@@ -1,0 +1,27 @@
+<div class="container-fluid my-4 pb-4" id="search-results">
+
+    <div class="main_pane_letter">
+      
+        <div class="row">
+        {% for word in page_obj %}
+        <!-- add letters as headings when it changes -->
+        {% with letter=word.tok_ples|first %}
+            {% ifchanged %} 
+                </div>
+                <div class="container-fluid text-center bg-light py-2 my-2">
+                    <h1>{{letter}}</h1>
+                </div>
+            {% endifchanged %}
+        {% endwith %}
+        
+            <!-- If the counter is even close the last <div> and make a new row -->
+            {% if forloop.counter0|divisibleby:2 %}</div> <div class="row">{% endif %}
+            <div class="entry col-sm-6 border-right border-bottom my-auto">
+            {% include 'lexicon/includes/lexicon_entry.html' %}
+            </div>
+        {% endfor %}
+        </div>
+
+{% include 'lexicon/includes/pagination.html' %}
+</div>
+

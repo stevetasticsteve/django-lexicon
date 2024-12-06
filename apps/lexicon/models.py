@@ -140,7 +140,13 @@ class LexiconEntry(models.Model):
     checked = models.BooleanField(default=False, blank=False, null=False)
 
     def save(self, *args, **kwargs):
-        """Code that runs whenever a Lexicon entry is saved."""
+        """Code that runs whenever a Lexicon entry is saved.
+
+        Lower case should be enforced and the version number updated if the tok_ples
+        changes.
+        The version number is used mostly to keep track of spell check exports,
+        we don't want users downloading new spell checks when no spelling data
+        has changed."""
         # Make all entries lower case
         self.tok_ples = self.tok_ples.lower()
         if self.eng:  # imports may be lacking, avoid a None type error
@@ -148,7 +154,8 @@ class LexiconEntry(models.Model):
         if self.oth_lang:  # this field is optional, avoid a None type error
             self.oth_lang = self.oth_lang.lower()
         # Increment the project's version number
-        self.project.version += 1
+        if self.__original_tok_ples != self.tok_ples:
+            self.project.version += 1
         self.project.save()
 
         return super(LexiconEntry, self).save(*args, **kwargs)
@@ -163,6 +170,11 @@ class LexiconEntry(models.Model):
         return reverse(
             "lexicon:entry_detail", args=(self.project.language_code, self.pk)
         )
+
+    def __init__(self, *args, **kwargs):
+        """Override the init to remember the original tok_ples value"""
+        super().__init__(*args, **kwargs)
+        self.__original_tok_ples = self.tok_ples
 
 
 class SpellingVariation(models.Model):

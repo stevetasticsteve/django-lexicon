@@ -4,36 +4,15 @@
 
 {% endblock %}
 {% block page_content %}
-{% include 'lexicon/includes/search_bar.html' %}
 
 
 <div class="btn-group p-4" role="group">
 <a href="{% url 'lexicon:create_entry' lang_code %}"><button type="button" class="btn btn-secondary">Add a word</button></a>
 </div>
 
-<div class="container-fluid mb-4 pb-4" id="entries">
+{% include 'lexicon/includes/search_bar.html' %}
+{% include 'lexicon/includes/search-results.html' %}
 
-    {% for letter, words in lexicon.items %}
-    <div class="main_pane_letter">
-        <div class="container-fluid letter text-center bg-light">
-            <hr>
-                <h1 id="{{letter}}">{{letter}}</h1>
-            <hr>    
-        </div>
-
-        <div class="row">
-        {% for word in words %}
-            <!-- If the counter is even close the last <div> and make a new row -->
-            {% if forloop.counter0|divisibleby:2 %}</div> <div class="row">{% endif %}
-            <div class="entry col-sm-6 border-right border-bottom my-auto">
-            {% include 'lexicon/includes/lexicon_entry.html' %}
-            </div>
-        {% endfor %}
-        </div>
-    </div>
-    {% endfor %}
-
-</div>
 
 <footer class="footer text-center bg-dark fixed-bottom py-2">
     <a class="text-light" href="#top">Jump to top</a>

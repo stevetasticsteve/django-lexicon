@@ -1,3 +1,5 @@
+from django.db.models.query import QuerySet
+from django.http.request import HttpRequest as HttpRequest
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
@@ -14,7 +16,6 @@ from apps.lexicon import models
 from apps.lexicon import forms
 from apps.lexicon.utils import db_requests, export
 from apps.lexicon import tasks
-from django.conf import settings
 
 import datetime
 import os
@@ -27,29 +28,47 @@ class ProjectList(ListView):
     template_name = "lexicon/project_list.html"
 
 
-class LexiconView(ListView):
+class ProjectTemplateMixin(TemplateView):
+    """A base class to handle common context passing to templates.
+
+    All project pages need access to the lang_code context variable."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        self.lang_code = self.kwargs.get("lang_code")
+        context["lang_code"] = self.lang_code
+        self.project = get_object_or_404(
+            models.LexiconProject, language_code=self.kwargs.get("lang_code")
+        )
+        context["project"] = self.project
+        return context
+
+
+class LexiconView(ProjectTemplateMixin):
     """The main display for the lexicon, listing all entries."""
 
     model = models.LexiconEntry
     template_name = "lexicon/lexicon_list.html"
 
-    def get_context_data(self, **kwargs):
-        """Data added to the context used in the template."""
-        context = super().get_context_data(**kwargs)
-        project = get_object_or_404(
+
+class SearchResults(ListView):
+    """The actual lexicon entries, filtered by htmx-get."""
+
+    template_name = "lexicon/includes/search-results.html"
+    model = models.LexiconEntry
+    paginate_by = 250
+
+    def get_queryset(self, **kwargs):
+        search = self.request.GET.get("search")
+        self.project = get_object_or_404(
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
-        # lang code is used to set urls
-        context["lang_code"] = self.kwargs.get("lang_code")
-        # object list is the lexicon entries
-        lexicon = db_requests.group_lexicon_entries_by_letter(
-            models.LexiconEntry.objects.filter(project=project)
-        )
-        context["lexicon"] = lexicon
-
-        # project is used in the search bar
-        context["project"] = project
-        return context
+        if search:
+            return models.LexiconEntry.objects.filter(
+                project=self.project, tok_ples__icontains=search
+            )
+        else:
+            return models.LexiconEntry.objects.filter(project=self.project)
 
 
 class ProjectSingleMixin(SingleObjectMixin):
@@ -59,24 +78,12 @@ class ProjectSingleMixin(SingleObjectMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["lang_code"] = self.kwargs.get("lang_code")
-        context["project"] = get_object_or_404(
+        self.lang_code = self.kwargs.get("lang_code")
+        context["lang_code"] = self.lang_code
+        self.project = get_object_or_404(
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
-        return context
-
-
-class ProjectTemplateMixin(TemplateView):
-    """A base class to handle common context passing to templates.
-
-    All project pages need access to the lang_code context variable."""
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["lang_code"] = self.kwargs.get("lang_code")
-        context["project"] = get_object_or_404(
-            models.LexiconProject, language_code=self.kwargs.get("lang_code")
-        )
+        context["project"] = self.project
         return context
 
 
