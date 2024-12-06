@@ -1,4 +1,3 @@
-from django.db.models.query import QuerySet
 from django.http.request import HttpRequest as HttpRequest
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
@@ -14,7 +13,7 @@ from django.http import HttpResponse
 
 from apps.lexicon import models
 from apps.lexicon import forms
-from apps.lexicon.utils import db_requests, export
+from apps.lexicon.utils import export
 from apps.lexicon import tasks
 
 import datetime
@@ -63,12 +62,13 @@ class SearchResults(ListView):
         self.project = get_object_or_404(
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
+        query = models.LexiconEntry.objects.select_related("project").filter(
+            project=self.project
+        )
         if search:
-            return models.LexiconEntry.objects.filter(
-                project=self.project, tok_ples__icontains=search
-            )
+            return query.filter(tok_ples__icontains=search)
         else:
-            return models.LexiconEntry.objects.filter(project=self.project)
+            return query
 
 
 class ProjectSingleMixin(SingleObjectMixin):

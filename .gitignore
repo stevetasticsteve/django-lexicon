@@ -4,3 +4,4 @@ __pycache__
 .env
 apps/lexicon/utils/upload.py
 .venv
+*.sh

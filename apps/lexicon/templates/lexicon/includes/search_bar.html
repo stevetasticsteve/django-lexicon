@@ -6,7 +6,6 @@
            name="search" placeholder="Begin typing to search entries..."
            hx-get="{% url 'lexicon:search' lang_code %}"
            hx-trigger="keyup changed, search, load"
-           hx-target="#search-results"
-           hx-indicator=".htmx-indicator">
+           hx-target="#search-results">
 </form>
 </div>

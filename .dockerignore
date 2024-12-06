@@ -3,3 +3,4 @@ data
 docker
 .ruff_cache
 .env
+*.sh

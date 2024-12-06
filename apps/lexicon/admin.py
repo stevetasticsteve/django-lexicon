@@ -10,7 +10,8 @@ admin.site.register(models.LexiconProject, ProjectAdmin)
 
 
 class LexiconEntriesAdmin(admin.ModelAdmin):
-    pass
+    list_filter = ["project"]
+    search_fields = ["tok_ples", "eng"]
 
 
 admin.site.register(models.LexiconEntry, LexiconEntriesAdmin)
