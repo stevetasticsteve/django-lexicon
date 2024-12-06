@@ -63,11 +63,12 @@ class SearchResults(ListView):
         self.project = get_object_or_404(
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
-        queryset = models.LexiconEntry.objects.filter(project=self.project)
         if search:
-            queryset = queryset.filter(tok_ples__icontains=search)
+            return models.LexiconEntry.objects.filter(
+                project=self.project, tok_ples__icontains=search
+            )
         else:
-            return queryset
+            return models.LexiconEntry.objects.filter(project=self.project)
 
 
 class ProjectSingleMixin(SingleObjectMixin):
@@ -303,5 +304,5 @@ class ReviewList(ListView):
         return models.LexiconEntry.objects.filter(project=self.project, review__gt=0)
 
 
-class IgnoreList(ListView):
-    pass
+class IgnoreList(ProjectTemplateMixin):
+    template_name = "lexicon/ignore_list.html"
