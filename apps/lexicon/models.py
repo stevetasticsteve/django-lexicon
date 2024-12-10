@@ -176,6 +176,9 @@ class LexiconEntry(models.Model):
         super().__init__(*args, **kwargs)
         self.__original_tok_ples = self.tok_ples
 
+    class Meta:
+        ordering = ["tok_ples"]
+
 
 class SpellingVariation(models.Model):
     """An allowed spelling variation for a LexiconEntry."""
@@ -217,12 +220,19 @@ class IgnoreWord(models.Model):
     check extension these can be included with a /NOSUGGEST tag.
     """
 
-    word = models.CharField(
+    tok_ples = models.CharField(
         max_length=60,
         blank=False,
         null=False,
         unique=True,
         help_text="Word to add to spell check.",
+    )
+    project = models.ForeignKey(
+        LexiconProject,
+        on_delete=models.CASCADE,
+        related_name="ignore_word_project",
+        blank=False,
+        null=False,
     )
     type = models.CharField(
         max_length=3,
@@ -253,12 +263,12 @@ class IgnoreWord(models.Model):
     def save(self, *args, **kwargs):
         """Code that runs whenever a Lexicon entry is saved."""
         # enforce lower case
-        self.word = self.word.lower()
+        self.tok_ples = self.tok_ples.lower()
         return super(IgnoreWord, self).save(*args, **kwargs)
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"Ignore word: {self.word}"
+        return f"Ignore word: {self.tok_ples}"
 
     def get_absolute_url(self):
         """What page Django should return if asked to show this entry."""
@@ -266,4 +276,4 @@ class IgnoreWord(models.Model):
         return reverse("lexicon:ignore-update", args=(self.pk,))
 
     class Meta:
-        ordering = ["word"]
+        ordering = ["tok_ples"]

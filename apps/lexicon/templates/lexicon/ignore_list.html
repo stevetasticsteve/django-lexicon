@@ -1,14 +1,27 @@
 {% extends 'base.html' %}
 {% block header %}
 {% include 'lexicon/includes/project_header.html' %}
+
 {% endblock %}
 {% block page_content %}
-{% load crispy_forms_tags %}
+
+<h3>Ignore words</h3>
+<p>Ignore words are words that you want to treat a little bit differently. Ignore words:</p>
+<ul>Do not show up in the main lexicon search</ul>
+<ul>Are not suggested by spell check to correct spelling errors</ul>
+<ul>But do not cause a spelling error when spelt correctly</ul>
+<p>You may decide for example that Proper nouns shouldn't display when searching the Lexicon, but should be included in
+    the spell check.
+</p>
+
+<a href="{% url 'lexicon:create_ignore' lang_code %}"><button type="button" class="btn btn-secondary mt-4">Add a word</button></a>
+
+{% include 'lexicon/includes/search_bar.html' %}
+{% include 'lexicon/includes/ignore_search_results.html' %}
 
 
-<div class="container">
-    <h1>To do</h1>
+<footer class="footer text-center bg-dark fixed-bottom py-2">
+    <a class="text-light" href="#top">Jump to top</a>
+</footer>
 
-</div>
-
-{% endblock %}
+{% endblock %}  

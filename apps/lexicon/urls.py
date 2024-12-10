@@ -34,4 +34,24 @@ urlpatterns = [
     path("<str:lang_code>/search", views.SearchResults.as_view(), name="search"),
     path("<str:lang_code>/review", views.ReviewList.as_view(), name="review_list"),
     path("<str:lang_code>/ignore", views.IgnoreList.as_view(), name="ignore_list"),
+    path(
+        "<str:lang_code>/ignore/search",
+        views.IgnoreSearchResults.as_view(),
+        name="ignore_search",
+    ),
+    path(
+        "<str:lang_code>/ignore/create",
+        views.CreateIgnoreWordView.as_view(),
+        name="create_ignore",
+    ),
+    path(
+        "<str:lang_code>/ignore/<int:pk>/update",
+        views.UpdateIgnoreWordView.as_view(),
+        name="update_ignore",
+    ),
+    path(
+        "<str:lang_code>/ignore/<int:pk>/delete",
+        views.DeleteIgnoreWordView.as_view(),
+        name="delete_ignore",
+    ),
 ]

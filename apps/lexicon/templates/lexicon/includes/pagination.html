@@ -1,28 +1,5 @@
-{% if page_obj %}
-<div class="container-fluid mt-4">
-    <ul class="pagination justify-content-center">
-    {% if page_obj.has_previous %}
-      <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.previous_page_number }}">&laquo;</a></li>
-    {% else %}
-      <li class="disabled"><span class="page-link">&laquo;</span></li>
-    {% endif %}
-
-    {% for i in page_obj.paginator.page_range %}
-      {% if forloop.counter < 11 %}
-        {% if page_obj.number == i %}
-          <li class="page-item active"><span class="page-link">{{ i }} <span class="sr-only"></span></span></li>
-        {% else %}
-          <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-        {% endif %}
-      {% endif %}
-    {% endfor %}
-
-    {% if page_obj.has_next %}
-      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
-    {% else %}
-      <li class="disabled"><span class="page-link">&raquo;</span></li>
-    {% endif %}
-    </ul>
+{% if paginator.num_pages > 1%}
+<div class="d-grid mx-auto">
+  <p class="text-center mt-4">Thare are {{paginator.num_pages}} pages of results.</p>
 </div>
 {% endif %}
-</div>

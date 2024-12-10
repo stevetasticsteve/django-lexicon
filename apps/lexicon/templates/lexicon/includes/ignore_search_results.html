@@ -1,0 +1,37 @@
+<div id="search-results">
+
+    <div class="main_pane_letter">
+      
+        <div class="container-fluid my-4 pb-4">
+        <table class="table table-striped">
+        <thead>
+            <tr>
+            <th scope="col">Ignore Word</th>
+            <th scope="col">Type</th>
+            <th scope="col">English</th>
+            <th scope="col">Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for word in page_obj %}
+                <tr>
+                <th scope="row">
+                    <a href="{% url 'lexicon:update_ignore' word.project.language_code word.pk %}">{{word.tok_ples}}</a> 
+                <td>
+                    {{word.get_type_display}}
+                </td>
+                <td>
+                    {{word.eng}}
+                </td>
+                <td>
+                    {{word.comments}}
+                </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+
+{% include 'lexicon/includes/pagination.html' %}
+</div>
+
