@@ -9,7 +9,7 @@ from django.views.generic import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.http import FileResponse
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.urls import reverse_lazy
 
 
@@ -29,23 +29,39 @@ class ProjectList(ListView):
     template_name = "lexicon/project_list.html"
 
 
-class ProjectTemplateMixin(TemplateView):
-    """A base class to handle common context passing to templates.
+class ProjectContextMixin:
+    """A reusable mixin to provide project context for views."""
 
-    All project pages need access to the lang_code context variable."""
+    def get_project(self) -> models.LexiconProject:
+        """Retrieve the project based on the language code."""
+        lang_code = self.kwargs.get("lang_code")
+        return get_object_or_404(models.LexiconProject, language_code=lang_code)
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> dict:
+        """Add project and lang_code to the context."""
         context = super().get_context_data(**kwargs)
-        self.lang_code = self.kwargs.get("lang_code")
-        context["lang_code"] = self.lang_code
-        self.project = get_object_or_404(
-            models.LexiconProject, language_code=self.kwargs.get("lang_code")
-        )
-        context["project"] = self.project
+        project = self.get_project()
+        context.update({"lang_code": project.language_code, "project": project})
         return context
 
 
-class LexiconView(ProjectTemplateMixin):
+# class ProjectTemplateMixin(TemplateView):
+#     """A base class to handle common context passing to templates.
+
+#     All project pages need access to the lang_code context variable."""
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         self.lang_code = self.kwargs.get("lang_code")
+#         context["lang_code"] = self.lang_code
+#         self.project = get_object_or_404(
+#             models.LexiconProject, language_code=self.kwargs.get("lang_code")
+#         )
+#         context["project"] = self.project
+#         return context
+
+
+class LexiconView(ProjectContextMixin, TemplateView):
     """The main display for the lexicon, listing all entries."""
 
     template_name = "lexicon/lexicon_list.html"
@@ -77,23 +93,23 @@ class SearchResults(ListView):
             return query
 
 
-class ProjectSingleMixin(SingleObjectMixin):
-    """A base class to handle common context passing to templates with Single Mixin.
+# class ProjectSingleMixin(SingleObjectMixin):
+#     """A base class to handle common context passing to templates with Single Mixin.
 
-    All project pages need access to the lang_code context variable."""
+#     All project pages need access to the lang_code context variable."""
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        self.lang_code = self.kwargs.get("lang_code")
-        context["lang_code"] = self.lang_code
-        self.project = get_object_or_404(
-            models.LexiconProject, language_code=self.kwargs.get("lang_code")
-        )
-        context["project"] = self.project
-        return context
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         self.lang_code = self.kwargs.get("lang_code")
+#         context["lang_code"] = self.lang_code
+#         self.project = get_object_or_404(
+#             models.LexiconProject, language_code=self.kwargs.get("lang_code")
+#         )
+#         context["project"] = self.project
+#         return context
 
 
-class EntryDetail(DetailView, ProjectSingleMixin):
+class EntryDetail(ProjectContextMixin, DetailView):
     """The view at url <lang code>/1/detail. Displays all info in .db for a word."""
 
     model = models.LexiconEntry
@@ -111,7 +127,7 @@ class EntryDetail(DetailView, ProjectSingleMixin):
     # return context
 
 
-class CreateEntry(LoginRequiredMixin, ProjectSingleMixin, CreateView):
+class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
     """The view at url <lang code>/create. Creates a new word."""
 
     model = models.LexiconEntry
@@ -129,7 +145,7 @@ class CreateEntry(LoginRequiredMixin, ProjectSingleMixin, CreateView):
         return super().form_valid(form, **kwargs)
 
 
-class UpdateEntry(LoginRequiredMixin, ProjectSingleMixin, UpdateView):
+class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
     """The view at url <lang code>/<pk>/update. Updates words.
 
     get_context_data and form_valid are extended to add in inline formsets representing
@@ -179,7 +195,7 @@ class UpdateEntry(LoginRequiredMixin, ProjectSingleMixin, UpdateView):
         return super().form_valid(form, **kwargs)
 
 
-class DeleteEntry(LoginRequiredMixin, ProjectSingleMixin, DeleteView):
+class DeleteEntry(LoginRequiredMixin, ProjectContextMixin, DeleteView):
     """The view at url <lang code>/<pk>/delete. Deletes a word."""
 
     model = models.LexiconEntry
@@ -190,7 +206,7 @@ class DeleteEntry(LoginRequiredMixin, ProjectSingleMixin, DeleteView):
         return reverse("lexicon:entry_list", args=(self.kwargs.get("lang_code"),))
 
 
-class ImportPage(FormView, ProjectTemplateMixin):
+class ImportPage(ProjectContextMixin, FormView):
     """The view ate url <lang code>/import. Provides an import form."""
 
     template_name = "lexicon/import_page.html"
@@ -218,7 +234,7 @@ class ImportPage(FormView, ProjectTemplateMixin):
         return context
 
 
-class ImportSuccess(ProjectTemplateMixin):
+class ImportSuccess(ProjectContextMixin, TemplateView):
     """A simple page to inform user of import results <lang code>/import-result"""
 
     template_name = "lexicon/upload_result.html"
@@ -229,7 +245,7 @@ class ImportSuccess(ProjectTemplateMixin):
         return context
 
 
-class ExportPage(FormView, ProjectTemplateMixin):
+class ExportPage(FormView, ProjectContextMixin):
     """Lists the export options at <lang code>/export.
 
     The response is a http file attachment, so no success url is required."""
@@ -310,7 +326,7 @@ class ReviewList(ListView):
         return models.LexiconEntry.objects.filter(project=self.project, review__gt=0)
 
 
-class IgnoreList(ProjectTemplateMixin):
+class IgnoreList(ProjectContextMixin, TemplateView):
     template_name = "lexicon/ignore_list.html"
 
     def get_context_data(self, **kwargs):
@@ -355,7 +371,7 @@ class IgnoreWordEditView(LoginRequiredMixin):
         )
 
 
-class CreateIgnoreWordView(IgnoreWordEditView, ProjectSingleMixin, CreateView):
+class CreateIgnoreWordView(IgnoreWordEditView, ProjectContextMixin, CreateView):
     """The view at url ignore/1/create. Creates a new ignore view."""
 
     def form_valid(self, form, **kwargs):
@@ -368,7 +384,7 @@ class CreateIgnoreWordView(IgnoreWordEditView, ProjectSingleMixin, CreateView):
         return super().form_valid(form, **kwargs)
 
 
-class UpdateIgnoreWordView(IgnoreWordEditView, ProjectSingleMixin, UpdateView):
+class UpdateIgnoreWordView(IgnoreWordEditView, ProjectContextMixin, UpdateView):
     """The view at url ignore/1/update. Updates a new ignore view."""
 
     def form_valid(self, form, **kwargs):
@@ -381,26 +397,44 @@ class UpdateIgnoreWordView(IgnoreWordEditView, ProjectSingleMixin, UpdateView):
         return super().form_valid(form, **kwargs)
 
 
-class DeleteIgnoreWordView(IgnoreWordEditView, ProjectSingleMixin, DeleteView):
+class DeleteIgnoreWordView(IgnoreWordEditView, ProjectContextMixin, DeleteView):
     """The view at url ignore/1/delete. Deletes a new ignore view."""
 
     fields = None
     template_name = "lexicon/confirm_entry_delete.html"
 
 
-class AffixTester(ProjectTemplateMixin):
+class AffixTester(ProjectContextMixin, TemplateView):
     """A view for submitting a basic form to test affixes."""
 
     template_name = "lexicon/affix_tester.html"
 
     def get_context_data(self, **kwargs):
+        """Add affix file information to the template context."""
         context = super().get_context_data(**kwargs)
-        context["affix_file"] = self.project.affix_file
+        project = (
+            self.get_project()
+        )  # Manually call get_project from ProjectContextMixin
+        context["affix_file"] = project.affix_file
         return context
 
 
-def Affix_results(request, lang_code):
+def affix_results(request, lang_code):
+    """Handle requests for testing affixes."""
     words = request.GET.get("words")
     affix = request.GET.get("affix")
 
-    return HttpResponse(hunspell.unmunch(words, affix))
+    try:
+        # Call the unmunch function
+        result = hunspell.unmunch(words, affix)
+    except Exception as e:
+        return JsonResponse(
+            {
+                "error": "An error occurred while processing the affixes.",
+                "details": str(e),
+            },
+            status=500,
+        )
+
+    # Return a successful HTTP response
+    return HttpResponse(result, content_type="text/plain")

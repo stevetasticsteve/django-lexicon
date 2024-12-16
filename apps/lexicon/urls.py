@@ -59,7 +59,7 @@ urlpatterns = [
     ),
     path(
         "<str:lang_code>/affix-results",
-        views.Affix_results,
+        views.affix_results,
         name="affix_results",
     ),
 ]
