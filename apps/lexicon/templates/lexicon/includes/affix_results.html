@@ -1,3 +1,22 @@
 <div class="container" id="affix_results">
-    
+    {% if generated_words %}
+    <h3 class="my-3">Words generated</h3>
+    {% endif %}
+    <div class="row">
+        {% for word in generated_words %}
+            {% if forloop.counter0|divisibleby:6 %}
+                {% if not forloop.first %}
+                    </ul>
+                </div>
+                {% endif %}
+                <div class="col-3">
+                    <ul class="list-unstyled">
+            {% endif %}
+                        <li >{{ word }}</li>
+            {% if forloop.last %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
 </div>

@@ -2,7 +2,7 @@ import subprocess
 import tempfile
 
 
-def unmunch(dic_content: str, aff_content: str) -> str:
+def unmunch(dic_content: str, aff_content: str) -> list:
     """Generate words from Hunspell .dic and .aff contents using the unmunch command.
 
     Args:
@@ -43,7 +43,7 @@ def unmunch(dic_content: str, aff_content: str) -> str:
         # Raise an exception if the command fails
         result.check_returncode()
 
-        return result.stdout.strip()
+        return result.stdout.strip().splitlines()
 
 
 def check_length_dic_contents(dic_content: str, default_length: int = 100) -> str:

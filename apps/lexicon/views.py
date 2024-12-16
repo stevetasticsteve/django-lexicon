@@ -419,22 +419,28 @@ class AffixTester(ProjectContextMixin, TemplateView):
         return context
 
 
-def affix_results(request, lang_code):
+class AffixResults(TemplateView):
     """Handle requests for testing affixes."""
-    words = request.GET.get("words")
-    affix = request.GET.get("affix")
 
-    try:
-        # Call the unmunch function
-        result = hunspell.unmunch(words, affix)
-    except Exception as e:
-        return JsonResponse(
-            {
-                "error": "An error occurred while processing the affixes.",
-                "details": str(e),
-            },
-            status=500,
-        )
+    template_name = "lexicon/includes/affix_results.html"
 
-    # Return a successful HTTP response
-    return HttpResponse(result, content_type="text/plain")
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        words = self.request.GET.get("words")
+        affix = self.request.GET.get("affix")
+
+        try:
+            # Call the unmunch function
+            result = hunspell.unmunch(words, affix)
+        except Exception as e:
+            return JsonResponse(
+                {
+                    "error": "An error occurred while processing the affixes.",
+                    "details": str(e),
+                },
+                status=500,
+            )
+        context.update({"generated_words": result})
+        print(result)
+        return context
