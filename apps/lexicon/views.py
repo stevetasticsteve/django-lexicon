@@ -15,7 +15,7 @@ from django.urls import reverse_lazy
 
 from apps.lexicon import models
 from apps.lexicon import forms
-from apps.lexicon.utils import export
+from apps.lexicon.utils import export, hunspell
 from apps.lexicon import tasks
 
 import datetime
@@ -387,3 +387,20 @@ class DeleteIgnoreWordView(IgnoreWordEditView, ProjectSingleMixin, DeleteView):
     fields = None
     template_name = "lexicon/confirm_entry_delete.html"
 
+
+class AffixTester(ProjectTemplateMixin):
+    """A view for submitting a basic form to test affixes."""
+
+    template_name = "lexicon/affix_tester.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["affix_file"] = self.project.affix_file
+        return context
+
+
+def Affix_results(request, lang_code):
+    words = request.GET.get("words")
+    affix = request.GET.get("affix")
+
+    return HttpResponse(hunspell.unmunch(words, affix))

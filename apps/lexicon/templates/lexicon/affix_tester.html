@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block header %}
+{% include 'lexicon/includes/project_header.html' %}
+{% endblock %}
+{% block page_content %}
+{% load crispy_forms_tags %}
+
+<div class="container my-4">
+    <form action="" method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col">
+            <h3>Test words</h3>
+            <textarea class="form-control" id="exampleFormControlTextarea1" rows="15" name="words"></textarea>
+            </div>
+            <div class="col">
+            <h3>Your affix file</h3>
+            <textarea class="form-control" id="exampleFormControlTextarea1" rows="15" name="affix">{{affix_file}}</textarea>
+            </div>
+        </div>
+
+        <button class="btn btn-primary m-4"
+            hx-get="{% url 'lexicon:affix_results' lang_code %}"
+            hx-target="#affix_results"
+            hx-include="[name='words'], [name='affix']">
+            Generate
+        </button></form>
+</div>
+
+{% include 'lexicon/includes/affix_results.html' %}
+
+{% endblock %}

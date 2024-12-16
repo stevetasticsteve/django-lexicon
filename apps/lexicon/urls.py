@@ -54,4 +54,12 @@ urlpatterns = [
         views.DeleteIgnoreWordView.as_view(),
         name="delete_ignore",
     ),
+    path(
+        "<str:lang_code>/affix-tester", views.AffixTester.as_view(), name="affix_tester"
+    ),
+    path(
+        "<str:lang_code>/affix-results",
+        views.Affix_results,
+        name="affix_results",
+    ),
 ]
