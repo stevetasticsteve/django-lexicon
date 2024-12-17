@@ -442,5 +442,4 @@ class AffixResults(TemplateView):
                 status=500,
             )
         context.update({"generated_words": result})
-        print(result)
         return context

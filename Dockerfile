@@ -17,5 +17,6 @@ COPY --chown=django:django . .
 
 USER django
 RUN mkdir -p /app/data/exports
+RUN mkdir -p /app/data/logs
 RUN python manage.py collectstatic --noinput --clear --settings config.settings.prod
-CMD set -xe; python manage.py  migrate --settings config.settings.prod; gunicorn config.wsgi:application --timeout 60
+CMD set -xe; python manage.py  migrate --settings config.settings.prod; gunicorn config.wsgi:application --timeout 60 --access-logfile /app/data/logs/requests.log --error-logfile /app/data/logs/gunicorn_errors.log
