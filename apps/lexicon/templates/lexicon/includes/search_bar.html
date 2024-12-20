@@ -1,11 +1,43 @@
 <!-- Filterable search using htmx-->
-<div class="container-fluid w-75" >
-<form>
-    {% csrf_token %}
-    <input class="form-control" type="search"
-           name="search" placeholder="Begin typing to search entries..."
-           hx-get="{% url search_view lang_code %}"
-           hx-trigger="keyup changed, search, load"
-           hx-target="#search-results">
-</form>
+
+<div class="container-fluid w-75 mt-4">
+    <form id="search-form">
+        {% csrf_token %}
+        
+        <!-- Radio Selectors for Language -->
+        <div class="mb-2 px-4">
+            <label>
+                <input type="radio" name="language" value="{{project.language_name}}" checked>
+                {{project.language_name}}
+            </label>
+            <label class="ms-3 px-4">
+                <input type="radio" name="language" value="english">
+                English
+            </label>
+        </div>
+        
+        
+        <!-- Search Input -->
+        <input class="form-control" type="search"
+               name="search" placeholder="Begin typing to search entries..."
+               hx-get="{% url search_view lang_code %}"
+               data-hx-vals='{"eng": false}'
+               hx-trigger="keyup changed, search, load"
+               hx-target="#search-results">
+    </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('search-form');
+        const radios = form.querySelectorAll('input[name="language"]');
+        const searchInput = form.querySelector('input[type="search"]');
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                const isEnglish = this.value === 'english';
+                searchInput.setAttribute('data-hx-vals', JSON.stringify({ eng: isEnglish }));
+            });
+        });
+    });
+</script>
