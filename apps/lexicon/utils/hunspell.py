@@ -23,7 +23,6 @@ def unmunch(dic_content: str, aff_content: str) -> list:
         tempfile.NamedTemporaryFile(mode="w+", delete=True) as dic_temp,
         tempfile.NamedTemporaryFile(mode="w+", delete=True) as aff_temp,
     ):
-
         # Write the contents to the temp files
         dic_temp.write(dic_content)
         aff_temp.write(aff_content)

@@ -3,7 +3,6 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
 from django.views.generic import DetailView
-from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin

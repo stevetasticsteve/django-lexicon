@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('lexicon', '0002_ignoreword_lexiconproject_secondary_language_and_more'),
+        ("lexicon", "0002_ignoreword_lexiconproject_secondary_language_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='lexiconproject',
-            name='version',
-            field=models.IntegerField(default=0, verbose_name='version'),
+            model_name="lexiconproject",
+            name="version",
+            field=models.IntegerField(default=0, verbose_name="version"),
         ),
     ]

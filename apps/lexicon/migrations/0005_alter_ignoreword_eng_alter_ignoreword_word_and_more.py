@@ -4,70 +4,119 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('lexicon', '0004_lexiconproject_affix_file'),
+        ("lexicon", "0004_lexiconproject_affix_file"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='ignoreword',
-            name='eng',
-            field=models.CharField(help_text='English', max_length=60, verbose_name='English'),
+            model_name="ignoreword",
+            name="eng",
+            field=models.CharField(
+                help_text="English", max_length=60, verbose_name="English"
+            ),
         ),
         migrations.AlterField(
-            model_name='ignoreword',
-            name='word',
-            field=models.CharField(help_text='Word to add to spell check.', max_length=60, unique=True),
+            model_name="ignoreword",
+            name="word",
+            field=models.CharField(
+                help_text="Word to add to spell check.", max_length=60, unique=True
+            ),
         ),
         migrations.AlterField(
-            model_name='lexiconentry',
-            name='eng',
-            field=models.CharField(max_length=60, null=True, verbose_name='English'),
+            model_name="lexiconentry",
+            name="eng",
+            field=models.CharField(max_length=60, null=True, verbose_name="English"),
         ),
         migrations.AlterField(
-            model_name='lexiconentry',
-            name='modified_by',
-            field=models.CharField(blank=True, editable=False, max_length=45, null=True),
+            model_name="lexiconentry",
+            name="modified_by",
+            field=models.CharField(
+                blank=True, editable=False, max_length=45, null=True
+            ),
         ),
         migrations.AlterField(
-            model_name='lexiconentry',
-            name='oth_lang',
-            field=models.CharField(blank=True, help_text='Translation in project 2nd language.', max_length=60, null=True, verbose_name='Other language'),
+            model_name="lexiconentry",
+            name="oth_lang",
+            field=models.CharField(
+                blank=True,
+                help_text="Translation in project 2nd language.",
+                max_length=60,
+                null=True,
+                verbose_name="Other language",
+            ),
         ),
         migrations.AlterField(
-            model_name='lexiconentry',
-            name='pos',
-            field=models.CharField(blank=True, choices=[('n', 'noun'), ('pn', 'proper noun'), ('adj', 'adjective'), ('v', 'verb'), ('adv', 'adverb'), ('com', 'compound verb'), ('prn', 'pronoun'), ('rel', 'relator/preposition'), ('uk', 'uknown')], max_length=5, null=True, verbose_name='part of speech'),
+            model_name="lexiconentry",
+            name="pos",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("n", "noun"),
+                    ("pn", "proper noun"),
+                    ("adj", "adjective"),
+                    ("v", "verb"),
+                    ("adv", "adverb"),
+                    ("com", "compound verb"),
+                    ("prn", "pronoun"),
+                    ("rel", "relator/preposition"),
+                    ("uk", "uknown"),
+                ],
+                max_length=5,
+                null=True,
+                verbose_name="part of speech",
+            ),
         ),
         migrations.AlterField(
-            model_name='lexiconentry',
-            name='review_user',
-            field=models.CharField(blank=True, editable=False, max_length=45, null=True),
+            model_name="lexiconentry",
+            name="review_user",
+            field=models.CharField(
+                blank=True, editable=False, max_length=45, null=True
+            ),
         ),
         migrations.AlterField(
-            model_name='lexiconentry',
-            name='tok_ples',
-            field=models.CharField(help_text='The language the project is focussed on.', max_length=60, unique=True, verbose_name='Tok Ples'),
+            model_name="lexiconentry",
+            name="tok_ples",
+            field=models.CharField(
+                help_text="The language the project is focussed on.",
+                max_length=60,
+                unique=True,
+                verbose_name="Tok Ples",
+            ),
         ),
         migrations.AlterField(
-            model_name='lexiconproject',
-            name='language_name',
-            field=models.CharField(max_length=45, verbose_name='Language name'),
+            model_name="lexiconproject",
+            name="language_name",
+            field=models.CharField(max_length=45, verbose_name="Language name"),
         ),
         migrations.AlterField(
-            model_name='lexiconproject',
-            name='secondary_language',
-            field=models.CharField(blank=True, help_text='An optional 2nd language, Tok Pisin for PNG langages', max_length=45, null=True),
+            model_name="lexiconproject",
+            name="secondary_language",
+            field=models.CharField(
+                blank=True,
+                help_text="An optional 2nd language, Tok Pisin for PNG langages",
+                max_length=45,
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='lexiconproject',
-            name='tok_ples_validator',
-            field=models.CharField(blank=True, help_text='An optional regex to represent which characters are allowed in Tok Ples entries. If set entries can only be saved if they only contain these characters. [abc] for example only allows the characters a, b and c.', max_length=60, null=True, verbose_name='Regex Tok ples validator'),
+            model_name="lexiconproject",
+            name="tok_ples_validator",
+            field=models.CharField(
+                blank=True,
+                help_text="An optional regex to represent which characters are allowed in Tok Ples entries. If set entries can only be saved if they only contain these characters. [abc] for example only allows the characters a, b and c.",
+                max_length=60,
+                null=True,
+                verbose_name="Regex Tok ples validator",
+            ),
         ),
         migrations.AlterField(
-            model_name='spellingvariation',
-            name='spelling_variation',
-            field=models.CharField(help_text='write the spelling variation here', max_length=60, verbose_name='spelling variation'),
+            model_name="spellingvariation",
+            name="spelling_variation",
+            field=models.CharField(
+                help_text="write the spelling variation here",
+                max_length=60,
+                verbose_name="spelling variation",
+            ),
         ),
     ]

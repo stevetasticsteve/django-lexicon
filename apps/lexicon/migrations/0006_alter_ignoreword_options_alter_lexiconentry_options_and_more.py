@@ -5,29 +5,33 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('lexicon', '0005_alter_ignoreword_eng_alter_ignoreword_word_and_more'),
+        ("lexicon", "0005_alter_ignoreword_eng_alter_ignoreword_word_and_more"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='ignoreword',
-            options={'ordering': ['tok_ples']},
+            name="ignoreword",
+            options={"ordering": ["tok_ples"]},
         ),
         migrations.AlterModelOptions(
-            name='lexiconentry',
-            options={'ordering': ['tok_ples']},
+            name="lexiconentry",
+            options={"ordering": ["tok_ples"]},
         ),
         migrations.RenameField(
-            model_name='ignoreword',
-            old_name='word',
-            new_name='tok_ples',
+            model_name="ignoreword",
+            old_name="word",
+            new_name="tok_ples",
         ),
         migrations.AddField(
-            model_name='ignoreword',
-            name='project',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='ignore_word_project', to='lexicon.lexiconproject'),
+            model_name="ignoreword",
+            name="project",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="ignore_word_project",
+                to="lexicon.lexiconproject",
+            ),
             preserve_default=False,
         ),
     ]

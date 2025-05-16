@@ -18,7 +18,7 @@ if os.getenv("HTTPS", "False").lower() in ("true", "yes", "1"):
     CSRF_TRUSTED_ORIGINS = [f"https://{site}" for site in ALLOWED_HOSTS]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True  
+    SECURE_SSL_REDIRECT = True
 
 
 sentry_sdk.init(

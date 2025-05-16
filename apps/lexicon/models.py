@@ -277,3 +277,21 @@ class IgnoreWord(models.Model):
 
     class Meta:
         ordering = ["tok_ples"]
+
+
+class Paradigm(models.Model):
+    """Represents a user defined word paradigm which can be used flexibly.
+
+    A paradigm is used in templates to display entries in a grid."""
+
+    name = models.CharField(max_length=100)
+    project = models.ForeignKey(LexiconProject, on_delete=models.CASCADE)
+    part_of_speech = models.CharField(
+        max_length=5,
+        choices=LexiconEntry._meta.get_field("pos").choices,
+        help_text="Part of speech this paradigm is for (e.g., verb, noun)",
+    )
+    row_labels = models.JSONField(help_text="List of row labels for the paradigm grid")
+    column_labels = models.JSONField(
+        help_text="List of column labels for the paradigm grid"
+    )

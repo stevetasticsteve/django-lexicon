@@ -4,19 +4,35 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='LexiconProject',
+            name="LexiconProject",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('language_name', models.CharField(max_length=25, verbose_name='Language name')),
-                ('language_code', models.CharField(max_length=4, unique=True, verbose_name='3 Digit ethnologue language code')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "language_name",
+                    models.CharField(max_length=25, verbose_name="Language name"),
+                ),
+                (
+                    "language_code",
+                    models.CharField(
+                        max_length=4,
+                        unique=True,
+                        verbose_name="3 Digit ethnologue language code",
+                    ),
+                ),
             ],
         ),
     ]

@@ -5,66 +5,223 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('lexicon', '0001_initial'),
+        ("lexicon", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='IgnoreWord',
+            name="IgnoreWord",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('word', models.CharField(help_text='Word to add to spell check.', max_length=25, unique=True)),
-                ('type', models.CharField(choices=[('tpi', 'Tok Pisin'), ('pn', 'Proper noun'), ('eng', 'English'), ('fgn', 'Foreign transliterated')], help_text='Type of word to add to spell check.', max_length=3)),
-                ('eng', models.CharField(help_text='English', max_length=25, verbose_name='English')),
-                ('comments', models.TextField(blank=True, help_text='extra comments or an extended definition information', max_length=300, null=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "word",
+                    models.CharField(
+                        help_text="Word to add to spell check.",
+                        max_length=25,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("tpi", "Tok Pisin"),
+                            ("pn", "Proper noun"),
+                            ("eng", "English"),
+                            ("fgn", "Foreign transliterated"),
+                        ],
+                        help_text="Type of word to add to spell check.",
+                        max_length=3,
+                    ),
+                ),
+                (
+                    "eng",
+                    models.CharField(
+                        help_text="English", max_length=25, verbose_name="English"
+                    ),
+                ),
+                (
+                    "comments",
+                    models.TextField(
+                        blank=True,
+                        help_text="extra comments or an extended definition information",
+                        max_length=300,
+                        null=True,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['word'],
+                "ordering": ["word"],
             },
         ),
         migrations.AddField(
-            model_name='lexiconproject',
-            name='secondary_language',
-            field=models.CharField(blank=True, help_text='An optional 2nd language, Tok Pisin for PNG langages', max_length=25, null=True),
+            model_name="lexiconproject",
+            name="secondary_language",
+            field=models.CharField(
+                blank=True,
+                help_text="An optional 2nd language, Tok Pisin for PNG langages",
+                max_length=25,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='lexiconproject',
-            name='tok_ples_validator',
-            field=models.CharField(blank=True, help_text='An optional regex to represent which characters are allowed in Tok Ples entries. If set entries can only be saved if they only contain these characters. [abc] for example only allows the characters a, b and c.', max_length=25, null=True, verbose_name='Regex Tok ples validator'),
+            model_name="lexiconproject",
+            name="tok_ples_validator",
+            field=models.CharField(
+                blank=True,
+                help_text="An optional regex to represent which characters are allowed in Tok Ples entries. If set entries can only be saved if they only contain these characters. [abc] for example only allows the characters a, b and c.",
+                max_length=25,
+                null=True,
+                verbose_name="Regex Tok ples validator",
+            ),
         ),
         migrations.AddField(
-            model_name='lexiconproject',
-            name='version',
-            field=models.DecimalField(decimal_places=3, default=0.0, max_digits=5, verbose_name='version'),
+            model_name="lexiconproject",
+            name="version",
+            field=models.DecimalField(
+                decimal_places=3, default=0.0, max_digits=5, verbose_name="version"
+            ),
         ),
         migrations.CreateModel(
-            name='LexiconEntry',
+            name="LexiconEntry",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('tok_ples', models.CharField(help_text='The language the project is focussed on.', max_length=45, unique=True, verbose_name='Tok Ples')),
-                ('eng', models.CharField(max_length=45, null=True, verbose_name='English')),
-                ('oth_lang', models.CharField(blank=True, help_text='Translation in project 2nd language.', max_length=45, null=True, verbose_name='Other language')),
-                ('comments', models.TextField(blank=True, help_text='extra comments or an extended definition information', max_length=1000, null=True)),
-                ('review', models.CharField(choices=[('0', 'No review'), ('1', 'Review now'), ('2', 'Review after literacy')], default='0', help_text='Should this word be marked for review?', max_length=1)),
-                ('review_comments', models.TextField(blank=True, null=True)),
-                ('review_user', models.CharField(blank=True, editable=False, max_length=10, null=True)),
-                ('review_time', models.DateField(editable=False, null=True)),
-                ('created', models.DateField(auto_now_add=True)),
-                ('modified', models.DateField(auto_now=True)),
-                ('modified_by', models.CharField(blank=True, editable=False, max_length=10, null=True)),
-                ('pos', models.CharField(blank=True, choices=[('n', 'noun'), ('pn', 'proper noun'), ('adj', 'adjective'), ('adv', 'adverb'), ('com', 'compound verb'), ('prn', 'pronoun'), ('rel', 'relator/preposition'), ('uk', 'uknown')], max_length=5, null=True, verbose_name='part of speech')),
-                ('checked', models.BooleanField(default=False)),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='project', to='lexicon.lexiconproject')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "tok_ples",
+                    models.CharField(
+                        help_text="The language the project is focussed on.",
+                        max_length=45,
+                        unique=True,
+                        verbose_name="Tok Ples",
+                    ),
+                ),
+                (
+                    "eng",
+                    models.CharField(max_length=45, null=True, verbose_name="English"),
+                ),
+                (
+                    "oth_lang",
+                    models.CharField(
+                        blank=True,
+                        help_text="Translation in project 2nd language.",
+                        max_length=45,
+                        null=True,
+                        verbose_name="Other language",
+                    ),
+                ),
+                (
+                    "comments",
+                    models.TextField(
+                        blank=True,
+                        help_text="extra comments or an extended definition information",
+                        max_length=1000,
+                        null=True,
+                    ),
+                ),
+                (
+                    "review",
+                    models.CharField(
+                        choices=[
+                            ("0", "No review"),
+                            ("1", "Review now"),
+                            ("2", "Review after literacy"),
+                        ],
+                        default="0",
+                        help_text="Should this word be marked for review?",
+                        max_length=1,
+                    ),
+                ),
+                ("review_comments", models.TextField(blank=True, null=True)),
+                (
+                    "review_user",
+                    models.CharField(
+                        blank=True, editable=False, max_length=10, null=True
+                    ),
+                ),
+                ("review_time", models.DateField(editable=False, null=True)),
+                ("created", models.DateField(auto_now_add=True)),
+                ("modified", models.DateField(auto_now=True)),
+                (
+                    "modified_by",
+                    models.CharField(
+                        blank=True, editable=False, max_length=10, null=True
+                    ),
+                ),
+                (
+                    "pos",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("n", "noun"),
+                            ("pn", "proper noun"),
+                            ("adj", "adjective"),
+                            ("adv", "adverb"),
+                            ("com", "compound verb"),
+                            ("prn", "pronoun"),
+                            ("rel", "relator/preposition"),
+                            ("uk", "uknown"),
+                        ],
+                        max_length=5,
+                        null=True,
+                        verbose_name="part of speech",
+                    ),
+                ),
+                ("checked", models.BooleanField(default=False)),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="project",
+                        to="lexicon.lexiconproject",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SpellingVariation',
+            name="SpellingVariation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('spelling_variation', models.CharField(help_text='write the spelling variation here', max_length=45, verbose_name='spelling variation')),
-                ('word', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='spelling_variation', to='lexicon.lexiconentry')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "spelling_variation",
+                    models.CharField(
+                        help_text="write the spelling variation here",
+                        max_length=45,
+                        verbose_name="spelling variation",
+                    ),
+                ),
+                (
+                    "word",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="spelling_variation",
+                        to="lexicon.lexiconentry",
+                    ),
+                ),
             ],
         ),
     ]
