@@ -118,3 +118,14 @@ LOGOUT_REDIRECT_URL = "/"
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "lexicon_app_db",
+        "USER": "django",
+        "PASSWORD": os.getenv("DATABASE_PASSWORD", "1234"),
+        "HOST": "db",
+        "PORT": 5432,
+    }
+}

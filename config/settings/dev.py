@@ -1,13 +1,5 @@
 from config.settings.base import *
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join("data", "db.sqlite3"),
-    }
-}
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

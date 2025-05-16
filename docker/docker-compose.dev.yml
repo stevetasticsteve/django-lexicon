@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+   db:
+    image: postgres:17
+    container_name: database_lexicon_app
+    restart: always
+    volumes:
+      - lexicon_postgres:/var/lib/postgresql/data
+    environment:
+     - POSTGRES_DB=lexicon_app_db
+     - POSTGRES_USER=django
+     - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+  
+   web1:
+    image: stevetasticsteve/lexicon
+    container_name: lexicon_app1
+    restart: always
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.dev 
+    volumes:
+      - ../:/app
+    ports:
+      - 8000:8000
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    depends_on:
+      - db
+   
+   celery:
+    image: stevetasticsteve/celery_lexicon
+    container_name: celery_lexicon
+    build:
+      context: ../
+      dockerfile: docker/CeleryDockerfile.dev
+    restart: always
+    command: celery -A config worker
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - web1
+      - redis
+      - db
+    
+   redis:
+    image: redis
+    container_name: redis_lexicon
+    restart: always
+   
+volumes:
+  lexicon_postgres:

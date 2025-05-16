@@ -1,0 +1,27 @@
+FROM ghcr.io/astral-sh/uv:debian
+
+# System dependencies
+RUN apt-get update && apt-get install -y hunspell-tools
+
+WORKDIR /app
+
+# Optional: set ENV vars
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Copy project metadata and lock file first for layer caching
+COPY uv.lock pyproject.toml /app/
+
+# Install all dependencies INCLUDING the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --system --locked
+
+# Copy the rest of the code
+COPY . /app
+
+# Create necessary folders
+RUN mkdir -p /app/data/exports /app/data/logs
+
+# Collect static files
+RUN uv run manage.py collectstatic --noinput --clear --settings config.settings.dev

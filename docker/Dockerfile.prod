@@ -1,0 +1,38 @@
+FROM ghcr.io/astral-sh/uv:debian
+RUN apt-get update
+RUN apt-get install -y hunspell-tools
+
+EXPOSE 8010
+
+# Install the project into `/app`
+WORKDIR /app
+
+# Enable bytecode compilation
+ENV UV_COMPILE_BYTECODE=1
+
+# Copy from the cache instead of linking since it's a mounted volume
+ENV UV_LINK_MODE=copy
+
+# Install the project's dependencies using the lockfile and settings
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project --no-dev
+
+# Then, add the rest of the project source code and install it
+# Installing separately from its dependencies allows optimal layer caching
+COPY . /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev
+RUN uv add psycopg2-binary gunicorn
+
+# Place executables in the environment at the front of the path
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Create a place for log files and exports
+RUN mkdir -p /app/data/exports
+RUN mkdir -p /app/data/logs
+
+# Run django migrations and start gunicorn on port
+RUN uv run manage.py collectstatic --noinput --clear --settings config.settings.prod
+CMD set -xe; uv run manage.py  migrate --settings config.settings.prod; gunicorn config.wsgi:application --workers 4 --timeout 60 --access-logfile /app/data/logs/requests.log --error-logfile /app/data/logs/gunicorn_errors.log

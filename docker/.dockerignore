@@ -1,0 +1,43 @@
+# Local virtual environments
+.venv
+env/
+venv/
+
+# Local environment settings
+.env
+*.env
+
+# Django-related files that shouldn't go into the image
+data/
+*.sqlite3
+
+# Docker config and support files
+docker/
+*.sh
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ruff and build caches
+.ruff_cache/
+*.egg-info/
+.eggs/
+*.log
+
+# Node (if using for static assets at any point)
+node_modules/
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
