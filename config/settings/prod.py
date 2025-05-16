@@ -2,7 +2,7 @@ import os
 
 import sentry_sdk
 
-from config.settings.base import *
+from config.settings.base import *  # noqa: F403
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "yes", "1")

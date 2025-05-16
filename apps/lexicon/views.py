@@ -9,8 +9,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.http import FileResponse
 from django.http import HttpResponse, JsonResponse
-from django.urls import reverse_lazy
-
 
 from apps.lexicon import models
 from apps.lexicon import forms
