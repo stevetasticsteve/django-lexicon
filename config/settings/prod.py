@@ -16,7 +16,17 @@ log.debug(f"Secret key = {SECRET_KEY}")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
 log.debug(f"Allowed hosts = {ALLOWED_HOSTS}")
 
+# email error logs
+ADMINS = ["Steve", "stevetasticsteve@gmail.com"]
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.office365.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv("EMAIL_SENDER", "localhost").split(",")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASDWORD", "localhost").split(",")
+EMAIL_USE_TLS = True
+log.debug(f"Email in use {EMAIL_HOST_USER}")
 
+# CSRF settings
 CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [f"https://{site}" for site in ALLOWED_HOSTS]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
