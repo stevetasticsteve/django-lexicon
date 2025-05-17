@@ -21,6 +21,7 @@ from config import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("accounts/login/", views.LoginView.as_view(), name="login"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("", views.home, name="home"),
     path("to-do/", views.to_do, name="to_do"),

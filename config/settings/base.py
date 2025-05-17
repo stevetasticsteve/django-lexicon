@@ -143,10 +143,18 @@ LOGGING = {
         "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
     },
     "handlers": {
-        "lexicon_file": {
-            "level": "DEBUG",  # Or any other level like DEBUG, WARNING, ERROR, CRITICAL
+        "lexicon_log_file": {
+            "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
             "filename": os.path.join(LOGGING_DIR, "lexicon.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB - Adjust as needed
+            "backupCount": 3,  # Keep 5 backup log files
+            "formatter": "standard",
+        },
+        "user_log_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGGING_DIR, "user_activity.log"),
             "maxBytes": 1024 * 1024 * 5,  # 5 MB - Adjust as needed
             "backupCount": 3,  # Keep 5 backup log files
             "formatter": "standard",
@@ -154,9 +162,14 @@ LOGGING = {
     },
     "loggers": {
         "lexicon": {
-            "handlers": ["lexicon_file"],
+            "handlers": ["lexicon_log_file"],
             "level": "DEBUG",
-            "propagate": False,  # Prevent messages from propagating to the root logger
+            "propagate": False,
+        },
+        "user_log": {
+            "handlers": ["user_log_file"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
     "root": {

@@ -17,6 +17,9 @@ from apps.lexicon import tasks
 
 import datetime
 import os
+import logging
+
+user_log = logging.getLogger("user_log")
 
 
 class ProjectList(ListView):
@@ -91,6 +94,7 @@ class SearchResults(ListView):
             project=self.project
         )
         if search:
+            user_log.info(f"{self.request.user} used search.")
             return query.filter(**filter_kwargs)
         else:
             return query
@@ -145,6 +149,7 @@ class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
         obj.save()
+        user_log.info(f"{self.request.user} created an entry in {obj.project} lexicon.")
         return super().form_valid(form, **kwargs)
 
 
@@ -195,6 +200,10 @@ class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
         if "review" in form.changed_data:
             self.object.review_user = self.request.user.username
             self.object.review_time = datetime.date.today()
+        user_log.info(
+            f"{self.request.user} edited an entry in {self.object.project} lexicon."
+        )
+
         return super().form_valid(form, **kwargs)
 
 
@@ -207,6 +216,13 @@ class DeleteEntry(LoginRequiredMixin, ProjectContextMixin, DeleteView):
 
     def get_success_url(self):
         return reverse("lexicon:entry_list", args=(self.kwargs.get("lang_code"),))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        user_log.info(
+            f"{request.user} deleted an entry in {self.object.project} lexicon."
+        )
+        return super().post(request, *args, **kwargs)
 
 
 class ImportPage(ProjectContextMixin, FormView):
@@ -380,10 +396,13 @@ class CreateIgnoreWordView(IgnoreWordEditView, ProjectContextMixin, CreateView):
     def form_valid(self, form, **kwargs):
         """When the form saves run this code."""
         obj = form.save(commit=False)
-        obj.ignore_word_project = get_object_or_404(
+        obj.project = get_object_or_404(
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
         obj.save()
+        user_log.info(
+            f"{self.request.user} created an ignore word in {obj.project} lexicon."
+        )
         return super().form_valid(form, **kwargs)
 
 
@@ -397,6 +416,9 @@ class UpdateIgnoreWordView(IgnoreWordEditView, ProjectContextMixin, UpdateView):
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
         obj.save()
+        user_log.info(
+            f"{self.request.user} updated an ignore word in {obj.project} lexicon."
+        )
         return super().form_valid(form, **kwargs)
 
 
@@ -405,6 +427,13 @@ class DeleteIgnoreWordView(IgnoreWordEditView, ProjectContextMixin, DeleteView):
 
     fields = None
     template_name = "lexicon/confirm_entry_delete.html"
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        user_log.info(
+            f"{request.user} deleted an ignore word in {self.object.project} lexicon."
+        )
+        return super().post(request, *args, **kwargs)
 
 
 class AffixTester(ProjectContextMixin, TemplateView):
@@ -428,6 +457,7 @@ class AffixResults(TemplateView):
     template_name = "lexicon/includes/affix_results.html"
 
     def get_context_data(self, **kwargs):
+        user_log.info(f"{self.request.user} requested affix generation")
         context = super().get_context_data(**kwargs)
 
         words = self.request.GET.get("words")
