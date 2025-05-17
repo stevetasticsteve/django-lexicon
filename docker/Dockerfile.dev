@@ -3,6 +3,8 @@ FROM ghcr.io/astral-sh/uv:debian
 # System dependencies
 RUN apt-get update && apt-get install -y hunspell-tools
 
+EXPOSE 8000
+
 WORKDIR /app
 
 # Optional: set ENV vars

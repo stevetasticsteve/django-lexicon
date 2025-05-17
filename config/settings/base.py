@@ -12,13 +12,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import toml
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-version = "0.1.6"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -119,6 +120,7 @@ LOGOUT_REDIRECT_URL = "/"
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# postgres used in both dev and prod in a container workflow
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -129,3 +131,45 @@ DATABASES = {
         "PORT": 5432,
     }
 }
+
+# Create a rotating log file data/lexicon.log
+LOGGING_DIR = os.path.join("data", "logs")
+os.makedirs(LOGGING_DIR, exist_ok=True)  # Ensure the directory exists
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
+    },
+    "handlers": {
+        "lexicon_file": {
+            "level": "DEBUG",  # Or any other level like DEBUG, WARNING, ERROR, CRITICAL
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGGING_DIR, "lexicon.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB - Adjust as needed
+            "backupCount": 3,  # Keep 5 backup log files
+            "formatter": "standard",
+        },
+    },
+    "loggers": {
+        "lexicon": {
+            "handlers": ["lexicon_file"],
+            "level": "DEBUG",
+            "propagate": False,  # Prevent messages from propagating to the root logger
+        },
+    },
+    "root": {
+        "handlers": [],  # You can add default handlers here if needed
+        "level": "WARNING",
+    },
+}
+
+try:
+    with open("pyproject.toml", "r") as f:
+        pyproject_data = toml.load(f)
+        version = pyproject_data["project"]["version"]
+except FileNotFoundError:
+    version = "0.0.0"  # Default if the file isn't found
+except KeyError:
+    version = "0.0.0"  # Default if the 'project' or 'version' keys are missing

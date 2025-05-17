@@ -2,7 +2,7 @@ FROM ghcr.io/astral-sh/uv:debian
 RUN apt-get update
 RUN apt-get install -y hunspell-tools
 
-EXPOSE 8010
+EXPOSE 8000
 
 # Install the project into `/app`
 WORKDIR /app
@@ -35,4 +35,4 @@ RUN mkdir -p /app/data/logs
 
 # Run django migrations and start gunicorn on port
 RUN uv run manage.py collectstatic --noinput --clear --settings config.settings.prod
-CMD set -xe; uv run manage.py  migrate --settings config.settings.prod; gunicorn config.wsgi:application --workers 4 --timeout 60 --access-logfile /app/data/logs/requests.log --error-logfile /app/data/logs/gunicorn_errors.log
+CMD set -xe; uv run manage.py  migrate --settings config.settings.prod; gunicorn config.wsgi:application --workers 4 --timeout 60 --access-logfile /app/data/logs/requests.log --error-logfile /app/data/logs/gunicorn_errors.log --bind 0.0.0.0:8000
