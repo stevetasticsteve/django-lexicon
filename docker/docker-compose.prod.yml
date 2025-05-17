@@ -14,6 +14,8 @@ services:
     image: stevetasticsteve/lexicon
     container_name: lexicon_app1
     restart: always
+    volumes:
+      - ./data/logs:/app/data/logs
     ports:
       - 8000:8000
     environment:
