@@ -3,22 +3,25 @@ import os
 import sentry_sdk
 
 from config.settings.base import *  # noqa: F403
+import logging
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "yes", "1")
+log = logging.getLogger("lexicon")
+
+DEBUG = False
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv(
     "SECRET_KEY", "django-insecure-24#+mypq*=1v77s(37v+_$t!p7+iwdnq)$q&djz85vo$9f5sym"
 )
+log.debug(f"Secret key = {SECRET_KEY}")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
+log.debug(f"Allowed hosts = {ALLOWED_HOSTS}")
 
-# HTTPS, optional according the .env file
-if os.getenv("HTTPS", "False").lower() in ("true", "yes", "1"):
-    CSRF_COOKIE_SECURE = True
-    CSRF_TRUSTED_ORIGINS = [f"https://{site}" for site in ALLOWED_HOSTS]
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SESSION_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
+
+CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = [f"https://{site}" for site in ALLOWED_HOSTS]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
 
 
 sentry_sdk.init(
