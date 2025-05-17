@@ -18,7 +18,9 @@ services:
       context: ../
       dockerfile: docker/Dockerfile.dev 
     volumes:
-      - ../:/app
+      - ../apps:/app/apps:ro
+      - ../config:/app/config:ro
+      - ../data/logs:/app/data/logs
     ports:
       - 8000:8000
     environment:
