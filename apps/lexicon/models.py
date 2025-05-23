@@ -1,9 +1,8 @@
-from django.db import models
-from django.core.validators import RegexValidator
-from django.urls import reverse
-
-
 import re
+
+from django.core.validators import RegexValidator
+from django.db import models
+from django.urls import reverse
 
 
 class LexiconProject(models.Model):
@@ -284,7 +283,7 @@ class Paradigm(models.Model):
 
     A paradigm is used in templates to display entries in a grid."""
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=40)
     project = models.ForeignKey(LexiconProject, on_delete=models.CASCADE)
     part_of_speech = models.CharField(
         max_length=5,
@@ -295,3 +294,19 @@ class Paradigm(models.Model):
     column_labels = models.JSONField(
         help_text="List of column labels for the paradigm grid"
     )
+
+    def __str__(self):
+        """What Python calls this object when it shows it on screen."""
+        return f"Paradigm: {self.name}"
+
+
+class Conjugation(models.Model):
+    word = models.ForeignKey(LexiconEntry, on_delete=models.CASCADE)
+    paradigm = models.ForeignKey(Paradigm, on_delete=models.CASCADE)
+    row = models.IntegerField(null=True, blank=True)
+    column = models.IntegerField(null=True, blank=True)
+    conjugation = models.CharField(max_length=40, null=True, blank=True)
+
+    def __str__(self):
+        """What Python calls this object when it shows it on screen."""
+        return f"Conjugation: {self.conjugation} for {self.word} in {self.paradigm}"

@@ -1,0 +1,47 @@
+<!-- myapp/templates/myapp/partials/my_modal.html -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">My Modal</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form 
+            id="paradigm-form" 
+            hx-post="{% url 'lexicon:paradigm_modal' project.language_code object.pk %}"
+            hx-target="this" 
+            hx-swap="outerHTML">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary mt-2">Add</button>
+          </form>
+
+        </div>
+        <div class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    (() => {
+      const myModal = new bootstrap.Modal(document.getElementById('myModal'));
+      myModal.show();
+    })();
+  </script>
+  
+  <script>
+    document.body.addEventListener("htmx:afterRequest", function(evt) {
+  if (evt.detail.xhr.getResponseHeader("HX-Trigger") === "paradigmSaved") {
+    const modalEl = document.getElementById("myModal");  // was "paradigmModal"
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) {
+      modal.hide();
+    }
+  }
+});
+
+  </script>
+  
+  

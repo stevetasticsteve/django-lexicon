@@ -1,0 +1,47 @@
+<div class="border rounded-lg p-3" id="paradigm-{{ paradigm.pk }}">
+<form>
+    {% csrf_token %}
+    <div class="row">
+    <div class="col-md-10">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    {% for col in paradigm.column_labels %}
+                        <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in paradigm.row_labels %}
+                    <tr>
+                        <th>{{ row }}</th>
+                        {% for col in paradigm.column_labels %}
+                            {% with row_idx=forloop.parentloop.counter0 col_idx=forloop.counter0 %}
+                                {% for c in conjugations %}
+                                        <td>
+                                            {% if c.row == row_idx and c.column == col_idx and c.paradigm == paradigm %}
+                                            <input type="text" name="conj_{{ c.id }}" value="{{ c.conjugation }}" class="form-control">
+                                            {% else %}
+                                            <input type="text" name="conj_{{ c.id }}" value="" class="form-control">
+                                        </td>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endwith %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-success" 
+        hx-post="{% url 'lexicon:paradigm' word.pk paradigm.pk 'view' %}"
+        hx-target="#paradigm-{{ paradigm.pk }}" 
+        hx-swap="outerHTML"
+        hx-trigger="click">
+        Save</button>
+    </div>
+    </div>
+</form>
+</div>

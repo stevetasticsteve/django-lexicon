@@ -1,0 +1,15 @@
+{% if conjugations %}
+    <h3>Conjugations</h3>
+
+    {% for p in paradigms %}
+        <div 
+        id="paradigm-{{ forloop.counter }}" 
+        class="border rounded-lg p-3"
+        hx-get="{% url 'lexicon:paradigm' object.pk p.pk 'view' %}"
+        hx-trigger="load"
+        hx-target="#paradigm-{{ forloop.counter }}"
+        hx-swap="innerHTML">
+        </div>
+    {% endfor %}
+
+{% endif %}

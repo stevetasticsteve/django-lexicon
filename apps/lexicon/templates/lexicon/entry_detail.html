@@ -7,12 +7,22 @@
 <div class="container">
 
     <div class="btn-group my-4" role="group">
-    <a href="{% url 'lexicon:entry_list' object.project.language_code %}"><button type="button" class="btn btn-primary">Return to Lexicon</button></a>
-    <a href="{% url 'lexicon:update_entry' object.project.language_code object.pk %}"><button type="button" class="btn btn-secondary">Update entry</button></a>
-    <a href="{% url 'lexicon:delete_entry' object.project.language_code object.pk %}"><button type="button" class="btn btn-danger">Delete word</button></a> 
+    <a href="{% url 'lexicon:entry_list' project.language_code %}"><button type="button" class="btn btn-primary">Return to Lexicon</button></a>
+    <a href="{% url 'lexicon:update_entry' project.language_code object.pk %}"><button type="button" class="btn btn-secondary">Update entry</button></a>
+    <button 
+    type="button" 
+    class="btn btn-secondary"
+    hx-get="{% url 'lexicon:paradigm_modal' project.language_code object.pk %}"
+    hx-target="#modal-container"
+    hx-trigger="click">
+    Add a paradigm</button>
+    <a href="{% url 'lexicon:delete_entry' project.language_code object.pk %}"><button type="button" class="btn btn-danger">Delete word</button></a> 
     </div>
 
     <h1 class="my-2">{{object.tok_ples}}</h1>
+
+    <!-- Container for dynamically loaded modal -->
+    <div id="modal-container"></div>
 
     <div class="container p-2">
         <table class="table table-striped">
@@ -82,6 +92,8 @@
 
         </tbody>
     </table>
+    {% include 'lexicon/includes/paradigm_list.html' %}  
+
     </div>
 </div>
 

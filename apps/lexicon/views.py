@@ -1,25 +1,24 @@
-from django.http.request import HttpRequest as HttpRequest
-from django.shortcuts import get_object_or_404
-from django.views.generic import TemplateView
-from django.views.generic.list import ListView
-from django.views.generic import DetailView
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
-from django.views.generic import FormView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse
-from django.http import FileResponse
-from django.http import HttpResponse, JsonResponse
-
-from apps.lexicon import models
-from apps.lexicon import forms
-from apps.lexicon.utils import export, hunspell
-from apps.lexicon import tasks
-
 import datetime
-import os
 import logging
+import os
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http.request import HttpRequest as HttpRequest
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.http import require_http_methods
+from django.views.generic import DetailView, FormView, TemplateView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.list import ListView
+
+from apps.lexicon import forms, models, tasks
+from apps.lexicon.utils import export, hunspell
 
 user_log = logging.getLogger("user_log")
+log = logging.getLogger("lexicon")
 
 
 class ProjectList(ListView):
@@ -121,6 +120,13 @@ class EntryDetail(ProjectContextMixin, DetailView):
 
     model = models.LexiconEntry
     template_name = "lexicon/entry_detail.html"
+
+    def get_context_data(self, **kwargs):
+        """Add the conjugations linked to the entry."""
+        context = super().get_context_data(**kwargs)
+        context["conjugations"] = models.Conjugation.objects.filter(word=self.object)
+        context["paradigms"] = set(conj.paradigm for conj in context["conjugations"])
+        return context
 
     # def get_context_data(self, **kwargs):
     #     """Add senses and variations for the template to use."""
@@ -476,3 +482,94 @@ class AffixResults(TemplateView):
             )
         context.update({"generated_words": result})
         return context
+
+
+class paradigm_modal(ProjectContextMixin, FormView):
+    template_name = "lexicon/includes/paradigm_modal.html"
+    form_class = forms.ParadigmSelectForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Add extra data you want to pass
+        project = models.LexiconEntry.objects.get(pk=self.kwargs.get("pk")).project
+        kwargs["paradigms"] = models.Paradigm.objects.filter(project=project)
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        word = models.LexiconEntry.objects.get(pk=self.kwargs.get("pk"))
+        context["object"] = word
+        return context
+
+    def form_valid(self, form):
+        # Do your processing here (e.g., save data)
+        selected_paradigm = models.Paradigm.objects.get(
+            pk=form.cleaned_data["paradigm"]
+        )
+        log.debug(type(selected_paradigm))
+        word = models.LexiconEntry.objects.get(pk=self.kwargs.get("pk"))
+        if not models.Conjugation.objects.filter(word=word):
+            models.Conjugation.objects.create(word=word, paradigm=selected_paradigm)
+            log.debug(f"Conjugation object created for {word}")
+        response = HttpResponse(status=204)  # No content
+        response["HX-Trigger"] = "paradigmSaved"  # closes the modal dialog
+        return response
+
+
+@method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
+class ParadigmView(View):
+    """A view to render and edit conjugations for a word.
+
+    GET responds with a html snippet to be inserted into the page.
+    POST updates the conjugations and returns a html snippet to be inserted into the page.
+    """
+
+    view_template = "lexicon//includes/paradigm_view.html"
+    edit_template = "lexicon/includes/paradigm_edit.html"
+
+    def context_lookup(self, word_pk, paradigm_pk):
+        """Get the word and conjugations for the given paradigm."""
+        word = get_object_or_404(models.LexiconEntry, pk=word_pk)
+        paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
+        conjugations = models.Conjugation.objects.filter(word=word, paradigm=paradigm)
+        log.debug(f"paradigm = {paradigm}")
+        log.debug(f"conjugations = {conjugations}")
+        return {
+            "conjugations": conjugations,
+            "word": word,
+            "paradigm": paradigm,
+        }
+
+    def get(self, request, word_pk, paradigm_pk, edit):
+        log.debug("GET request for ParadigmView")
+        context = self.context_lookup(word_pk, paradigm_pk)
+        if edit == "edit":
+            log.debug("edit is true")
+            template = self.edit_template
+        else:
+            log.debug("edit is false")
+            template = self.view_template
+      
+        return render(
+            request,
+            template,
+            context,
+        )
+
+    def post(self, request, word_pk, paradigm_pk, edit):
+        log.debug(f"POST request for ParadigmView, paradigm id:{paradigm_pk}")
+        log.debug(request.POST)
+        for key, value in request.POST.items():
+            if key.startswith("conj_"):
+                conj_id = key.split("_")[1]
+                conjugation = models.Conjugation.objects.get(id=conj_id)
+                conjugation.conjugation = value
+                log.debug(f"Saving {conjugation} with value: {value}")
+                conjugation.save()
+
+        context = self.context_lookup(word_pk, paradigm_pk)
+        return render(
+            request,
+            self.view_template,
+            context,
+        )

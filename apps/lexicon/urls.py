@@ -1,4 +1,5 @@
 from django.urls import path
+
 from apps.lexicon import views
 
 app_name = "lexicon"
@@ -61,5 +62,15 @@ urlpatterns = [
         "<str:lang_code>/affix-results",
         views.AffixResults.as_view(),
         name="affix_results",
+    ),
+    path(
+        "<str:lang_code>/paradigm-modal/<int:pk>",
+        views.paradigm_modal.as_view(),
+        name="paradigm_modal",
+    ),
+    path(
+        "<int:word_pk>/paradigm/<int:paradigm_pk>/<str:edit>",
+        views.ParadigmView.as_view(),
+        name="paradigm",
     ),
 ]
