@@ -21,6 +21,7 @@ services:
       - ../apps:/app/apps:ro
       - ../config:/app/config:ro
       - ../data/logs:/app/data/logs
+      - ../templates:/app/templates:ro
     ports:
       - 8000:8000
     environment:

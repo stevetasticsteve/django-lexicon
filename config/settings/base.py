@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
+
 import toml
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -169,6 +170,24 @@ LOGGING = {
         "user_log": {
             "handlers": ["user_log_file"],
             "level": "INFO",
+            "propagate": False,
+        },
+        # Catch errors from Django's core
+        "django": {
+            "handlers": ["lexicon_log_file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        # Catch request/response errors (like 500s)
+        "django.request": {
+            "handlers": ["lexicon_log_file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        # Optionally: log server exceptions (e.g. during runserver)
+        "django.server": {
+            "handlers": ["lexicon_log_file"],
+            "level": "ERROR",
             "propagate": False,
         },
     },
