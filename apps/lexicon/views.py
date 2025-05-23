@@ -3,6 +3,7 @@ import logging
 import os
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.http.request import HttpRequest as HttpRequest
 from django.shortcuts import get_object_or_404, render
@@ -524,50 +525,96 @@ class ParadigmView(View):
     POST updates the conjugations and returns a html snippet to be inserted into the page.
     """
 
-    view_template = "lexicon//includes/paradigm_view.html"
+    view_template = "lexicon/includes/paradigm_view.html"
     edit_template = "lexicon/includes/paradigm_edit.html"
 
-    def context_lookup(self, word_pk, paradigm_pk):
-        """Get the word and conjugations for the given paradigm."""
-        word = get_object_or_404(models.LexiconEntry, pk=word_pk)
+    def _context_lookup(self, word_pk, paradigm_pk):
+        """Return required context for both view and edit."""
+
+        word = models.LexiconEntry.objects.get(pk=word_pk)
         paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
+
+        # Build a nested dict: {row_idx: {col_idx: conjugation_obj}}
+        # The dict_get template tag can read it
         conjugations = models.Conjugation.objects.filter(word=word, paradigm=paradigm)
-        log.debug(f"paradigm = {paradigm}")
-        log.debug(f"conjugations = {conjugations}")
+        conjugation_grid = {}
+        for c in conjugations:
+            conjugation_grid.setdefault(c.row, {})[c.column] = c.conjugation
         return {
-            "conjugations": conjugations,
+            "conjugation_grid": conjugation_grid,
             "word": word,
             "paradigm": paradigm,
         }
 
+    def _save_conjugation(self, word, paradigm, row, col, value):
+        """Check if a value has been submitted for a conjugation.
+        If so, save it to the database. If not, delete the conjugation."""
+        value = value.strip()
+        qs = models.Conjugation.objects.filter(
+            paradigm=paradigm, word=word, row=row, column=col
+        )
+        existing = qs.first()
+
+        if value:
+            # update or create the conjugation
+            if existing:
+                if existing.conjugation != value:
+                    existing.conjugation = value
+                    existing.save()
+                    log.debug(
+                        f"Updating {existing} at {existing.get_position_display()} with {value}"
+                    )
+            else:
+                models.Conjugation.objects.create(
+                    word=word, paradigm=paradigm, row=row, column=col, conjugation=value
+                )
+                log.debug(f"Conjugation created: {value}")
+        # if conjugation exists in db but not in the form, delete it
+        elif existing:
+            existing.delete()
+            log.debug(f"Conjugation deleted: {existing}")
+
+    def _parse_conj_key(self, key):
+        """Parse the conjugation key from the POST data."""
+        try:
+            _, row, col = key.split("_")
+            return int(row), int(col)
+        except ValueError:
+            return None, None
+
     def get(self, request, word_pk, paradigm_pk, edit):
-        log.debug("GET request for ParadigmView")
-        context = self.context_lookup(word_pk, paradigm_pk)
+        """Upon a get request return the html snippet for the paradigm view.
+        This might be a form or a read-only view."""
+
+        context = self._context_lookup(word_pk, paradigm_pk)
         if edit == "edit":
-            log.debug("edit is true")
             template = self.edit_template
         else:
-            log.debug("edit is false")
             template = self.view_template
-      
+
         return render(
             request,
             template,
             context,
         )
 
-    def post(self, request, word_pk, paradigm_pk, edit):
-        log.debug(f"POST request for ParadigmView, paradigm id:{paradigm_pk}")
-        log.debug(request.POST)
+    @transaction.atomic
+    def post(self, request, word_pk, paradigm_pk, *args, **kwargs):
+        """Upon a post request save the conjugation values to the database."""
+
+        word = models.LexiconEntry.objects.get(pk=word_pk)
+        paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
+
+        # Pull the conjugation values from the POST data
+        # and save them to the database
         for key, value in request.POST.items():
             if key.startswith("conj_"):
-                conj_id = key.split("_")[1]
-                conjugation = models.Conjugation.objects.get(id=conj_id)
-                conjugation.conjugation = value
-                log.debug(f"Saving {conjugation} with value: {value}")
-                conjugation.save()
+                row_idx, col_idx = self._parse_conj_key(key)
+                if row_idx is not None:
+                    self._save_conjugation(word, paradigm, row_idx, col_idx, value)
 
-        context = self.context_lookup(word_pk, paradigm_pk)
+        # Fetch the context after saving for updated values
+        context = self._context_lookup(word_pk, paradigm_pk)
         return render(
             request,
             self.view_template,

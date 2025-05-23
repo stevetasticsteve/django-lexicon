@@ -1,47 +1,77 @@
+{% comment %}
+  Editable conjugation paradigm form. 
+  HTMX will replace the view version of the paradigm with this form when editing.
+{% endcomment %}
+
+{% load dict_utils %}
+
 <div class="border rounded-lg p-3" id="paradigm-{{ paradigm.pk }}">
-<form>
+  <form>
     {% csrf_token %}
+
     <div class="row">
-    <div class="col-md-10">
+      
+      {# --- Main table area (10 columns wide) --- #}
+      <div class="col-md-10">
         <table class="table">
-            <thead>
-                <tr>
-                    <th></th>
-                    {% for col in paradigm.column_labels %}
-                        <th>{{ col }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in paradigm.row_labels %}
-                    <tr>
-                        <th>{{ row }}</th>
-                        {% for col in paradigm.column_labels %}
-                            {% with row_idx=forloop.parentloop.counter0 col_idx=forloop.counter0 %}
-                                {% for c in conjugations %}
-                                        <td>
-                                            {% if c.row == row_idx and c.column == col_idx and c.paradigm == paradigm %}
-                                            <input type="text" name="conj_{{ c.id }}" value="{{ c.conjugation }}" class="form-control">
-                                            {% else %}
-                                            <input type="text" name="conj_{{ c.id }}" value="" class="form-control">
-                                        </td>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endwith %}
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </tbody>
+          <thead>
+            <tr>
+              <th></th>  {# Empty top-left cell above row headers #}
+
+              {# Column headers from paradigm.column_labels #}
+              {% for col in paradigm.column_labels %}
+                <th>{{ col }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row_label in paradigm.row_labels %}
+              <tr>
+                <th>{{ row_label }}</th>
+
+                {% with row_idx=forloop.counter0 %}
+                  {% for col_label in paradigm.column_labels %}
+                    {% with col_idx=forloop.counter0 %}
+                      {% with row_map=conjugation_grid|dict_get:row_idx %}
+                        {% with conj=row_map|dict_get:col_idx %}
+                        {% if conj %}
+                          {# Existing conjugation value #}
+                          <td>
+                            <input type="text"
+                                   name="conj_{{ row_idx }}_{{ col_idx }}"
+                                   value="{{ conj }}"
+                                   class="form-control">
+                          </td>
+                        {% else %}
+                          <td>
+                            <input type="text"
+                                   name="conj_{{ row_idx }}_{{ col_idx }}"
+                                   value=""
+                                   class="form-control">
+                          </td>
+                        {% endif %}
+                        {% endwith %}
+                      {% endwith %}
+                    {% endwith %}
+                  {% endfor %}
+                {% endwith %}
+              </tr>
+            {% endfor %}
+          </tbody>
         </table>
+      </div>
+
+      {# --- Save button (2 columns wide) --- #}
+      <div class="col-md-2 d-flex align-items-start justify-content-end">
+        <button class="btn btn-success"
+                hx-post="{% url 'lexicon:paradigm' word.pk paradigm.pk 'view' %}"
+                hx-target="#paradigm-{{ paradigm.pk }}"
+                hx-swap="outerHTML"
+                hx-trigger="click">
+          Save
+        </button>
+      </div>
+
     </div>
-    <div class="col-md-2">
-        <button class="btn btn-success" 
-        hx-post="{% url 'lexicon:paradigm' word.pk paradigm.pk 'view' %}"
-        hx-target="#paradigm-{{ paradigm.pk }}" 
-        hx-swap="outerHTML"
-        hx-trigger="click">
-        Save</button>
-    </div>
-    </div>
-</form>
+  </form>
 </div>

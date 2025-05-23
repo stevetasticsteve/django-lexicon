@@ -1,57 +1,58 @@
-{# A div with id paradigm-n displaying conjugations in a grid that htmx can drop in #}
-
-<div class="row border rounded-lg p-3" id="paradigm-{{ paradigm.pk }}">
+{% comment %}
+    Template for displaying a conjugation paradigm in a table. 
+    Each paradigm is wrapped in a <div> with an id so HTMX can dynamically replace it.
+ {% endcomment %}
+  
+  {% load dict_utils %}
+  
+  <div class="row border rounded-lg p-3" id="paradigm-{{ paradigm.pk }}">
+  
+    {# --- Main table area (10 columns wide) --- #}
     <div class="col-md-10">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th></th> {# Empty header above the row labels #}
-
-                    {# Loop through and create table column headers #}
-                    {% for col in paradigm.column_labels %}
-                        <th>{{ col }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-            {# Loop through all conjugations in the paradigm to match row and column location #}
-            {% for c in conjugations %}
-                
-                {# Create row headers #}
-                {% for row in paradigm.row_labels %}
-                    <tr>
-                    <th>{{ row }}</th>
-                    
-                    {# Loop through and create table cells. Use with to make syntax cleaner #}
-                    {# Use parentloop to get the row index and counter to get the column index #}
-
-                    {% for col in paradigm.column_labels %}
-                    {% with row_index=forloop.parentloop.counter0 col_index=forloop.counter0 %}
-
-                        {# Assign the table value when row and column matches #}
-                        {% if c.row == row_index and c.column == col_index %}
-                            <td>{{ c.conjugation }}</td> 
-                        {% else %}
-                            <td></td>      
-                        {% endif %}
-
-                    {% endwith %}
-                    {% endfor %}
-                    </tr>
-                {% endfor %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th></th>  {# Empty corner cell above row headers #}
+  
+            {# Table column headers from paradigm.column_labels #}
+            {% for col in paradigm.column_labels %}
+              <th>{{ col }}</th>
             {% endfor %}
-            </tbody>
-        </table>
-
+          </tr>
+        </thead>
+        <tbody>
+          {# Loop over each row label to construct table rows #}
+          {% for row_label in paradigm.row_labels %}
+            <tr>
+              <th>{{ row_label }}</th>  {# Row header cell #}
+  
+              {% with row_idx=forloop.counter0 %}
+                {# Loop over each column label to create cells in this row #}
+                {% for col_label in paradigm.column_labels %}
+                  {% with col_idx=forloop.counter0 %}
+                    {# Lookup conjugation value from nested dict: conjugation_grid[row_idx][col_idx] #}
+                    {% with row_map=conjugation_grid|dict_get:row_idx %}
+                      <td>{{ row_map|dict_get:col_idx }}</td>
+                    {% endwith %}
+                  {% endwith %}
+                {% endfor %}
+              {% endwith %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <div class="col-md-2">
-
-        {# Use a button for a htmx request to switch to editing mode #}
-        <button class="btn btn-primary" 
-        hx-get="{% url 'lexicon:paradigm' word.pk paradigm.pk 'edit' %}" 
-        hx-target="#paradigm-{{ paradigm.pk }}" 
-        hx-swap="outerHTML"
-        hx-trigger="click">
-        Edit</button>
+  
+    {# --- Action button area (2 columns wide) --- #}
+    <div class="col-md-2 d-flex align-items-start justify-content-end">
+      <button class="btn btn-primary"
+              hx-get="{% url 'lexicon:paradigm' word.pk paradigm.pk 'edit' %}"
+              hx-target="#paradigm-{{ paradigm.pk }}"
+              hx-swap="outerHTML"
+              hx-trigger="click">
+        Edit
+      </button>
     </div>
-</div>
+  
+  </div>
+  

@@ -1,5 +1,6 @@
 import re
 
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
@@ -287,25 +288,81 @@ class Paradigm(models.Model):
     project = models.ForeignKey(LexiconProject, on_delete=models.CASCADE)
     part_of_speech = models.CharField(
         max_length=5,
+        blank=False,
+        null=False,
         choices=LexiconEntry._meta.get_field("pos").choices,
         help_text="Part of speech this paradigm is for (e.g., verb, noun)",
     )
-    row_labels = models.JSONField(help_text="List of row labels for the paradigm grid")
-    column_labels = models.JSONField(
-        help_text="List of column labels for the paradigm grid"
+    row_labels = models.JSONField(
+        help_text="List of row labels for the paradigm grid", blank=False, null=False
     )
+    column_labels = models.JSONField(
+        help_text="List of column labels for the paradigm grid", blank=False, null=False
+    )
+
+    def clean(self):
+        if not isinstance(self.row_labels, list) or not isinstance(
+            self.column_labels, list
+        ):
+            raise ValidationError("Row and column labels must be lists.")
+
+    class Meta:
+        # enforce unique paradigm names per project
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "name"], name="unique_paradigm_name_per_project"
+            )
+        ]
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"Paradigm: {self.name}"
+        return f"Paradigm: {self.name} ({self.part_of_speech})"
 
 
 class Conjugation(models.Model):
-    word = models.ForeignKey(LexiconEntry, on_delete=models.CASCADE)
-    paradigm = models.ForeignKey(Paradigm, on_delete=models.CASCADE)
-    row = models.IntegerField(null=True, blank=True)
-    column = models.IntegerField(null=True, blank=True)
-    conjugation = models.CharField(max_length=40, null=True, blank=True)
+    """
+    A single cell in a conjugation paradigm grid.
+
+    Each instance represents one form of a word based on a paradigm,
+    identified by its row and column index in the grid.
+    """
+
+    word = models.ForeignKey(
+        LexiconEntry,
+        on_delete=models.CASCADE,
+        help_text="The word that this conjugation belongs to.",
+    )
+    paradigm = models.ForeignKey(
+        Paradigm,
+        on_delete=models.CASCADE,
+        help_text="The paradigm that defines the conjugation structure.",
+    )
+    row = models.IntegerField(
+        null=False, blank=True, help_text="The row index in the paradigm grid."
+    )
+    column = models.IntegerField(
+        null=False, blank=True, help_text="The column index in the paradigm grid."
+    )
+    conjugation = models.CharField(
+        max_length=40,
+        null=False,
+        blank=True,
+        help_text="The actual conjugated form of the word.",
+    )
+
+    def get_position_display(self):
+        """Return a human-readable string representing the grid position."""
+        return f"Row {self.row}, Column {self.column}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["word", "paradigm", "row", "column"],
+                name="unique_conjugation_position",
+            )
+        ]
+        verbose_name = "Conjugation"
+        verbose_name_plural = "Conjugations"
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
