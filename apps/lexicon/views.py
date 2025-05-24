@@ -545,7 +545,7 @@ class ParadigmView(View):
             "row", "column"
         )
         formset = forms.get_conjugation_formset(
-            paradigm, queryset=qs
+            paradigm, queryset=qs,
         )
         # Create a grid of forms for the template
         forms_grid = []
@@ -575,8 +575,8 @@ class ParadigmView(View):
 
         word = models.LexiconEntry.objects.get(pk=word_pk)
         paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
-        qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm)
-        formset = forms.get_conjugation_formset(paradigm, queryset=qs, data=request.POST)
+        qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm).order_by("row", "column")
+        formset = forms.get_conjugation_formset(paradigm, queryset=qs, data=request.POST, word=word)
         log.debug(f"formset: {formset.data}")
         if formset.is_valid():
             log.debug("Formset is valid")

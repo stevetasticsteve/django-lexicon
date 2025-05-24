@@ -89,6 +89,7 @@ class ExportForm(forms.Form):
 class ConjugationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.paradigm = kwargs.pop("paradigm", None)
+        self.word = kwargs.pop("word", None)
         super().__init__(*args, **kwargs)
 
     class Meta:
@@ -106,6 +107,11 @@ class BaseConjugationFormSet(BaseModelFormSet):
 
     Overides the clean method to delete blank conjugation entries"""
 
+    def __init__(self, *args, word=None, paradigm=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.word = word
+        self.paradigm = paradigm
+
     def clean(self):
         super().clean()
         for form in self.forms:
@@ -115,8 +121,34 @@ class BaseConjugationFormSet(BaseModelFormSet):
                     f"Form instance pk: {form.instance.pk}, DELETE: {form.cleaned_data.get('DELETE')}"
                 )
 
+    def save(self, commit=True):
+        if not self.forms:
+            return []
 
-def get_conjugation_formset(paradigm, data=None, queryset=None):
+        paradigm = self.paradigm
+        num_cols = len(paradigm.column_labels)
+
+        instances = []
+        for idx, form in enumerate(self.forms):
+            if form.cleaned_data.get("DELETE", False):
+                if form.instance.pk:
+                    form.instance.delete()
+                continue
+
+            instance = form.instance  # existing or new instance
+            instance.row = idx // num_cols
+            instance.column = idx % num_cols
+            instance.paradigm = paradigm
+            instance.word = self.word
+
+            if commit:
+                instance.save()
+            instances.append(instance)
+
+        return instances
+
+
+def get_conjugation_formset(paradigm, data=None, queryset=None, word=None, extra=None):
     total_cells = len(paradigm.row_labels) * len(paradigm.column_labels)
     queryset = queryset or Conjugation.objects.none()
     ConjugationFormSet = modelformset_factory(
@@ -127,7 +159,11 @@ def get_conjugation_formset(paradigm, data=None, queryset=None):
         can_delete=True,
     )
     return ConjugationFormSet(
-        data, queryset=queryset, form_kwargs={"paradigm": paradigm}
+        data,
+        queryset=queryset,
+        form_kwargs={"paradigm": paradigm, "word": word},
+        word=word,
+        paradigm=paradigm,
     )
 
 
@@ -135,6 +171,6 @@ def get_conjugation_formset(paradigm, data=None, queryset=None):
 #     Conjugation,
 #     form=ConjugationForm,
 #     formset=BaseConjugationFormSet,
-#     extra=0, 
+#     extra=0,
 #     can_delete=True,  # Allow deleting conjugations
 # )
