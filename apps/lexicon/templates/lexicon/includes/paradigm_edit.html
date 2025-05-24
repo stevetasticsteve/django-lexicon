@@ -8,60 +8,44 @@
 <div class="border rounded-lg p-3" id="paradigm-{{ paradigm.pk }}">
   <form>
     {% csrf_token %}
+    {{ formset.management_form }}
 
     <div class="row">
-      
-      {# --- Main table area (10 columns wide) --- #}
       <div class="col-md-10">
         <table class="table">
           <thead>
             <tr>
-              <th></th>  {# Empty top-left cell above row headers #}
-
-              {# Column headers from paradigm.column_labels #}
+              <th></th>
               {% for col in paradigm.column_labels %}
                 <th>{{ col }}</th>
               {% endfor %}
             </tr>
           </thead>
           <tbody>
-            {% for row_label in paradigm.row_labels %}
+            {% if formset.errors %}
+              <div class="alert alert-danger" role="alert">
+                {{ formset.errors }}
+              </div>
+            {% endif %}
+            {% for row_idx in forms_grid %}
               <tr>
-                <th>{{ row_label }}</th>
-
-                {% with row_idx=forloop.counter0 %}
-                  {% for col_label in paradigm.column_labels %}
-                    {% with col_idx=forloop.counter0 %}
-                      {% with row_map=conjugation_grid|dict_get:row_idx %}
-                        {% with conj=row_map|dict_get:col_idx %}
-                        {% if conj %}
-                          {# Existing conjugation value #}
-                          <td>
-                            <input type="text"
-                                   name="conj_{{ row_idx }}_{{ col_idx }}"
-                                   value="{{ conj }}"
-                                   class="form-control">
-                          </td>
-                        {% else %}
-                          <td>
-                            <input type="text"
-                                   name="conj_{{ row_idx }}_{{ col_idx }}"
-                                   value=""
-                                   class="form-control">
-                          </td>
-                        {% endif %}
-                        {% endwith %}
-                      {% endwith %}
-                    {% endwith %}
-                  {% endfor %}
-                {% endwith %}
+                <th>{{ paradigm.row_labels|index:forloop.counter0 }}</th>
+                {% for form in row_idx %}
+                  <td>
+                    {{ form.conjugation.errors }}
+                    {% if form %}
+                      {{ form.id }}
+                      {{ form.conjugation}}
+                  {% else %}
+                    <input type="text" name="empty-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" data-row="{{ forloop.parentloop.counter0 }}" data-col="{{ forloop.counter0 }}" placeholder="—" />
+                  {% endif %}
+                  </td>
+                {% endfor %}
               </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-
-      {# --- Save button (2 columns wide) --- #}
       <div class="col-md-2 d-flex align-items-start justify-content-end">
         <button class="btn btn-success"
                 hx-post="{% url 'lexicon:paradigm' word.pk paradigm.pk 'view' %}"
@@ -71,7 +55,6 @@
           Save
         </button>
       </div>
-
     </div>
   </form>
 </div>

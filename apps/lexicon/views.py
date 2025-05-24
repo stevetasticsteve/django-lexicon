@@ -540,67 +540,34 @@ class ParadigmView(View):
         conjugation_grid = {}
         for c in conjugations:
             conjugation_grid.setdefault(c.row, {})[c.column] = c.conjugation
+
+        qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm).order_by(
+            "row", "column"
+        )
+        formset = forms.get_conjugation_formset(
+            paradigm, queryset=qs
+        )
+        # Create a grid of forms for the template
+        forms_grid = []
+        forms_iter = iter(formset.forms)
+        for _ in range(len(paradigm.row_labels)):
+            row = []
+            for _ in range(len(paradigm.column_labels)):
+                row.append(next(forms_iter))
+            forms_grid.append(row)
+
         return {
             "conjugation_grid": conjugation_grid,
             "word": word,
             "paradigm": paradigm,
+            "formset": formset,
+            "forms_grid": forms_grid,
         }
 
-    def _save_conjugation(self, word, paradigm, row, col, value):
-        """Check if a value has been submitted for a conjugation.
-        If so, save it to the database. If not, delete the conjugation."""
-        value = value.strip()
-        qs = models.Conjugation.objects.filter(
-            paradigm=paradigm, word=word, row=row, column=col
-        )
-        existing = qs.first()
-
-        if value:
-            # update or create the conjugation
-            if existing:
-                if existing.conjugation != value:
-                    existing.conjugation = value
-                    existing.save()
-                    log.debug(
-                        f"Updating conjugation for {word} at {existing.get_position_display()} with {value}"
-                    )
-            else:
-                new = models.Conjugation.objects.create(
-                    word=word, paradigm=paradigm, row=row, column=col, conjugation=value
-                )
-                log.debug(
-                    f"Creating entry for {word} at {new.get_position_display()} with {value}"
-                )
-        # if conjugation exists in db but not in the form, delete it
-        elif existing:
-            existing.delete()
-            log.debug(
-                f"Conjugation for {word} at {existing.get_position_display()} deleted: {existing.conjugation}"
-            )
-
-    def _parse_conj_key(self, key):
-        """Parse the conjugation key from the POST data."""
-        try:
-            _, row, col = key.split("_")
-            return int(row), int(col)
-        except ValueError:
-            return None, None
-
     def get(self, request, word_pk, paradigm_pk, edit):
-        """Upon a get request return the html snippet for the paradigm view.
-        This might be a form or a read-only view."""
-
         context = self._context_lookup(word_pk, paradigm_pk)
-        if edit == "edit":
-            template = self.edit_template
-        else:
-            template = self.view_template
-
-        return render(
-            request,
-            template,
-            context,
-        )
+        template = self.edit_template if edit == "edit" else self.view_template
+        return render(request, template, context)
 
     @transaction.atomic
     def post(self, request, word_pk, paradigm_pk, *args, **kwargs):
@@ -608,19 +575,18 @@ class ParadigmView(View):
 
         word = models.LexiconEntry.objects.get(pk=word_pk)
         paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
-
-        # Pull the conjugation values from the POST data
-        # and save them to the database
-        for key, value in request.POST.items():
-            if key.startswith("conj_"):
-                row_idx, col_idx = self._parse_conj_key(key)
-                if row_idx is not None:
-                    self._save_conjugation(word, paradigm, row_idx, col_idx, value)
-
-        # Fetch the context after saving for updated values
-        context = self._context_lookup(word_pk, paradigm_pk)
-        return render(
-            request,
-            self.view_template,
-            context,
-        )
+        qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm)
+        formset = forms.get_conjugation_formset(paradigm, queryset=qs, data=request.POST)
+        log.debug(f"formset: {formset.data}")
+        if formset.is_valid():
+            log.debug("Formset is valid")
+            formset.save()
+            # Success: re-render the view template
+            context = self._context_lookup(word_pk, paradigm_pk)
+            return render(request, self.view_template, context)
+        else:
+            # Errors: re-render the edit template with errors
+            log.debug("Formset is NOT valid")
+            log.debug(formset.errors)
+            context = self._context_lookup(word_pk, paradigm_pk)
+            return render(request, self.edit_template, context)
