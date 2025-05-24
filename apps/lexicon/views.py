@@ -562,17 +562,21 @@ class ParadigmView(View):
                     existing.conjugation = value
                     existing.save()
                     log.debug(
-                        f"Updating {existing} at {existing.get_position_display()} with {value}"
+                        f"Updating conjugation for {word} at {existing.get_position_display()} with {value}"
                     )
             else:
-                models.Conjugation.objects.create(
+                new = models.Conjugation.objects.create(
                     word=word, paradigm=paradigm, row=row, column=col, conjugation=value
                 )
-                log.debug(f"Conjugation created: {value}")
+                log.debug(
+                    f"Creating entry for {word} at {new.get_position_display()} with {value}"
+                )
         # if conjugation exists in db but not in the form, delete it
         elif existing:
             existing.delete()
-            log.debug(f"Conjugation deleted: {existing}")
+            log.debug(
+                f"Conjugation for {word} at {existing.get_position_display()} deleted: {existing.conjugation}"
+            )
 
     def _parse_conj_key(self, key):
         """Parse the conjugation key from the POST data."""
