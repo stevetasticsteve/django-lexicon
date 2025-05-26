@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.lexicon import views
+from apps.lexicon.views import views, conjugation_views
 
 app_name = "lexicon"
 
@@ -65,12 +65,12 @@ urlpatterns = [
     ),
     path(
         "<str:lang_code>/paradigm-modal/<int:pk>",
-        views.paradigm_modal.as_view(),
+        conjugation_views.paradigm_modal.as_view(),
         name="paradigm_modal",
     ),
     path(
         "<int:word_pk>/paradigm/<int:paradigm_pk>/<str:edit>",
-        views.ParadigmView.as_view(),
+        conjugation_views.ParadigmView.as_view(),
         name="paradigm",
     ),
 ]
