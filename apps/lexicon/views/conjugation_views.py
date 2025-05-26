@@ -98,7 +98,7 @@ class ParadigmView(View):
 
         formset = self._get_or_create_formset_context(word, paradigm)
         # Create a grid of forms for the template
-        self._ensure_conjugations_exist(word, paradigm)
+        # self._ensure_conjugations_exist(word, paradigm)
         forms_grid = []
         forms_iter = iter(formset.forms)
         for _ in range(len(paradigm.row_labels)):
@@ -116,21 +116,21 @@ class ParadigmView(View):
             "forms_grid": forms_grid,
         }
 
-    def _ensure_conjugations_exist(self, word, paradigm):
-        """Ensure all grid positions have conjugation objects in the database."""
-        for row_idx in range(len(paradigm.row_labels)):
-            for col_idx in range(len(paradigm.column_labels)):
-                models.Conjugation.objects.get_or_create(
-                    word=word,
-                    paradigm=paradigm,
-                    row=row_idx,
-                    column=col_idx,
-                    defaults={"conjugation": ""},
-                )
+    # def _ensure_conjugations_exist(self, word, paradigm):
+    #     """Ensure all grid positions have conjugation objects in the database."""
+    #     for row_idx in range(len(paradigm.row_labels)):
+    #         for col_idx in range(len(paradigm.column_labels)):
+    #             models.Conjugation.objects.get_or_create(
+    #                 word=word,
+    #                 paradigm=paradigm,
+    #                 row=row_idx,
+    #                 column=col_idx,
+    #                 defaults={"conjugation": ""},
+    #             )
 
     def _get_or_create_formset_context(self, word, paradigm, data=None):
         """Single method to handle formset creation for both GET and POST."""
-        self._ensure_conjugations_exist(word, paradigm)
+        # self._ensure_conjugations_exist(word, paradigm)
         qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm).order_by(
             "row", "column"
         )

@@ -127,50 +127,91 @@ class BaseConjugationFormSet(BaseModelFormSet):
 
         paradigm = self.paradigm
         num_cols = len(paradigm.column_labels)
-
         instances = []
+
         for idx, form in enumerate(self.forms):
-            if form.cleaned_data.get("DELETE", False):
-                if form.instance.pk:
-                    form.instance.delete()
-                continue
+            conjugation_value = form.cleaned_data.get("conjugation", "").strip()
 
-            instance = form.instance  # existing or new instance
-            instance.row = idx // num_cols
-            instance.column = idx % num_cols
-            instance.paradigm = paradigm
-            instance.word = self.word
+            if conjugation_value:  # Only process non-empty conjugations
+                row = idx // num_cols
+                column = idx % num_cols
 
-            if commit:
-                instance.save()
-            instances.append(instance)
+                # Get or create the conjugation instance
+                instance, created = Conjugation.objects.get_or_create(
+                    word=self.word,
+                    paradigm=paradigm,
+                    row=row,
+                    column=column,
+                    defaults={"conjugation": conjugation_value},
+                )
+
+                # If it already exists, update the conjugation value
+                if not created:
+                    instance.conjugation = conjugation_value
+                    if commit:
+                        instance.save()
+
+                instances.append(instance)
+                log.debug(
+                    f"{'Created' if created else 'Updated'} conjugation: {conjugation_value} at ({row}, {column})"
+                )
+
+            else:
+                # If the conjugation is empty but an instance exists, delete it
+                row = idx // num_cols
+                column = idx % num_cols
+                try:
+                    existing = Conjugation.objects.get(
+                        word=self.word, paradigm=paradigm, row=row, column=column
+                    )
+                    if commit:
+                        existing.delete()
+                    log.debug(f"Deleted empty conjugation at ({row}, {column})")
+                except Conjugation.DoesNotExist:
+                    pass  # Nothing to delete
 
         return instances
 
 
 def get_conjugation_formset(paradigm, data=None, queryset=None, word=None, extra=None):
     total_cells = len(paradigm.row_labels) * len(paradigm.column_labels)
-    queryset = queryset or Conjugation.objects.none()
+
+    # Create a formset with the right number of forms, but don't pre-populate with empty instances
     ConjugationFormSet = modelformset_factory(
         Conjugation,
         form=ConjugationForm,
         formset=BaseConjugationFormSet,
-        extra=total_cells - queryset.count(),
-        can_delete=True,
-    )
-    return ConjugationFormSet(
-        data,
-        queryset=queryset,
-        form_kwargs={"paradigm": paradigm, "word": word},
-        word=word,
-        paradigm=paradigm,
+        extra=total_cells,  # Create enough forms for the full grid
+        can_delete=False,  # We handle deletion manually
     )
 
+    # Create initial data structure for the grid
+    if not data:
+        # For GET requests, populate with existing conjugations
+        existing_conjugations = {}
+        if queryset:
+            for conj in queryset:
+                grid_index = conj.row * len(paradigm.column_labels) + conj.column
+                existing_conjugations[grid_index] = {"conjugation": conj.conjugation}
 
-# ConjugationFormSet = modelformset_factory(
-#     Conjugation,
-#     form=ConjugationForm,
-#     formset=BaseConjugationFormSet,
-#     extra=0,
-#     can_delete=True,  # Allow deleting conjugations
-# )
+        # Create initial data for all grid positions
+        initial_data = []
+        for i in range(total_cells):
+            initial_data.append(existing_conjugations.get(i, {"conjugation": ""}))
+
+        return ConjugationFormSet(
+            queryset=Conjugation.objects.none(),  # Don't pre-populate with instances
+            initial=initial_data,
+            form_kwargs={"paradigm": paradigm, "word": word},
+            word=word,
+            paradigm=paradigm,
+        )
+    else:
+        # For POST requests, use the submitted data
+        return ConjugationFormSet(
+            data,
+            queryset=Conjugation.objects.none(),
+            form_kwargs={"paradigm": paradigm, "word": word},
+            word=word,
+            paradigm=paradigm,
+        )
