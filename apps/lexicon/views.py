@@ -126,7 +126,6 @@ class EntryDetail(ProjectContextMixin, DetailView):
         """Add the conjugations linked to the entry."""
         context = super().get_context_data(**kwargs)
         context["conjugations"] = models.Conjugation.objects.filter(word=self.object)
-        # context["paradigms"] = set(conj.paradigm for conj in context["conjugations"])
         context["paradigms"] = self.object.paradigms.all()  # Get all paradigms linked to the word
 
         return context
@@ -528,6 +527,32 @@ class ParadigmView(View):
     view_template = "lexicon/includes/paradigm_view.html"
     edit_template = "lexicon/includes/paradigm_edit.html"
 
+    def get(self, request, word_pk, paradigm_pk, edit):
+        context = self._context_lookup(word_pk, paradigm_pk)
+        template = self.edit_template if edit == "edit" else self.view_template
+        return render(request, template, context)
+
+    @transaction.atomic
+    def post(self, request, word_pk, paradigm_pk, *args, **kwargs):
+        """Upon a post request save the conjugation values to the database."""
+
+        word = models.LexiconEntry.objects.get(pk=word_pk)
+        paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
+
+        formset= self._get_or_create_formset_context(word, paradigm, request.POST)
+        if formset.is_valid():
+            log.debug("Formset is valid")
+            formset.save()
+            # Success: re-render the view template
+            context = self._context_lookup(word_pk, paradigm_pk)
+            return render(request, self.view_template, context)
+        else:
+            # Errors: re-render the edit template with errors
+            log.debug("Formset is NOT valid")
+            log.debug(formset.errors)
+            context = self._context_lookup(word_pk, paradigm_pk)
+            return render(request, self.edit_template, context)
+
     def _context_lookup(self, word_pk, paradigm_pk):
         """Return required context for both view and edit."""
 
@@ -541,13 +566,9 @@ class ParadigmView(View):
         for c in conjugations:
             conjugation_grid.setdefault(c.row, {})[c.column] = c.conjugation
 
-        qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm).order_by(
-            "row", "column"
-        )
-        formset = forms.get_conjugation_formset(
-            paradigm, queryset=qs,
-        )
+        formset = self._get_or_create_formset_context(word, paradigm)
         # Create a grid of forms for the template
+        self._ensure_conjugations_exist(word, paradigm)
         forms_grid = []
         forms_iter = iter(formset.forms)
         for _ in range(len(paradigm.row_labels)):
@@ -555,6 +576,7 @@ class ParadigmView(View):
             for _ in range(len(paradigm.column_labels)):
                 row.append(next(forms_iter))
             forms_grid.append(row)
+        log.debug(f"forms_grid= {forms_grid}")
 
         return {
             "conjugation_grid": conjugation_grid,
@@ -563,30 +585,29 @@ class ParadigmView(View):
             "formset": formset,
             "forms_grid": forms_grid,
         }
+    
+    def _ensure_conjugations_exist(self, word, paradigm):
+        """Ensure all grid positions have conjugation objects in the database."""
+        for row_idx in range(len(paradigm.row_labels)):
+            for col_idx in range(len(paradigm.column_labels)):
+                models.Conjugation.objects.get_or_create(
+                    word=word,
+                    paradigm=paradigm,
+                    row=row_idx,
+                    column=col_idx,
+                    defaults={'conjugation': ''}
+                )
 
-    def get(self, request, word_pk, paradigm_pk, edit):
-        context = self._context_lookup(word_pk, paradigm_pk)
-        template = self.edit_template if edit == "edit" else self.view_template
-        return render(request, template, context)
+    def _get_or_create_formset_context(self, word, paradigm, data=None):
+        """Single method to handle formset creation for both GET and POST."""
+        self._ensure_conjugations_exist(word, paradigm)
+        qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm).order_by(
+            "row", "column"
+        )
 
-    @transaction.atomic
-    def post(self, request, word_pk, paradigm_pk, *args, **kwargs):
-        """Upon a post request save the conjugation values to the database."""
+        formset = forms.get_conjugation_formset(
+            paradigm, queryset=qs, data=data, word=word if data else None
+        )
 
-        word = models.LexiconEntry.objects.get(pk=word_pk)
-        paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
-        qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm).order_by("row", "column")
-        formset = forms.get_conjugation_formset(paradigm, queryset=qs, data=request.POST, word=word)
-        log.debug(f"formset: {formset.data}")
-        if formset.is_valid():
-            log.debug("Formset is valid")
-            formset.save()
-            # Success: re-render the view template
-            context = self._context_lookup(word_pk, paradigm_pk)
-            return render(request, self.view_template, context)
-        else:
-            # Errors: re-render the edit template with errors
-            log.debug("Formset is NOT valid")
-            log.debug(formset.errors)
-            context = self._context_lookup(word_pk, paradigm_pk)
-            return render(request, self.edit_template, context)
+        return formset
+    
