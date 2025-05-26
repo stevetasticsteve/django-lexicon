@@ -11,3 +11,11 @@ def dict_get(d, key):
     if isinstance(d, dict):
         return d.get(key, "")
     return ""
+
+@register.filter
+def index(sequence, position):
+    """Return the item at the given position in the sequence."""
+    try:
+        return sequence[position]
+    except (IndexError, TypeError):
+        return ""

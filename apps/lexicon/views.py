@@ -126,7 +126,9 @@ class EntryDetail(ProjectContextMixin, DetailView):
         """Add the conjugations linked to the entry."""
         context = super().get_context_data(**kwargs)
         context["conjugations"] = models.Conjugation.objects.filter(word=self.object)
-        context["paradigms"] = set(conj.paradigm for conj in context["conjugations"])
+        # context["paradigms"] = set(conj.paradigm for conj in context["conjugations"])
+        context["paradigms"] = self.object.paradigms.all()  # Get all paradigms linked to the word
+
         return context
 
     # def get_context_data(self, **kwargs):
@@ -507,11 +509,9 @@ class paradigm_modal(ProjectContextMixin, FormView):
         selected_paradigm = models.Paradigm.objects.get(
             pk=form.cleaned_data["paradigm"]
         )
-        log.debug(type(selected_paradigm))
         word = models.LexiconEntry.objects.get(pk=self.kwargs.get("pk"))
-        if not models.Conjugation.objects.filter(word=word):
-            models.Conjugation.objects.create(word=word, paradigm=selected_paradigm)
-            log.debug(f"Conjugation object created for {word}")
+        word.paradigms.add(selected_paradigm)
+        log.debug(f"{selected_paradigm} applied to {word}")
         response = HttpResponse(status=204)  # No content
         response["HX-Trigger"] = "paradigmSaved"  # closes the modal dialog
         return response

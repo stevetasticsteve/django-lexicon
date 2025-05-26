@@ -138,6 +138,11 @@ class LexiconEntry(models.Model):
     )
 
     checked = models.BooleanField(default=False, blank=False, null=False)
+    paradigms = models.ManyToManyField(
+        "Paradigm",
+        blank=True,
+        help_text="Paradigms that this word can use for conjugation/declension",
+    )
 
     def save(self, *args, **kwargs):
         """Code that runs whenever a Lexicon entry is saved.
@@ -162,7 +167,7 @@ class LexiconEntry(models.Model):
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"Lexicon entry: {self.tok_ples}"
+        return f"Word: {self.tok_ples} in {self.project.language_name}"
 
     def get_absolute_url(self):
         """What page Django should return if asked to show this entry."""
@@ -331,17 +336,21 @@ class Conjugation(models.Model):
         LexiconEntry,
         on_delete=models.CASCADE,
         help_text="The word that this conjugation belongs to.",
+        blank=False,
+        null=False,
     )
     paradigm = models.ForeignKey(
         Paradigm,
         on_delete=models.CASCADE,
         help_text="The paradigm that defines the conjugation structure.",
+        blank=False,
+        null=False,
     )
     row = models.IntegerField(
-        null=False, blank=True, help_text="The row index in the paradigm grid."
+        null=False, blank=False, help_text="The row index in the paradigm grid."
     )
     column = models.IntegerField(
-        null=False, blank=True, help_text="The column index in the paradigm grid."
+        null=False, blank=False, help_text="The column index in the paradigm grid."
     )
     conjugation = models.CharField(
         max_length=40,
@@ -353,6 +362,15 @@ class Conjugation(models.Model):
     def get_position_display(self):
         """Return a human-readable string representing the grid position."""
         return f"Row {self.row}, Column {self.column}"
+
+    def get_grid_labels(self):
+        """Return the row and column labels for this conjugation's position."""
+        try:
+            row_label = self.paradigm.row_labels[self.row]
+            col_label = self.paradigm.column_labels[self.column]
+            return f"{row_label}, {col_label}"
+        except (IndexError, TypeError):
+            return self.get_position_display()
 
     class Meta:
         constraints = [
@@ -366,4 +384,7 @@ class Conjugation(models.Model):
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"Conjugation: {self.conjugation} for {self.word} in {self.paradigm}"
+        if self.conjugation:
+            return f"Conjugation: {self.conjugation} for {self.word} in {self.paradigm}"
+        else:
+            return f"Empty conjugation for {self.word} in {self.paradigm} ({self.get_grid_labels()})"
