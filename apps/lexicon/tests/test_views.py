@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.auth.models import User
 from django.http import Http404
 from django.urls import reverse
 from django.views.generic import TemplateView
@@ -84,6 +85,11 @@ def kovol_words(kovol_project):
         tok_ples="bili", eng="good", project=kovol_project
     )
     return [word1, word2]
+
+
+@pytest.fixture
+def user(db):
+    return User.objects.create_user(username="testuser", password="testpass")
 
 
 @pytest.mark.django_db
@@ -344,7 +350,7 @@ class TestEntryDetail:
         assert response.context["object"] == entry
         assert "conjugations" in response.context
         assert "paradigms" in response.context
-    
+
     def test_entry_detail_view_contents(self, client, english_project, english_words):
         """Test that the entry detail view contains expected content."""
         entry = english_words[0]
@@ -380,3 +386,175 @@ class TestEntryDetail:
         assert response.status_code == 200
         assert conjugation in response.context["conjugations"]
         assert paradigm in response.context["paradigms"]
+
+
+@pytest.mark.django_db
+class TestCreateEntry:
+    def get_create_url(self, english_project):
+        return reverse(
+            "lexicon:create_entry", kwargs={"lang_code": english_project.language_code}
+        )
+
+    def test_create_entry_get(self, client, english_project, user):
+        """GET request should render the form."""
+        client.force_login(user)
+        url = self.get_create_url(english_project)
+        response = client.get(url)
+        assert response.status_code == 200
+        assert "form" in response.context
+        assert "tok_ples" in response.content.decode()
+
+    def test_create_entry_post_success(self, client, english_project, user):
+        """POST valid data should create a new LexiconEntry and redirect."""
+        client.force_login(user)
+        url = self.get_create_url(english_project)
+        data = {
+            "tok_ples": "new_word",
+            "eng": "new_word_gloss",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        # Should redirect after successful creation
+        assert response.status_code == 302
+        # The entry should exist in the database
+        assert models.LexiconEntry.objects.filter(
+            tok_ples="new_word", project=english_project
+        ).exists()
+
+    def test_create_entry_missing_required_field(self, client, english_project, user):
+        """POST missing required field should return form with errors."""
+        client.force_login(user)
+        url = self.get_create_url(english_project)
+        data = {
+            # "tok_ples" is missing
+            "eng": "missing_word",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 200  # Form re-rendered with errors
+        assert "This field is required" in response.content.decode()
+        assert not models.LexiconEntry.objects.filter(
+            eng="missing_word", project=english_project
+        ).exists()
+
+    def test_create_entry_sets_modified_by(self, client, english_project, user):
+        """The created entry should have modified_by set to the username."""
+        client.force_login(user)
+        url = self.get_create_url(english_project)
+        data = {
+            "tok_ples": "audit_word",
+            "eng": "audit_gloss",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        entry = models.LexiconEntry.objects.get(
+            tok_ples="audit_word", project=english_project
+        )
+        assert entry.modified_by == user.username
+
+
+@pytest.mark.django_db
+class TestUpdateEntry:
+    @pytest.fixture
+    def entry(self, english_project):
+        return models.LexiconEntry.objects.create(
+            tok_ples="update_me",
+            eng="update_me_gloss",
+            project=english_project,
+            checked=False,
+            review=0,
+        )
+
+    def get_update_url(self, english_project, entry):
+        return reverse(
+            "lexicon:update_entry",
+            kwargs={"lang_code": english_project.language_code, "pk": entry.pk},
+        )
+
+    def test_update_entry_get(self, client, english_project, entry, user):
+        """GET request should render the update form."""
+        client.force_login(user)
+        url = self.get_update_url(english_project, entry)
+        response = client.get(url)
+        assert response.status_code == 200
+        assert "form" in response.context
+        assert entry.tok_ples in response.content.decode()
+
+    def test_update_entry_post_success(self, client, english_project, entry, user):
+        """POST valid data should update the entry and redirect."""
+        client.force_login(user)
+        url = self.get_update_url(english_project, entry)
+        data = {
+            "tok_ples": "updated_word",
+            "eng": "updated_gloss",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "Updated via test",
+            "checked": True,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 302
+        entry.refresh_from_db()
+        assert entry.tok_ples == "updated_word"
+        assert entry.eng == "updated_gloss"
+        assert entry.comments == "Updated via test"
+        assert entry.modified_by == user.username
+
+    def test_update_entry_missing_required_field(
+        self, client, english_project, entry, user
+    ):
+        """POST missing required field should return form with errors."""
+        client.force_login(user)
+        url = self.get_update_url(english_project, entry)
+        data = {
+            # "tok_ples" is missing
+            "eng": "should_fail",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 200  # Form re-rendered with errors
+        assert "This field is required" in response.content.decode()
+        entry.refresh_from_db()
+        assert entry.eng != "should_fail"
+
+    def test_update_entry_sets_review_user(self, client, english_project, entry, user):
+        """If review is changed, review_user and review_time should be set."""
+        client.force_login(user)
+        url = self.get_update_url(english_project, entry)
+        data = {
+            "tok_ples": entry.tok_ples,
+            "eng": entry.eng,
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 1,  # Change review value
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 302
+        entry.refresh_from_db()
+        assert entry.review_user == user.username
+        assert entry.review_time is not None
