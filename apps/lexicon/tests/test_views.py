@@ -53,6 +53,28 @@ def kovol_project():
 
 
 @pytest.fixture
+def english_words_with_paradigm(english_project):
+    """Fixture to create test words and a paradigm."""
+    word1 = models.LexiconEntry.objects.create(
+        tok_ples="test_word", eng="test_word_gloss", project=english_project
+    )
+    word2 = models.LexiconEntry.objects.create(
+        tok_ples="extra_word", eng="extra_word_gloss", project=english_project
+    )
+    paradigm = models.Paradigm.objects.create(
+        name="Test Paradigm",
+        row_labels=["row1"],
+        column_labels=["col1"],
+        project=english_project,
+    )
+    word1.paradigms.add(paradigm)
+    conjugation = models.Conjugation.objects.create(
+        word=word1, paradigm=paradigm, row=0, column=0, conjugation="test"
+    )
+    return [word1, word2], paradigm, conjugation
+
+
+@pytest.fixture
 def kovol_words(kovol_project):
     """Fixture to create test words."""
     word1 = models.LexiconEntry.objects.create(
@@ -257,6 +279,7 @@ class TestSearchResults:
         assert response.status_code == 200
         assert len(response.context["object_list"]) == 1
         assert response.context["object_list"][0].tok_ples == "test_word"
+        assert "test_word" in response.content.decode()
 
     def test_search_results_filters_by_eng_field(
         self, client, english_project, english_words
@@ -305,3 +328,55 @@ class TestSearchResults:
         url = self.get_base_url("invalid_lang")
         response = client.get(url)
         assert response.status_code == 404
+
+
+@pytest.mark.django_db
+class TestEntryDetail:
+    def test_entry_detail_view_success(self, client, english_project, english_words):
+        """Test that the entry detail view returns 200 and correct context for a valid entry."""
+        entry = english_words[0]
+        url = reverse(
+            "lexicon:entry_detail",
+            kwargs={"lang_code": english_project.language_code, "pk": entry.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.context["object"] == entry
+        assert "conjugations" in response.context
+        assert "paradigms" in response.context
+    
+    def test_entry_detail_view_contents(self, client, english_project, english_words):
+        """Test that the entry detail view contains expected content."""
+        entry = english_words[0]
+        url = reverse(
+            "lexicon:entry_detail",
+            kwargs={"lang_code": english_project.language_code, "pk": entry.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert entry.tok_ples in content
+        assert entry.eng in content
+
+    def test_entry_detail_view_404(self, client, english_project):
+        """Test that the entry detail view returns 404 for a non-existent entry."""
+        url = reverse(
+            "lexicon:entry_detail",
+            kwargs={"lang_code": english_project.language_code, "pk": 9999},
+        )
+        response = client.get(url)
+        assert response.status_code == 404
+
+    def test_entry_detail_conjugations_and_paradigms(
+        self, client, english_project, english_words_with_paradigm
+    ):
+        words, paradigm, conjugation = english_words_with_paradigm
+        entry = words[0]
+        url = reverse(
+            "lexicon:entry_detail",
+            kwargs={"lang_code": english_project.language_code, "pk": entry.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 200
+        assert conjugation in response.context["conjugations"]
+        assert paradigm in response.context["paradigms"]

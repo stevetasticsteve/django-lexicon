@@ -41,22 +41,6 @@ class ProjectContextMixin:
         return context
 
 
-# class ProjectTemplateMixin(TemplateView):
-#     """A base class to handle common context passing to templates.
-
-#     All project pages need access to the lang_code context variable."""
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         self.lang_code = self.kwargs.get("lang_code")
-#         context["lang_code"] = self.lang_code
-#         self.project = get_object_or_404(
-#             models.LexiconProject, language_code=self.kwargs.get("lang_code")
-#         )
-#         context["project"] = self.project
-#         return context
-
-
 class LexiconView(ProjectContextMixin, TemplateView):
     """The main display for the lexicon, listing all entries."""
 
@@ -96,48 +80,23 @@ class SearchResults(ListView):
             return query
 
 
-# class ProjectSingleMixin(SingleObjectMixin):
-#     """A base class to handle common context passing to templates with Single Mixin.
-
-#     All project pages need access to the lang_code context variable."""
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         self.lang_code = self.kwargs.get("lang_code")
-#         context["lang_code"] = self.lang_code
-#         self.project = get_object_or_404(
-#             models.LexiconProject, language_code=self.kwargs.get("lang_code")
-#         )
-#         context["project"] = self.project
-#         return context
-
-
 class EntryDetail(ProjectContextMixin, DetailView):
     """The view at url <lang code>/1/detail. Displays all info in .db for a word."""
 
     model = models.LexiconEntry
     template_name = "lexicon/entry_detail.html"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> dict:
         """Add the conjugations linked to the entry."""
         context = super().get_context_data(**kwargs)
-        context["conjugations"] = models.Conjugation.objects.filter(word=self.object)
+        context["conjugations"] = models.Conjugation.objects.filter(
+            word=self.object
+        ).select_related("paradigm")
         context["paradigms"] = (
             self.object.paradigms.all()
         )  # Get all paradigms linked to the word
 
         return context
-
-    # def get_context_data(self, **kwargs):
-    #     """Add senses and variations for the template to use."""
-    #     context = super().get_context_data(**kwargs)
-    #     context["word_senses"] = models.KovolWordSense.objects.filter(word=self.object)
-    #     context["spelling_variations"] = (
-    #         models.KovolWordSpellingVariation.objects.filter(word=self.object)
-    #     )
-    #     context["phrases"] = models.PhraseEntry.objects.filter(linked_word=self.object)
-
-    # return context
 
 
 class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
@@ -170,36 +129,10 @@ class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
 
     model = models.LexiconEntry
     fields = forms.editable_fields
-    template_name = "lexicon/simple_form.html"  # need a different form to insert senses
-
-    # def get_context_data(self, **kwargs):
-    #     """Add formsets to the context data for the template to use."""
-    #     context = super().get_context_data(**kwargs)
-    #     if self.request.POST:
-    #         context["senses_form"] = sense_inline_form(
-    #             self.request.POST, prefix="sense", instance=self.object
-    #         )
-    #         context["variation_form"] = variation_inline_form(
-    #             self.request.POST, prefix="spelling_variation", instance=self.object
-    #         )
-    #     else:
-    #         context["sense_form"] = sense_inline_form(
-    #             prefix="sense", instance=self.object
-    #         )
-    #         context["variation_form"] = variation_inline_form(
-    #             prefix="spelling_variation", instance=self.object
-    #         )
-    #     return context
+    template_name = "lexicon/simple_form.html"
 
     def form_valid(self, form, **kwargs):
         """Code that runs when the form has been submitted and is valid."""
-        # context = self.get_context_data()
-        # sense_form = context["senses_form"]
-        # variation_form = context["variation_form"]
-        # if sense_form.is_valid():
-        #     sense_form.save()
-        # if variation_form.is_valid():
-        #     variation_form.save()
 
         # Add user the user who made modifications or requested a review
         self.object.modified_by = self.request.user.username
