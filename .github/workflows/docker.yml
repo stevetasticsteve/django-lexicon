@@ -2,8 +2,8 @@ name: Build and share Docker Image to Docker Hub
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - '*'  # Triggers on any tag push
 
 jobs:
   build-and-share:
