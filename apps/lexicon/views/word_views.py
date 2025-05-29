@@ -2,7 +2,7 @@ import datetime
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http.request import HttpRequest as HttpRequest
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import DetailView, TemplateView
@@ -12,7 +12,6 @@ from django.views.generic.list import ListView
 from apps.lexicon import forms, models
 
 user_log = logging.getLogger("user_log")
-log = logging.getLogger("lexicon")
 
 
 class ProjectList(ListView):
@@ -41,18 +40,19 @@ class ProjectContextMixin:
 class LexiconView(ProjectContextMixin, TemplateView):
     """The main display for the lexicon, listing all entries.
 
-    Found at <lang code>/"""
+    Found at lexicon/<lang code>/
+    It contains lexicon:search inserted via htmx."""
 
     template_name = "lexicon/lexicon_list.html"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
         context["search_view"] = "lexicon:search"
         return context
 
 
 class EntryDetail(ProjectContextMixin, DetailView):
-    """The view at url <lang code>/1/detail. Displays all info in .db for a word."""
+    """The view at url lexicon<lang code>/<pk>/detail. Displays all info in .db for a word."""
 
     model = models.LexiconEntry
     template_name = "lexicon/entry_detail.html"
@@ -66,43 +66,34 @@ class EntryDetail(ProjectContextMixin, DetailView):
         context["paradigms"] = (
             self.object.paradigms.all()
         )  # Get all paradigms linked to the word
-
         return context
 
 
 class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
-    """The view at url <lang code>/create. Creates a new word."""
+    """The view at url lexicon/<lang code>/create. Creates a new word."""
 
     model = models.LexiconEntry
     fields = forms.editable_fields
     template_name = "lexicon/simple_form.html"
 
-    def form_valid(self, form, **kwargs):
+    def form_valid(self, form, **kwargs) -> HttpResponse:
         """When the form saves run this code."""
         obj = form.save(commit=False)
         obj.modified_by = self.request.user.username
-        obj.project = get_object_or_404(
-            models.LexiconProject, language_code=self.kwargs.get("lang_code")
-        )
+        obj.project = self.get_project()
         obj.save()
         user_log.info(f"{self.request.user} created an entry in {obj.project} lexicon.")
         return super().form_valid(form, **kwargs)
 
 
 class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
-    """The view at url <lang code>/<pk>/update. Updates words.
-
-    get_context_data and form_valid are extended to add in inline formsets representing
-    the one to many relationships of spelling variations and senses.
-    The inline formsets allow deleting sense and spelling variations so a delete view
-    isn't required.
-    """
+    """The view at url lexicon/<lang code>/<pk>/update. Updates words."""
 
     model = models.LexiconEntry
     fields = forms.editable_fields
     template_name = "lexicon/simple_form.html"
 
-    def form_valid(self, form, **kwargs):
+    def form_valid(self, form, **kwargs) -> HttpResponse:
         """Code that runs when the form has been submitted and is valid."""
 
         # Add user the user who made modifications or requested a review
@@ -118,16 +109,15 @@ class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
 
 
 class DeleteEntry(LoginRequiredMixin, ProjectContextMixin, DeleteView):
-    """The view at url <lang code>/<pk>/delete. Deletes a word."""
+    """The view at url lexicon/<lang code>/<pk>/delete. Deletes a word."""
 
     model = models.LexiconEntry
-    fields = None
     template_name = "lexicon/confirm_entry_delete.html"
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return reverse("lexicon:entry_list", args=(self.kwargs.get("lang_code"),))
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs) -> HttpResponse:
         self.object = self.get_object()
         user_log.info(
             f"{request.user} deleted an entry in {self.object.project} lexicon."
@@ -135,21 +125,12 @@ class DeleteEntry(LoginRequiredMixin, ProjectContextMixin, DeleteView):
         return super().post(request, *args, **kwargs)
 
 
-class ReviewList(ListView):
-    """Shows entries marked for review <lang code>/review."""
+class ReviewList(ProjectContextMixin, ListView):
+    """Shows entries marked for review at url lexicon/<lang code>/review."""
 
     model = models.LexiconEntry
     template_name = "lexicon/review_list.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["lang_code"] = self.lang_code
-        context["project"] = self.project
-        return context
-
-    def get_queryset(self):
-        self.lang_code = self.kwargs.get("lang_code")
-        self.project = get_object_or_404(
-            models.LexiconProject, language_code=self.lang_code
-        )
+    def get_queryset(self) -> dict:
+        self.project = self.get_project()
         return models.LexiconEntry.objects.filter(project=self.project, review__gt=0)

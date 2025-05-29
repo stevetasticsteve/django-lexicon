@@ -558,3 +558,114 @@ class TestUpdateEntry:
         entry.refresh_from_db()
         assert entry.review_user == user.username
         assert entry.review_time is not None
+
+
+@pytest.mark.django_db
+class TestDeleteEntry:
+    @pytest.fixture
+    def entry(self, english_project):
+        return models.LexiconEntry.objects.create(
+            tok_ples="delete_me",
+            eng="delete_me_gloss",
+            project=english_project,
+            checked=False,
+            review=0,
+        )
+
+    def get_delete_url(self, english_project, entry):
+        return reverse(
+            "lexicon:delete_entry",
+            kwargs={"lang_code": english_project.language_code, "pk": entry.pk},
+        )
+
+    def test_delete_entry_get_confirmation(self, client, english_project, entry, user):
+        """GET should render the confirmation page for deletion."""
+        client.force_login(user)
+        url = self.get_delete_url(english_project, entry)
+        response = client.get(url)
+        assert response.status_code == 200
+        assert "yes, delete it" in response.content.decode().lower()
+
+    def test_delete_entry_post_success(self, client, english_project, entry, user):
+        """POST should delete the entry and redirect to the entry list."""
+        client.force_login(user)
+        url = self.get_delete_url(english_project, entry)
+        response = client.post(url)
+        # Should redirect after deletion
+        assert response.status_code == 302
+        # The entry should no longer exist
+        assert not models.LexiconEntry.objects.filter(pk=entry.pk).exists()
+
+    def test_delete_entry_requires_login(self, client, english_project, entry):
+        """Anonymous users should be redirected to login."""
+        url = self.get_delete_url(english_project, entry)
+        response = client.get(url)
+        # Should redirect to login page (default 302)
+        assert response.status_code == 302
+        assert "/login" in response.url or "/accounts/login" in response.url
+
+
+@pytest.mark.django_db
+class TestReviewList:
+    def get_review_list_url(self, english_project):
+        return reverse(
+            "lexicon:review_list", kwargs={"lang_code": english_project.language_code}
+        )
+
+    @pytest.fixture
+    def reviewed_entries(self, english_project):
+        """Create entries with and without review marks."""
+        reviewed = models.LexiconEntry.objects.create(
+            tok_ples="needs_review",
+            eng="review_gloss",
+            project=english_project,
+            review=1,
+        )
+        not_reviewed = models.LexiconEntry.objects.create(
+            tok_ples="no_review",
+            eng="no_review_gloss",
+            project=english_project,
+            review=0,
+        )
+        return reviewed, not_reviewed
+
+    def test_review_list_shows_only_reviewed(
+        self, client, english_project, reviewed_entries
+    ):
+        """Only entries with review > 0 are shown."""
+        reviewed, not_reviewed = reviewed_entries
+        url = self.get_review_list_url(english_project)
+        response = client.get(url)
+        assert response.status_code == 200
+        # Only the reviewed entry should be in the object_list
+        object_list = response.context["object_list"]
+        assert reviewed in object_list
+        assert not_reviewed not in object_list
+        # Content check
+        content = response.content.decode()
+        assert reviewed.tok_ples in content
+        assert not_reviewed.tok_ples not in content
+
+    def test_review_list_uses_correct_template(
+        self, client, english_project, reviewed_entries
+    ):
+        url = self.get_review_list_url(english_project)
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.templates[0].name == "lexicon/review_list.html"
+
+    def test_review_list_context_contains_project_and_lang_code(
+        self, client, english_project, reviewed_entries
+    ):
+        url = self.get_review_list_url(english_project)
+        response = client.get(url)
+        context = response.context
+        assert "project" in context
+        assert context["project"] == english_project
+        assert "lang_code" in context
+        assert context["lang_code"] == english_project.language_code
+
+    def test_review_list_returns_404_for_nonexistent_project(self, client):
+        url = reverse("lexicon:review_list", kwargs={"lang_code": "nonexistent"})
+        response = client.get(url)
+        assert response.status_code == 404
