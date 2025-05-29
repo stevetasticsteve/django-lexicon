@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 
 from apps.lexicon import models
-from apps.lexicon.views import views
+from apps.lexicon.views import word_views
 
 
 @pytest.fixture
@@ -143,7 +143,7 @@ class TestProjectContextMixin:
         """A dummy view inheriting the mixin for isolated testing."""
 
         class MockView(
-            views.ProjectContextMixin, TemplateView
+            word_views.ProjectContextMixin, TemplateView
         ):  # we use TemplateView to get the context_data method
             # We need to simulate a request and kwargs for get_project
             def setup(self, request, *args, **kwargs):
@@ -461,7 +461,7 @@ class TestCreateEntry:
             "review": 0,
             "review_comments": "",
         }
-        response = client.post(url, data)
+        client.post(url, data)
         entry = models.LexiconEntry.objects.get(
             tok_ples="audit_word", project=english_project
         )

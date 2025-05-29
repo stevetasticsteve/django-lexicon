@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.generic import FormView
 
 from apps.lexicon import forms, models
-from apps.lexicon.views.views import ProjectContextMixin
+from apps.lexicon.views.word_views import ProjectContextMixin
 
 user_log = logging.getLogger("user_log")
 log = logging.getLogger("lexicon")
