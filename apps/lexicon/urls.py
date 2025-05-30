@@ -67,8 +67,13 @@ urlpatterns = [
     # search_views
     path(
         "<str:lang_code>/search",
-        search_views.SearchResults.as_view(),
-        name="search",
+        search_views.LexiconSearchResults.as_view(),
+        name="lexicon_search",
+    ),
+    path(
+        "<str:lang_code>/ignore/search",
+        search_views.IgnoreSearchResults.as_view(),
+        name="ignore_search",
     ),
     # ignore_word_views
     path(

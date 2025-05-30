@@ -1,36 +1,56 @@
 import logging
 
+from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView
 
 from apps.lexicon import models
 
 user_log = logging.getLogger("user_log")
+log = logging.getLogger("lexicon")
 
 
-class SearchResults(ListView):
-    """The actual lexicon entries, filtered by htmx-get."""
+class ProjectSearchView(ListView):
+    """Generic search view for project-scoped models.
+
+    Subclasses should define 'model' and a 'search_field'. Search will alternate
+    between the provided search_field and English toggle if applicable."""
 
     template_name = "lexicon/includes/search-results.html"
-    model = models.LexiconEntry
     paginate_by = 250
 
-    def get_queryset(self, **kwargs):
+    def get_queryset(self) -> QuerySet:
         search = self.request.GET.get("search")
-        is_english = self.request.GET.get("eng") == "true"
-
-        # Determine the field to search based on `is_english`
-        search_field = "eng__icontains" if is_english else "tok_ples__icontains"
-        filter_kwargs = {search_field: search}
-
         self.project = get_object_or_404(
             models.LexiconProject, language_code=self.kwargs.get("lang_code")
         )
-        query = models.LexiconEntry.objects.select_related("project").filter(
+        query = self.model.objects.select_related("project").filter(
             project=self.project
         )
         if search:
             user_log.info(f"{self.request.user} used search.")
-            return query.filter(**filter_kwargs)
+            return query.filter(**self.get_filter_kwargs())
         else:
             return query
+
+    def get_filter_kwargs(self) -> dict:
+        """Return the query parameters for filtering."""
+        search = self.request.GET.get("search")
+        is_english = self.request.GET.get("eng") == "true"
+
+        search_field = "eng__icontains" if is_english else self.search_field
+        return {search_field: search}
+
+
+class LexiconSearchResults(ProjectSearchView):
+    """Search results for lexicon entries."""
+
+    model = models.LexiconEntry
+    search_field = "tok_ples__icontains"
+
+
+class IgnoreSearchResults(ProjectSearchView):
+    """Search results for ignore words."""
+
+    model = models.IgnoreWord
+    search_field = "tok_ples__icontains"

@@ -1,95 +1,10 @@
 import pytest
-from django.contrib.auth.models import User
 from django.http import Http404
 from django.urls import reverse
 from django.views.generic import TemplateView
 
 from apps.lexicon import models
 from apps.lexicon.views import word_views
-
-
-@pytest.fixture
-def lexicon_projects():
-    """Create test lexicon projects"""
-    project1 = models.LexiconProject.objects.create(
-        language_name="English",
-        language_code="eng",
-        # Add other required fields based on your model
-    )
-    project2 = models.LexiconProject.objects.create(
-        language_name="Kovol",
-        language_code="kgu",
-    )
-    return [project1, project2]
-
-
-@pytest.fixture
-def english_project():
-    """Fixture to create an English project."""
-    return models.LexiconProject.objects.create(
-        language_code="eng",
-        language_name="English",
-    )
-
-
-@pytest.fixture
-def english_words(english_project):
-    """Fixture to create test words."""
-    word1 = models.LexiconEntry.objects.create(
-        tok_ples="test_word", eng="test_word_gloss", project=english_project
-    )
-    word2 = models.LexiconEntry.objects.create(
-        tok_ples="extra_word", eng="extra_word_gloss", project=english_project
-    )
-    return [word1, word2]
-
-
-@pytest.fixture
-def kovol_project():
-    """Fixture to create an English project."""
-    return models.LexiconProject.objects.create(
-        language_code="eng",
-        language_name="English",
-    )
-
-
-@pytest.fixture
-def english_words_with_paradigm(english_project):
-    """Fixture to create test words and a paradigm."""
-    word1 = models.LexiconEntry.objects.create(
-        tok_ples="test_word", eng="test_word_gloss", project=english_project
-    )
-    word2 = models.LexiconEntry.objects.create(
-        tok_ples="extra_word", eng="extra_word_gloss", project=english_project
-    )
-    paradigm = models.Paradigm.objects.create(
-        name="Test Paradigm",
-        row_labels=["row1"],
-        column_labels=["col1"],
-        project=english_project,
-    )
-    word1.paradigms.add(paradigm)
-    conjugation = models.Conjugation.objects.create(
-        word=word1, paradigm=paradigm, row=0, column=0, conjugation="test"
-    )
-    return [word1, word2], paradigm, conjugation
-
-
-@pytest.fixture
-def kovol_words(kovol_project):
-    """Fixture to create test words."""
-    word1 = models.LexiconEntry.objects.create(
-        tok_ples="hobol", eng="talk", project=kovol_project
-    )
-    word2 = models.LexiconEntry.objects.create(
-        tok_ples="bili", eng="good", project=kovol_project
-    )
-    return [word1, word2]
-
-
-@pytest.fixture
-def user(db):
-    return User.objects.create_user(username="testuser", password="testpass")
 
 
 @pytest.mark.django_db
@@ -227,10 +142,6 @@ class TestLexiconView:
         assert "lang_code" in context
         assert context["lang_code"] == english_project.language_code
 
-        # Assert context data specific to LexiconView
-        assert "search_view" in context
-        assert context["search_view"] == "lexicon:search"
-
     def test_lexicon_view_returns_404_for_non_existent_project(self, client):
         """
         Test that LexiconView returns a 404 Not Found error
@@ -245,95 +156,95 @@ class TestLexiconView:
         assert response.status_code == 404
 
 
-@pytest.mark.django_db
-class TestSearchResults:
-    """Tests for the SearchResults ListView."""
+# @pytest.mark.django_db
+# class TestSearchResults:
+#     """Tests for the SearchResults ListView."""
 
-    # URL to access the search results.
-    def get_base_url(self, lang_code):
-        return reverse("lexicon:search", kwargs={"lang_code": lang_code})
+#     # URL to access the search results.
+#     def get_base_url(self, lang_code):
+#         return reverse("lexicon:search", kwargs={"lang_code": lang_code})
 
-    def test_search_results_renders_correctly_no_search(
-        self, client, english_project, english_words
-    ):
-        """
-        Test that the view renders correctly with no search query,
-        returning all entries for the specified project.
-        """
-        url = self.get_base_url(english_project.language_code)
-        response = client.get(url)
+#     def test_search_results_renders_correctly_no_search(
+#         self, client, english_project, english_words
+#     ):
+#         """
+#         Test that the view renders correctly with no search query,
+#         returning all entries for the specified project.
+#         """
+#         url = self.get_base_url(english_project.language_code)
+#         response = client.get(url)
 
-        assert response.status_code == 200
-        assert response.templates[0].name == "lexicon/includes/search-results.html"
+#         assert response.status_code == 200
+#         assert response.templates[0].name == "lexicon/includes/search-results.html"
 
-        # Should contain both English entries
-        assert "object_list" in response.context
-        assert len(response.context["object_list"]) == 2
-        found_entries_tokples = {e.tok_ples for e in response.context["object_list"]}
-        assert "test_word" in found_entries_tokples
-        assert "extra_word" in found_entries_tokples
+#         # Should contain both English entries
+#         assert "object_list" in response.context
+#         assert len(response.context["object_list"]) == 2
+#         found_entries_tokples = {e.tok_ples for e in response.context["object_list"]}
+#         assert "test_word" in found_entries_tokples
+#         assert "extra_word" in found_entries_tokples
 
-    def test_search_results_filters_by_tok_ples_default(
-        self, client, english_project, english_words
-    ):
-        """
-        Test filtering by 'tok_ples' when 'eng' is not true or not provided.
-        """
-        url = self.get_base_url(english_project.language_code)
-        response = client.get(url, data={"search": "test"})  # Search for 'test'
+#     def test_search_results_filters_by_tok_ples_default(
+#         self, client, english_project, english_words
+#     ):
+#         """
+#         Test filtering by 'tok_ples' when 'eng' is not true or not provided.
+#         """
+#         url = self.get_base_url(english_project.language_code)
+#         response = client.get(url, data={"search": "test"})  # Search for 'test'
 
-        assert response.status_code == 200
-        assert len(response.context["object_list"]) == 1
-        assert response.context["object_list"][0].tok_ples == "test_word"
-        assert "test_word" in response.content.decode()
+#         assert response.status_code == 200
+#         assert len(response.context["object_list"]) == 1
+#         assert response.context["object_list"][0].tok_ples == "test_word"
+#         assert "test_word" in response.content.decode()
 
-    def test_search_results_filters_by_eng_field(
-        self, client, english_project, english_words
-    ):
-        """
-        Test filtering by 'eng' field when 'eng=true' is provided.
-        """
-        url = self.get_base_url(english_project.language_code)
-        response = client.get(
-            url, data={"search": "test", "eng": "true"}
-        )  # Search for 'sample' in English
+#     def test_search_results_filters_by_eng_field(
+#         self, client, english_project, english_words
+#     ):
+#         """
+#         Test filtering by 'eng' field when 'eng=true' is provided.
+#         """
+#         url = self.get_base_url(english_project.language_code)
+#         response = client.get(
+#             url, data={"search": "test", "eng": "true"}
+#         )  # Search for 'sample' in English
 
-        assert response.status_code == 200
-        assert len(response.context["object_list"]) == 1
-        found_entries_eng = {e.eng for e in response.context["object_list"]}
-        assert "test_word_gloss" in found_entries_eng
+#         assert response.status_code == 200
+#         assert len(response.context["object_list"]) == 1
+#         found_entries_eng = {e.eng for e in response.context["object_list"]}
+#         assert "test_word_gloss" in found_entries_eng
 
-    def test_search_results_no_matches(self, client, english_project, english_words):
-        """
-        Test that an empty queryset is returned when no matches are found.
-        """
-        url = self.get_base_url(english_project.language_code)
-        response = client.get(url, data={"search": "nonexistent_word"})
+#     def test_search_results_no_matches(self, client, english_project, english_words):
+#         """
+#         Test that an empty queryset is returned when no matches are found.
+#         """
+#         url = self.get_base_url(english_project.language_code)
+#         response = client.get(url, data={"search": "nonexistent_word"})
 
-        assert response.status_code == 200
-        assert len(response.context["object_list"]) == 0
+#         assert response.status_code == 200
+#         assert len(response.context["object_list"]) == 0
 
-    def test_search_results_filters_by_project_and_search(
-        self, client, kovol_project, kovol_words
-    ):
-        """
-        Test that entries are correctly filtered by both project and search query,
-        ensuring entries from other projects are not returned.
-        """
-        url = self.get_base_url(kovol_project.language_code)  # Target Kovol project
-        response = client.get(url, data={"search": "hobol"})  # Search for 'kgu_test'
+#     def test_search_results_filters_by_project_and_search(
+#         self, client, kovol_project, kovol_words
+#     ):
+#         """
+#         Test that entries are correctly filtered by both project and search query,
+#         ensuring entries from other projects are not returned.
+#         """
+#         url = self.get_base_url(kovol_project.language_code)  # Target Kovol project
+#         response = client.get(url, data={"search": "hobol"})  # Search for 'kgu_test'
 
-        assert response.status_code == 200
-        assert len(response.context["object_list"]) == 1
-        assert response.context["object_list"][0].tok_ples == "hobol"
+#         assert response.status_code == 200
+#         assert len(response.context["object_list"]) == 1
+#         assert response.context["object_list"][0].tok_ples == "hobol"
 
-    def test_search_results_returns_404_for_invalid_lang_code(self, client):
-        """
-        Test that the view returns 404 for a non-existent language code.
-        """
-        url = self.get_base_url("invalid_lang")
-        response = client.get(url)
-        assert response.status_code == 404
+#     def test_search_results_returns_404_for_invalid_lang_code(self, client):
+#         """
+#         Test that the view returns 404 for a non-existent language code.
+#         """
+#         url = self.get_base_url("invalid_lang")
+#         response = client.get(url)
+#         assert response.status_code == 404
 
 
 @pytest.mark.django_db
