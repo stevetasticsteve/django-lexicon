@@ -1,17 +1,29 @@
+import logging
 import os
+import re
 from zipfile import ZipFile
 
-from django.http import request
+from django.http import HttpRequest
 from django.urls import reverse
+from django.db.models.query import QuerySet
 
 from apps.lexicon import models
 
+log = logging.getLogger("lexicon")
 export_folder = os.path.join("data", "exports")
 
 
 def export_entries(
-    file_format: str, project: models.LexiconProject, checked: bool, request: request
-):
+    file_format: str,
+    project: models.LexiconProject,
+    checked: bool,
+    request: HttpRequest,
+) -> str:
+    """The view calls this function to export entries in the given format.
+
+    It takes the file format, the project to export from, whether to export only checked entries,
+    It returns the path to the created file."""
+    check_export_folder()
     match file_format:
         case "dic":
             return create_dic_file(project, checked)
@@ -21,7 +33,24 @@ def export_entries(
             return create_xml_file(project, checked)
 
 
-def get_entries(project: models.LexiconProject, checked: bool):
+def sanitize_filename_component(value: str) -> str:
+    # Only allow alphanumeric, underscore, hyphen
+    return re.sub(r"[^a-zA-Z0-9_-]", "_", value)
+
+
+def check_export_folder() -> None:
+    """Checks if the export folder exists, and creates it if not."""
+    os.makedirs(export_folder, exist_ok=True)
+    if not os.path.isdir(export_folder):
+        raise ValueError(f"Export folder {export_folder} is not a directory.")
+    elif not os.access(export_folder, os.W_OK):
+        raise PermissionError(f"Export folder {export_folder} is not writable.")
+
+
+def get_entries(
+    project: models.LexiconProject, checked: bool
+) -> QuerySet:
+    """Returns the entries to be exported from the database."""
     if checked:
         return models.LexiconEntry.objects.filter(checked=True, project=project)
     else:
@@ -31,8 +60,12 @@ def get_entries(project: models.LexiconProject, checked: bool):
 def create_dic_file(project: models.LexiconProject, checked: bool) -> str:
     """Creates a new .dic file and returns it's path.
 
-    The path is in the format <lang code>_version.dic."""
-    path = os.path.join(export_folder, f"{project.language_code}_{project.version}.dic")
+    The path is in the format {lang code}_{version}.dic."""
+    safe_lang_code = sanitize_filename_component(project.language_code)
+    safe_version = sanitize_filename_component(str(project.version))
+    path = os.path.join(export_folder, f"{safe_lang_code}_{safe_version}.dic")
+    if not os.path.exists(export_folder):
+        os.makedirs(export_folder)
 
     with open(path, "w") as file:
         entries = get_entries(project, checked)
@@ -44,8 +77,10 @@ def create_dic_file(project: models.LexiconProject, checked: bool) -> str:
 def create_xml_file(project: models.LexiconProject, checked: bool) -> str:
     """Creates a new .xml file and returns it's path.
 
-    The path is in the format <lang code>_version.xml."""
-    path = os.path.join(export_folder, f"{project.language_code}_{project.version}.xml")
+    The path is in the format {lang code}_{version}.xml."""
+    safe_lang_code = sanitize_filename_component(project.language_code)
+    safe_version = sanitize_filename_component(str(project.version))
+    path = os.path.join(export_folder, f"{safe_lang_code}_{safe_version}.xml")
     with open(path, "w") as file:
         entries = get_entries(project, checked)
         file.write('﻿<?xml version="1.0" encoding="utf-8"?>')
@@ -58,7 +93,7 @@ def create_xml_file(project: models.LexiconProject, checked: bool) -> str:
 
 
 def create_oxt_package(
-    project: models.LexiconProject, checked: bool, request: request
+    project: models.LexiconProject, checked: bool, request: HttpRequest
 ) -> str:
     """Creates a Libre office oxt zip file and returns it's path."""
 
@@ -66,6 +101,19 @@ def create_oxt_package(
     dic_contents = str(len(entries)) + "".join([f"\n{w.tok_ples}" for w in entries])
 
     template_path = os.path.join("apps", "lexicon", "templates", "oxt")
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(
+            f"Template path {template_path} does not exist. "
+            "Please ensure the template files are present."
+        )
+
+    # Iterate over files within the directory
+    for filename in os.listdir(template_path):
+        file_full_path = os.path.join(template_path, filename)
+        if not os.path.exists(file_full_path):
+            raise FileNotFoundError(f"Template file {file_full_path} does not exist.")
+        if not os.access(file_full_path, os.R_OK):
+            raise PermissionError(f"Template file {file_full_path} is not readable.")
 
     # write the description xml
     with open(os.path.join(template_path, "description.xml"), "r") as f:
@@ -85,9 +133,9 @@ def create_oxt_package(
         xcu_contents = f.read()
         xcu_contents = xcu_contents.replace("$LANG_CODE", project.language_code)
 
-    zip_path = os.path.join(
-        export_folder, f"{project.language_code}_{project.version}.oxt"
-    )
+    safe_lang_code = sanitize_filename_component(project.language_code)
+    safe_version = sanitize_filename_component(str(project.version))
+    zip_path = os.path.join(export_folder, f"{safe_lang_code}_{safe_version}.oxt")
     # Build the zip file
     with ZipFile(
         zip_path,
