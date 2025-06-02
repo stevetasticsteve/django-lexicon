@@ -38,12 +38,14 @@ def dummy_request():
 
 
 def test_sanitize_filename_component():
+    """Test dangerous filenames are sanitized correctly."""
     assert export.sanitize_filename_component("en/../g") == "en____g"
     assert export.sanitize_filename_component("en*bad?name") == "en_bad_name"
     assert export.sanitize_filename_component("en_good-name") == "en_good-name"
 
 
 def test_check_export_folder_creates_and_checks(temp_export_folder):
+    """Test that the export folder is created and checked."""
     # Should not raise
     export.check_export_folder()
     # Should be a directory and writable
@@ -65,6 +67,7 @@ def test_create_dic_file_creates_file(temp_export_folder, dummy_project, english
 
 @pytest.mark.django_db
 def test_create_xml_file_creates_file(temp_export_folder, dummy_project, english_words):
+    """Test that XML file is created with correct content."""
     path = export.create_xml_file(dummy_project, checked=False)
     assert os.path.exists(path)
     with open(path) as f:
@@ -78,6 +81,7 @@ def test_create_xml_file_creates_file(temp_export_folder, dummy_project, english
 def test_export_entries_dispatches_correct_format(
     monkeypatch, dummy_project, dummy_request
 ):
+    """Test that export_entries calls the correct functions based on format."""
     called = {}
     monkeypatch.setattr(
         export,
@@ -109,6 +113,7 @@ def test_export_entries_dispatches_correct_format(
 def test_create_oxt_package_creates_zip(
     temp_export_folder, dummy_project, english_words, dummy_request, monkeypatch
 ):
+    """Test that OXT package is created with all required files."""
     path = export.create_oxt_package(
         dummy_project, checked=False, request=dummy_request
     )

@@ -45,11 +45,6 @@ class LexiconView(ProjectContextMixin, TemplateView):
 
     template_name = "lexicon/lexicon_list.html"
 
-    # def get_context_data(self, **kwargs) -> dict:
-    #     context = super().get_context_data(**kwargs)
-    #     context["search_view"] = "lexicon:search"
-    #     return context
-
 
 class EntryDetail(ProjectContextMixin, DetailView):
     """The view at url lexicon<lang code>/<pk>/detail. Displays all info in .db for a word."""

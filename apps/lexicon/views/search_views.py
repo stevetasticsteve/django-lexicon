@@ -52,5 +52,6 @@ class LexiconSearchResults(ProjectSearchView):
 class IgnoreSearchResults(ProjectSearchView):
     """Search results for ignore words."""
 
+    template_name = "lexicon/includes/ignore_search_results.html"
     model = models.IgnoreWord
     search_field = "tok_ples__icontains"

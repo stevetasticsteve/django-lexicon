@@ -82,11 +82,6 @@ urlpatterns = [
         name="ignore_list",
     ),
     path(
-        "<str:lang_code>/ignore/search",
-        ignore_word_views.IgnoreSearchResults.as_view(),
-        name="ignore_search",
-    ),
-    path(
         "<str:lang_code>/ignore/create",
         ignore_word_views.CreateIgnoreWordView.as_view(),
         name="create_ignore",

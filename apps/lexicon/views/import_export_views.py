@@ -63,6 +63,7 @@ class ExportPage(ProjectContextMixin, FormView):
 
 
 def latest_oxt(request, lang_code) -> FileResponse:
+    """Respond to requests for the latest oxt file."""
     file = export.export_entries(
         "oxt",
         get_object_or_404(models.LexiconProject, language_code=lang_code),
