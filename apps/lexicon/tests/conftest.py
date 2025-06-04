@@ -86,3 +86,30 @@ def kovol_words(kovol_project):
 @pytest.fixture
 def user(db):
     return User.objects.create_user(username="testuser", password="testpass")
+
+@pytest.fixture
+def multirow_paradigm(english_project):
+    paradigm = models.Paradigm.objects.create(
+        name="Multirow Paradigm",
+        project=english_project,
+        row_labels=["1", "2", "3"],
+        column_labels=["1", "2"],
+    )
+    word = models.LexiconEntry.objects.create(
+        tok_ples="multiword",
+        eng="multiword",
+        project=english_project,
+    )
+    # Create conjugations for all cells
+    conjugations = []
+    for row in range(3):
+        for col in range(2):
+            conj = models.Conjugation.objects.create(
+                word=word,
+                paradigm=paradigm,
+                row=row,
+                column=col,
+                conjugation=f"orig_{row}_{col}",
+            )
+            conjugations.append(conj)
+    return word, paradigm, conjugations

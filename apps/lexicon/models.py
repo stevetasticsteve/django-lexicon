@@ -321,7 +321,7 @@ class Paradigm(models.Model):
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"Paradigm: {self.name} ({self.part_of_speech})"
+        return f"{self.name} {self.part_of_speech} paradigm"
 
 
 class Conjugation(models.Model):
@@ -385,6 +385,6 @@ class Conjugation(models.Model):
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
         if self.conjugation:
-            return f"Conjugation: {self.conjugation} for {self.word} in {self.paradigm}"
+            return f"{self.conjugation}, a conjugation for {self.word} in {self.paradigm}"
         else:
-            return f"Empty conjugation for {self.word} in {self.paradigm} ({self.get_grid_labels()})"
+            return f"Empty conjugation for {self.word} in {self.paradigm}"

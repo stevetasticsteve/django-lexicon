@@ -17,6 +17,12 @@ log = logging.getLogger("lexicon")
 
 
 class paradigm_modal(ProjectContextMixin, FormView):
+    """A view to select a paradigm for a word.
+    Displays a modal dialog with a form to select a paradigm.
+    The form is submitted via htmx and the selected paradigm is applied to the word.
+    Found at lexicon/<lang code>/<pk>/paradigm-modal.
+    The response is a 204 No Content to close the modal dialog."""
+
     template_name = "lexicon/includes/paradigm_modal.html"
     form_class = forms.ParadigmSelectForm
 
@@ -34,7 +40,6 @@ class paradigm_modal(ProjectContextMixin, FormView):
         return context
 
     def form_valid(self, form):
-        # Do your processing here (e.g., save data)
         selected_paradigm = models.Paradigm.objects.get(
             pk=form.cleaned_data["paradigm"]
         )
@@ -70,16 +75,17 @@ class ParadigmView(View):
         paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
 
         formset = self._get_or_create_formset_context(word, paradigm, request.POST)
+        log.debug(f"formset post data = {formset.data}")
         if formset.is_valid():
-            log.debug("Formset is valid")
+            log.debug("Paradigm conjugation formset is valid")
             formset.save()
             # Success: re-render the view template
             context = self._context_lookup(word_pk, paradigm_pk)
             return render(request, self.view_template, context)
         else:
             # Errors: re-render the edit template with errors
-            log.debug("Formset is NOT valid")
-            log.debug(formset.errors)
+            log.debug("Paradigm conjugation formset is NOT valid")
+            log.debug(f"formset errors = {formset.errors}")
             context = self._context_lookup(word_pk, paradigm_pk)
             return render(request, self.edit_template, context)
 
@@ -98,7 +104,6 @@ class ParadigmView(View):
 
         formset = self._get_or_create_formset_context(word, paradigm)
         # Create a grid of forms for the template
-        # self._ensure_conjugations_exist(word, paradigm)
         forms_grid = []
         forms_iter = iter(formset.forms)
         for _ in range(len(paradigm.row_labels)):
@@ -106,7 +111,6 @@ class ParadigmView(View):
             for _ in range(len(paradigm.column_labels)):
                 row.append(next(forms_iter))
             forms_grid.append(row)
-        log.debug(f"forms_grid= {forms_grid}")
 
         return {
             "conjugation_grid": conjugation_grid,
@@ -116,21 +120,8 @@ class ParadigmView(View):
             "forms_grid": forms_grid,
         }
 
-    # def _ensure_conjugations_exist(self, word, paradigm):
-    #     """Ensure all grid positions have conjugation objects in the database."""
-    #     for row_idx in range(len(paradigm.row_labels)):
-    #         for col_idx in range(len(paradigm.column_labels)):
-    #             models.Conjugation.objects.get_or_create(
-    #                 word=word,
-    #                 paradigm=paradigm,
-    #                 row=row_idx,
-    #                 column=col_idx,
-    #                 defaults={"conjugation": ""},
-    #             )
-
     def _get_or_create_formset_context(self, word, paradigm, data=None):
         """Single method to handle formset creation for both GET and POST."""
-        # self._ensure_conjugations_exist(word, paradigm)
         qs = models.Conjugation.objects.filter(word=word, paradigm=paradigm).order_by(
             "row", "column"
         )
