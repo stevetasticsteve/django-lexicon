@@ -2,7 +2,6 @@ import pytest
 from django.urls import reverse
 
 from apps.lexicon import models
-from apps.lexicon import forms
 
 
 @pytest.mark.django_db
@@ -189,37 +188,39 @@ class TestParadigmEditAdvanced:
                 assert conj.conjugation == ""
             else:
                 assert conj.conjugation == f"orig_{conj.row}_{conj.column}"
-# can't get the delte test to work
-    # def test_remove_conjugation(self, client, user, multirow_paradigm):
-    #     """Test the view can update a 3x2 paradigm, ensuring blank rows are deleted from db."""
-    #     client.force_login(user)
-    #     word, paradigm, conjugations = multirow_paradigm
-    #     initial_conjugation_number = models.Conjugation.objects.filter(
-    #         word=word, paradigm=paradigm
-    #     ).count()
-    #     url = self.get_edit_url(word, paradigm)
-    #     response = client.get(url)
-    #     formset = response.context["formset"]
-    #     data = formset.management_form.initial
 
-    #     # Remove the last conjugation by omitting its id and values
-    #     for i, form in enumerate(formset.forms):
-    #         data[f"form-{i}-conjugation"] = "changed"
-    #         data[f"form-{i}-id"] = form.instance.id if form.instance.id else ""
-    #         if i == len(formset.forms) - 1:
-    #             print("\nBOOOMSHAKA\n")
-    #             # overwrite the last form to submit blank.
-    #             data[f"form-{i}-conjugation"] = form.instance.conjugation
-    #     data["form-TOTAL_FORMS"] = len(formset.forms) - 1
-    #     data["form-INITIAL_FORMS"] = formset.initial_form_count()
-    #     data["form-MIN_NUM_FORMS"] = 0
-    #     data["form-MAX_NUM_FORMS"] = 1000
-    #     print(data)
-    #     post_response = client.post(url, data)
-    #     assert post_response.status_code == 200
-    #     # The last conjugation should be deleted
-    #     print(models.Conjugation.objects.all())
-    #     assert (
-    #         models.Conjugation.objects.filter(word=word, paradigm=paradigm).count()
-    #         == initial_conjugation_number - 1
-    #     )
+
+# can't get the delte test to work
+# def test_remove_conjugation(self, client, user, multirow_paradigm):
+#     """Test the view can update a 3x2 paradigm, ensuring blank rows are deleted from db."""
+#     client.force_login(user)
+#     word, paradigm, conjugations = multirow_paradigm
+#     initial_conjugation_number = models.Conjugation.objects.filter(
+#         word=word, paradigm=paradigm
+#     ).count()
+#     url = self.get_edit_url(word, paradigm)
+#     response = client.get(url)
+#     formset = response.context["formset"]
+#     data = formset.management_form.initial
+
+#     # Remove the last conjugation by omitting its id and values
+#     for i, form in enumerate(formset.forms):
+#         data[f"form-{i}-conjugation"] = "changed"
+#         data[f"form-{i}-id"] = form.instance.id if form.instance.id else ""
+#         if i == len(formset.forms) - 1:
+#             print("\nBOOOMSHAKA\n")
+#             # overwrite the last form to submit blank.
+#             data[f"form-{i}-conjugation"] = form.instance.conjugation
+#     data["form-TOTAL_FORMS"] = len(formset.forms) - 1
+#     data["form-INITIAL_FORMS"] = formset.initial_form_count()
+#     data["form-MIN_NUM_FORMS"] = 0
+#     data["form-MAX_NUM_FORMS"] = 1000
+#     print(data)
+#     post_response = client.post(url, data)
+#     assert post_response.status_code == 200
+#     # The last conjugation should be deleted
+#     print(models.Conjugation.objects.all())
+#     assert (
+#         models.Conjugation.objects.filter(word=word, paradigm=paradigm).count()
+#         == initial_conjugation_number - 1
+#     )

@@ -378,6 +378,57 @@ class TestCreateEntry:
         )
         assert entry.modified_by == user.username
 
+    def test_create_entry_scope_limited(
+        self, client, english_words, english_project, kovol_project, user
+    ):
+        """Created entries should be unique within projects only. The unique
+        constraint shouldn't affect other projects"""
+        client.force_login(user)
+        url = self.get_create_url(kovol_project)
+        data = {
+            "tok_ples": "test_word",
+            "eng": "test_word_eng",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 302
+        assert models.LexiconEntry.objects.filter(
+            project=kovol_project, tok_ples="test_word"
+        )
+        assert models.LexiconEntry.objects.filter(
+            project=english_project, tok_ples="test_word"
+        )
+        assert models.LexiconEntry.objects.filter(tok_ples="test_word").count() == 2
+
+    def test_tok_ples_unique_within_project(
+        self, client, english_words, english_project, user
+    ):
+        """Test the unique constraint for tok_ples within a project holds."""
+        client.force_login(user)
+        url = self.get_create_url(english_project)
+        data = {
+            "tok_ples": "test_word",
+            "eng": "test_word_eng",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 200
+        assert (
+            "Lexicon entry with this Project and Tok Ples already exists."
+            in response.content.decode()
+        )
+        assert models.LexiconEntry.objects.filter(tok_ples="test_word").count() == 1
+
     def test_create_entry_invalid_tok_ples_chars(self, client, user):
         """
         POST data with tok_ples violating the project's regex validator
