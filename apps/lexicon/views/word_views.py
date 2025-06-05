@@ -2,6 +2,7 @@ import datetime
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -75,12 +76,17 @@ class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
         # When creating a word project cannot be retrieved from the db.
         # project is required for validation, so it is provided for object creation.
         kwargs = super().get_form_kwargs()
-        kwargs['instance'] = self.model(project=self.get_project())
+        kwargs["instance"] = self.model(project=self.get_project())
         return kwargs
 
     def form_valid(self, form, **kwargs) -> HttpResponse:
         """When the form saves run this code."""
         obj = form.save(commit=False)
+        try:
+            obj.full_clean()
+        except ValidationError as e:
+            form.add_error(None, e)
+            return self.form_invalid(form)
         obj.modified_by = self.request.user.username
         obj.project = self.get_project()
         obj.save()
@@ -97,8 +103,12 @@ class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
 
     def form_valid(self, form, **kwargs) -> HttpResponse:
         """Code that runs when the form has been submitted and is valid."""
-
         # Add user the user who made modifications or requested a review
+        try:
+            self.object.full_clean()
+        except ValidationError as e:
+            form.add_error(None, e)
+            return self.form_invalid(form)
         self.object.modified_by = self.request.user.username
         if "review" in form.changed_data:
             self.object.review_user = self.request.user.username
@@ -106,7 +116,6 @@ class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
         user_log.info(
             f"{self.request.user} edited an entry in {self.object.project} lexicon."
         )
-
         return super().form_valid(form, **kwargs)
 
 

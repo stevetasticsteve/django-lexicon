@@ -11,6 +11,7 @@ log = logging.getLogger("lexicon")
 class LexiconProject(models.Model):
     """Represents a unique language to build a lexicon for."""
 
+    # fields
     language_name = models.CharField(
         max_length=45, blank=False, null=False, verbose_name="Language name"
     )
@@ -52,6 +53,11 @@ WORDCHARS -
 NOSUGGEST !""",
     )
 
+    # methods
+    def __str__(self):
+        """What Python calls this object when it shows it on screen."""
+        return f"{self.language_name} lexicon project"
+
     def clean(self):
         super().clean()
         if self.tok_ples_validator:
@@ -62,19 +68,15 @@ NOSUGGEST !""",
                     {"tok_ples_validator": "This is not a valid regular expression."}
                 )
 
-    def __str__(self):
-        """What Python calls this object when it shows it on screen."""
-        return f"{self.language_name} lexicon project"
 
-
-# Lexicon entry models
 class LexiconEntry(models.Model):
-    "A base class other models can inherit from."
+    "A representation of a word in a lexicon project."
 
+    # fields
     project = models.ForeignKey(
         LexiconProject,
         on_delete=models.CASCADE,
-        related_name="project",
+        related_name="entries",
         blank=False,
         null=False,
     )
@@ -84,7 +86,6 @@ class LexiconEntry(models.Model):
         max_length=60,
         null=False,
         blank=False,
-        unique=True,
     )
     eng = models.CharField(
         verbose_name="English",
@@ -151,32 +152,17 @@ class LexiconEntry(models.Model):
         help_text="Paradigms that this word can use for conjugation/declension",
     )
 
-    def save(self, *args, **kwargs):
-        """Code that runs whenever a Lexicon entry is saved.
+    # Methods
+    def __str__(self):
+        """What Python calls this object when it shows it on screen."""
+        return f"Word: {self.tok_ples} in {self.project.language_name}"
 
-        Lower case should be enforced and the version number updated if the tok_ples
-        changes.
-        The version number is used mostly to keep track of spell check exports,
-        we don't want users downloading new spell checks when no spelling data
-        has changed."""
-        self.tok_ples = self.tok_ples.lower()
-        if self.eng:
-            self.eng = self.eng.lower()
-        if self.oth_lang:
-            self.oth_lang = self.oth_lang.lower()
-
-        # Increment the project's version number only if the object already exists
-        # and tok_ples has changed.
-        # self.pk will be None for a new object, so __original_tok_ples won't be valid yet.
-        if (
-            self.pk
-            and hasattr(self, "__original_tok_ples")
-            and self.__original_tok_ples != self.tok_ples
-        ):
-            self.project.version += 1
-            self.project.save()  # Save the project to update its version
-
-        return super(LexiconEntry, self).save(*args, **kwargs)
+    def get_absolute_url(self):
+        """What page Django should return if asked to show this entry."""
+        # Return the detail page for the word
+        return reverse(
+            "lexicon:entry_detail", args=(self.project.language_code, self.pk)
+        )
 
     def clean(self):
         """
@@ -184,7 +170,6 @@ class LexiconEntry(models.Model):
         Checks tok_ples against the project's tok_ples_validator regex.
         """
         super().clean()  # Call the parent's clean method first
-
         # Only attempt validation if project is set (e.g., when creating via a form or directly setting project)
         # and if the validator is present on the project.
         if (
@@ -217,37 +202,48 @@ class LexiconEntry(models.Model):
                 raise ValidationError(
                     {"project": "The selected project does not exist."}
                 )
-            else:
-                log.error("No validation")
 
-    def __str__(self):
-        """What Python calls this object when it shows it on screen."""
-        return f"Word: {self.tok_ples} in {self.project.language_name}"
+    def save(self, *args, **kwargs):
+        """Code that runs whenever a Lexicon entry is saved.
 
-    def get_absolute_url(self):
-        """What page Django should return if asked to show this entry."""
-        # Return the detail page for the word
-        return reverse(
-            "lexicon:entry_detail", args=(self.project.language_code, self.pk)
-        )
+        Lower case should be enforced and the version number updated if the tok_ples
+        changes.
+        The version number is used mostly to keep track of spell check exports,
+        we don't want users downloading new spell checks when no spelling data
+        has changed."""
+        self.tok_ples = self.tok_ples.lower()
+        if self.eng:
+            self.eng = self.eng.lower()
+        if self.oth_lang:
+            self.oth_lang = self.oth_lang.lower()
 
-    def __init__(self, *args, **kwargs):
-        """Override the init to remember the original tok_ples value"""
-        super().__init__(*args, **kwargs)
-        # Store original tok_ples only if the object has been loaded from the DB
-        # (i.e., it's not a new object being created).
-        # For new objects, tok_ples will be set after __init__ or in ModelForm.
-        if self.pk:  # Check if the primary key exists (meaning it's an existing object)
-            self.__original_tok_ples = self.tok_ples
-        else:
-            # For new objects, initialize it to None or some default
-            self.__original_tok_ples = (
-                None  # Or self.tok_ples if tok_ples is passed in kwargs
-            )
-            # Better to just not set it if it's a new object and handle it in save()
+        original_tok_ples = None
+        # Fetch original tok_ples only if this is an existing object
+        if self.pk:
+            try:
+                original_tok_ples = LexiconEntry.objects.get(pk=self.pk).tok_ples
+            except LexiconEntry.DoesNotExist:
+                # Should not happen if self.pk exists, but defensive
+                pass
+                self.project.save()  # Save the project to update its version
+
+        # Perform the actual save first to ensure it's in the DB
+        # and to catch any integrity errors before updating project version.
+        super(LexiconEntry, self).save(*args, **kwargs)
+
+        # Now check if tok_ples changed from its original (pre-save) value
+        # and if it's not a new object (pk exists after save)
+        if original_tok_ples and original_tok_ples != self.tok_ples:
+            self.project.version += 1
+            self.project.save()  # Save the project to update its version
 
     class Meta:
         ordering = ["tok_ples"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "tok_ples"], name="unique_tok_ples_per_project"
+            )
+        ]
 
 
 class SpellingVariation(models.Model):
@@ -262,11 +258,6 @@ class SpellingVariation(models.Model):
         blank=False,
         null=False,
         help_text="write the spelling variation here",
-        # validators=RegexValidator(
-        #     regex=word.project.tok_ples_validator,
-        #     message="You must only use allowed characters.",
-        #     flags=re.IGNORECASE,
-        # ),
     )
 
     def __str__(self):
