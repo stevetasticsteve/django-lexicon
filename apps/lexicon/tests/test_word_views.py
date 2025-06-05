@@ -378,6 +378,51 @@ class TestCreateEntry:
         )
         assert entry.modified_by == user.username
 
+    def test_create_entry_invalid_tok_ples_chars(self, client, user):
+        """
+        POST data with tok_ples violating the project's regex validator
+        should re-render the form with validation errors and not save the entry.
+        """
+        client.force_login(user)
+
+        # 1. Create a project with a specific tok_ples_validator
+        # Only allows lowercase letters
+        project_with_validator = models.LexiconProject.objects.create(
+            language_name="Validated Lang",
+            language_code="vld",
+            tok_ples_validator="^[a-z]+$",
+        )
+
+        url = self.get_create_url(project_with_validator)
+
+        # Data with invalid characters (space, number, uppercase)
+        invalid_data = {
+            "tok_ples": "Invalid Word 123",
+            "eng": "an invalid word",
+            "oth_lang": "",
+            "pos": "n",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+
+        response = client.post(url, invalid_data)
+
+        # 2. Assert status code is 200 (form re-rendered with errors)
+        assert response.status_code == 200
+
+        # 3. Assert the validation error message is present
+        # Note: HTML encoding might convert ' (apostrophe) to &#x27; or &apos;
+        assert (
+            "Tok Ples entry contains characters not allowed by the project&#x27;s validator."
+            in response.content.decode()
+        )
+        # 4. Assert that no LexiconEntry was created for this project
+        assert not models.LexiconEntry.objects.filter(
+            tok_ples="invalid word 123", project=project_with_validator
+        ).exists()  # Note: tok_ples is lowercased on save if it ever got there
+
 
 @pytest.mark.django_db
 class TestUpdateEntry:
@@ -469,6 +514,66 @@ class TestUpdateEntry:
         entry.refresh_from_db()
         assert entry.review_user == user.username
         assert entry.review_time is not None
+
+    def test_update_entry_invalid_tok_ples_chars(self, client, user):
+        """
+        POST data to update an entry with tok_ples violating the project's regex validator
+        should re-render the form with validation errors and not update the entry.
+        """
+        client.force_login(user)
+
+        # 1. Create a project with a specific tok_ples_validator
+        project_with_validator = models.LexiconProject.objects.create(
+            language_name="Validated Update Lang",
+            language_code="vul",
+            tok_ples_validator="^[a-z]+$",  # Only allows lowercase letters
+        )
+
+        # 2. Create an initial, valid entry for this project
+        original_tok_ples = "validword"
+        original_eng = "validgloss"
+        entry_to_update = models.LexiconEntry.objects.create(
+            tok_ples=original_tok_ples,
+            eng=original_eng,
+            project=project_with_validator,
+            checked=False,
+            review=0,
+        )
+
+        url = self.get_update_url(project_with_validator, entry_to_update)
+
+        # Data with an invalid tok_ples (contains spaces, numbers, uppercase)
+        invalid_tok_ples_attempt = "Invalid Word 456"
+        data = {
+            "tok_ples": invalid_tok_ples_attempt,  # This violates the regex
+            "eng": "new_gloss_for_invalid",  # This field would otherwise update
+            "oth_lang": "",
+            "pos": "n",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+
+        response = client.post(url, data)
+
+        # 3. Assert status code is 200 (form re-rendered with errors)
+        assert response.status_code == 200
+
+        # 4. Assert the validation error message is present
+        assert (
+            "Tok Ples entry contains characters not allowed by the project&#x27;s validator."
+            in response.content.decode()
+        )
+
+        # 5. Assert that the entry in the database was NOT updated
+        entry_to_update.refresh_from_db()  # Get the latest state from the database
+        assert (
+            entry_to_update.tok_ples == original_tok_ples
+        )  # Should still be the original
+        assert (
+            entry_to_update.eng == original_eng
+        )  # Other fields should also not have changed
 
 
 @pytest.mark.django_db

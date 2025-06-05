@@ -1,9 +1,11 @@
+import logging
 import re
 
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
+
+log = logging.getLogger("lexicon")
 
 
 class LexiconProject(models.Model):
@@ -50,6 +52,16 @@ WORDCHARS -
 NOSUGGEST !""",
     )
 
+    def clean(self):
+        super().clean()
+        if self.tok_ples_validator:
+            try:
+                re.compile(self.tok_ples_validator)
+            except re.error:
+                raise ValidationError(
+                    {"tok_ples_validator": "This is not a valid regular expression."}
+                )
+
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
         return f"{self.language_name} lexicon project"
@@ -73,11 +85,6 @@ class LexiconEntry(models.Model):
         null=False,
         blank=False,
         unique=True,
-        # validators=RegexValidator(
-        #     regex=project.project.tok_ples_validator,
-        #     message="You must only use allowed characters.",
-        #     flags=re.IGNORECASE,
-        # ),
     )
     eng = models.CharField(
         verbose_name="English",
@@ -152,18 +159,66 @@ class LexiconEntry(models.Model):
         The version number is used mostly to keep track of spell check exports,
         we don't want users downloading new spell checks when no spelling data
         has changed."""
-        # Make all entries lower case
         self.tok_ples = self.tok_ples.lower()
-        if self.eng:  # imports may be lacking, avoid a None type error
+        if self.eng:
             self.eng = self.eng.lower()
-        if self.oth_lang:  # this field is optional, avoid a None type error
+        if self.oth_lang:
             self.oth_lang = self.oth_lang.lower()
-        # Increment the project's version number
-        if self.__original_tok_ples != self.tok_ples:
+
+        # Increment the project's version number only if the object already exists
+        # and tok_ples has changed.
+        # self.pk will be None for a new object, so __original_tok_ples won't be valid yet.
+        if (
+            self.pk
+            and hasattr(self, "__original_tok_ples")
+            and self.__original_tok_ples != self.tok_ples
+        ):
             self.project.version += 1
-        self.project.save()
+            self.project.save()  # Save the project to update its version
 
         return super(LexiconEntry, self).save(*args, **kwargs)
+
+    def clean(self):
+        """
+        Custom validation for the LexiconEntry model.
+        Checks tok_ples against the project's tok_ples_validator regex.
+        """
+        super().clean()  # Call the parent's clean method first
+
+        # Only attempt validation if project is set (e.g., when creating via a form or directly setting project)
+        # and if the validator is present on the project.
+        if (
+            self.project_id
+        ):  # Use project_id for existence check during initial creation
+            try:
+                # Access the project object only if project_id is set
+                project_instance = self.project  # This will now load the project object
+                if project_instance.tok_ples_validator:
+                    regex_pattern = project_instance.tok_ples_validator
+                    try:
+                        # Compile the regex to ensure it's valid
+                        regex = re.compile(regex_pattern, re.IGNORECASE)
+                    except re.error:
+                        raise ValidationError(
+                            {
+                                "tok_ples": "The associated project's Tok Ples validator regex is invalid. Please contact an administrator."
+                            }
+                        )
+
+                    if not regex.fullmatch(self.tok_ples):
+                        raise ValidationError(
+                            {
+                                "tok_ples": "Tok Ples entry contains characters not allowed by the project's validator."
+                            }
+                        )
+            except LexiconProject.DoesNotExist:
+                # This case should ideally not happen if project_id is set,
+                # but good to handle defensively.
+                raise ValidationError(
+                    {"project": "The selected project does not exist."}
+                )
+            else:
+                log.error("No validation")
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
@@ -179,7 +234,17 @@ class LexiconEntry(models.Model):
     def __init__(self, *args, **kwargs):
         """Override the init to remember the original tok_ples value"""
         super().__init__(*args, **kwargs)
-        self.__original_tok_ples = self.tok_ples
+        # Store original tok_ples only if the object has been loaded from the DB
+        # (i.e., it's not a new object being created).
+        # For new objects, tok_ples will be set after __init__ or in ModelForm.
+        if self.pk:  # Check if the primary key exists (meaning it's an existing object)
+            self.__original_tok_ples = self.tok_ples
+        else:
+            # For new objects, initialize it to None or some default
+            self.__original_tok_ples = (
+                None  # Or self.tok_ples if tok_ples is passed in kwargs
+            )
+            # Better to just not set it if it's a new object and handle it in save()
 
     class Meta:
         ordering = ["tok_ples"]
@@ -385,6 +450,8 @@ class Conjugation(models.Model):
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
         if self.conjugation:
-            return f"{self.conjugation}, a conjugation for {self.word} in {self.paradigm}"
+            return (
+                f"{self.conjugation}, a conjugation for {self.word} in {self.paradigm}"
+            )
         else:
             return f"Empty conjugation for {self.word} in {self.paradigm}"

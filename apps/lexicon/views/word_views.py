@@ -71,6 +71,13 @@ class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
     fields = forms.editable_fields
     template_name = "lexicon/simple_form.html"
 
+    def get_form_kwargs(self):
+        # When creating a word project cannot be retrieved from the db.
+        # project is required for validation, so it is provided for object creation.
+        kwargs = super().get_form_kwargs()
+        kwargs['instance'] = self.model(project=self.get_project())
+        return kwargs
+
     def form_valid(self, form, **kwargs) -> HttpResponse:
         """When the form saves run this code."""
         obj = form.save(commit=False)
