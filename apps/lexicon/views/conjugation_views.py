@@ -26,6 +26,10 @@ class paradigm_modal(ProjectContextMixin, FormView):
     template_name = "lexicon/includes/paradigm_modal.html"
     form_class = forms.ParadigmSelectForm
 
+    def post(self, request, *args, **kwargs):
+        log.debug("lexicon:paradigm_modal POST request.")
+        return super().post(request, *args, **kwargs)
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         # Add extra data you want to pass
@@ -45,7 +49,7 @@ class paradigm_modal(ProjectContextMixin, FormView):
         )
         word = models.LexiconEntry.objects.get(pk=self.kwargs.get("pk"))
         word.paradigms.add(selected_paradigm)
-        log.debug(f"{selected_paradigm} applied to {word}")
+        log.debug(f"'{selected_paradigm}' applied to '{word}'")
         response = HttpResponse(status=204)  # No content
         response["HX-Trigger"] = "paradigmSaved"  # closes the modal dialog
         return response
@@ -75,34 +79,37 @@ class ParadigmView(View):
         paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
 
         formset = self._get_or_create_formset_context(word, paradigm, request.POST)
-        log.debug(f"formset post data = {formset.data}")
+        log.debug(
+            f"lexicon:paradigm view POST submitted.\nFormset post data = '{formset.data}'"
+        )
         if formset.is_valid():
-            log.debug("Paradigm conjugation formset is valid")
+            log.debug("Formset is valid")
             formset.save()
             # Success: re-render the view template
-            context = self._context_lookup(word_pk, paradigm_pk)
+            context = self._context_lookup(word_pk, paradigm_pk, data=request.POST)
             return render(request, self.view_template, context)
         else:
             # Errors: re-render the edit template with errors
-            log.debug("Paradigm conjugation formset is NOT valid")
-            log.debug(f"formset errors = {formset.errors}")
-            context = self._context_lookup(word_pk, paradigm_pk)
+            log.debug(
+                f"Paradigm conjugation formset is NOT valid. \nFormset errors = '{formset.errors}'"
+            )
+            context = self._context_lookup(word_pk, paradigm_pk, data=request.POST)
+            context["formset"] = formset
             return render(request, self.edit_template, context)
 
-    def _context_lookup(self, word_pk, paradigm_pk):
+    def _context_lookup(self, word_pk, paradigm_pk, data=None):
         """Return required context for both view and edit."""
 
         word = models.LexiconEntry.objects.get(pk=word_pk)
         paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
 
-        # Build a nested dict: {row_idx: {col_idx: conjugation_obj}}
         # The dict_get template tag can read it
         conjugations = models.Conjugation.objects.filter(word=word, paradigm=paradigm)
         conjugation_grid = {}
         for c in conjugations:
             conjugation_grid.setdefault(c.row, {})[c.column] = c.conjugation
 
-        formset = self._get_or_create_formset_context(word, paradigm)
+        formset = self._get_or_create_formset_context(word, paradigm, data=data)
         # Create a grid of forms for the template
         forms_grid = []
         forms_iter = iter(formset.forms)

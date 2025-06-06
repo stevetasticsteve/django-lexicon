@@ -134,11 +134,13 @@ class DeleteEntry(LoginRequiredMixin, ProjectContextMixin, DeleteView):
     model = models.LexiconEntry
     template_name = "lexicon/confirm_entry_delete.html"
 
+
     def get_success_url(self) -> str:
         return reverse("lexicon:entry_list", args=(self.kwargs.get("lang_code"),))
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
         self.object = self.get_object()
+        log.debug("lexicon:delete_entry view POST request.")
         user_log.info(
             f"{request.user} deleted an entry in {self.object.project} lexicon."
         )

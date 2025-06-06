@@ -19,15 +19,19 @@ def regex_validator_factory(project, field_name="value"):
             except re.error:
                 raise ValidationError(f"Invalid regex pattern for {field_name}.")
             if not regex.fullmatch(value):
+                log.debug(f"Validation for '{value}' failed due to regex.")
                 raise ValidationError(
-                    f"{field_name.capitalize()} contains unallowed characters. A project admin set this restriction."
+                    f"{field_name.capitalize()} '{value}' contains unallowed characters. A project admin set this restriction."
                 )
+            else:
+                log.debug(f"Validation for '{value}' passed.")
 
     return validator
 
 
 def normalize_and_validate(value, project, field_name="value"):
     """Apply a regex pattern to a value and apply lowercase enforcement."""
+    log.debug(f"Running validation for '{value}'. project = '{project}', regex= '{project.tok_ples_validator}'")
     value = value.lower()
     validator = regex_validator_factory(project, field_name)
     validator(value)
@@ -415,6 +419,33 @@ class Conjugation(models.Model):
         help_text="The actual conjugated form of the word.",
     )
 
+    def __str__(self):
+        """What Python calls this object when it shows it on screen."""
+        if self.conjugation:
+            return (
+                f"{self.conjugation}, a conjugation for {self.word} in {self.paradigm}"
+            )
+        else:
+            return f"Empty conjugation for {self.word} in {self.paradigm}"
+
+    def clean(self):
+        """Run Tok ples validator over input."""
+        super().clean()
+        # Only validate if word is set (i.e., not a new/empty form)
+        if self.word_id:
+            project = self.word.project
+            if project and project.tok_ples_validator:
+                self.conjugation = normalize_and_validate(
+                    self.conjugation, project, "conjugation"
+                )
+
+    def save(self, *args, **kwargs):
+        """Only save lower case."""
+        self.full_clean()
+        if self.conjugation:
+            self.conjugation = self.conjugation.lower()
+        super().save(*args, **kwargs)
+
     def get_position_display(self):
         """Return a human-readable string representing the grid position."""
         return f"Row {self.row}, Column {self.column}"
@@ -437,12 +468,3 @@ class Conjugation(models.Model):
         ]
         verbose_name = "Conjugation"
         verbose_name_plural = "Conjugations"
-
-    def __str__(self):
-        """What Python calls this object when it shows it on screen."""
-        if self.conjugation:
-            return (
-                f"{self.conjugation}, a conjugation for {self.word} in {self.paradigm}"
-            )
-        else:
-            return f"Empty conjugation for {self.word} in {self.paradigm}"

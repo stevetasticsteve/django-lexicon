@@ -501,7 +501,7 @@ class TestLexiconEntryModel:
             entry.full_clean()
         assert "Tok ples" in excinfo.value.message_dict["__all__"][0]
         assert (
-            "Tok ples contains unallowed characters. A project admin set this restriction."
+            "Tok ples 'invalid word 123' contains unallowed characters. A project admin set this restriction."
             in excinfo.value.message_dict["__all__"][0]
         )
 
@@ -623,3 +623,111 @@ class TestLexiconEntryModel:
         assert (
             models.LexiconEntry.objects.filter(tok_ples="hello").count() == 2
         )  # Two entries with "hello"
+
+
+@pytest.mark.django_db
+class TestParadigmModel:
+    def test_row_and_column_labels_must_be_lists(self, english_project):
+        # Valid case
+        paradigm = models.Paradigm(
+            name="Valid",
+            project=english_project,
+            part_of_speech="n",
+            row_labels=["row1", "row2"],
+            column_labels=["col1", "col2"],
+        )
+        paradigm.full_clean()  # Should not raise
+
+        # Invalid row_labels
+        paradigm.row_labels = "notalist"
+        with pytest.raises(ValidationError):
+            paradigm.full_clean()
+
+        # Invalid column_labels
+        paradigm.row_labels = ["row1"]
+        paradigm.column_labels = "notalist"
+        with pytest.raises(ValidationError):
+            paradigm.full_clean()
+
+    def test_unique_name_per_project(self, english_project):
+        models.Paradigm.objects.create(
+            name="UniqueName",
+            project=english_project,
+            part_of_speech="n",
+            row_labels=["row1"],
+            column_labels=["col1"],
+        )
+        with pytest.raises(IntegrityError):
+            with transaction.atomic():
+                models.Paradigm.objects.create(
+                    name="UniqueName",
+                    project=english_project,
+                    part_of_speech="n",
+                    row_labels=["row2"],
+                    column_labels=["col2"],
+                )
+
+
+@pytest.mark.django_db
+class TestConjugationModel:
+    def test_conjugation_lowercase_and_regex(self, english_project):
+        # Set up a regex that only allows lowercase letters
+        english_project.tok_ples_validator = r"[a-z]+"
+        english_project.save()
+        word = models.LexiconEntry.objects.create(
+            tok_ples="word", eng="gloss", project=english_project
+        )
+        paradigm = models.Paradigm.objects.create(
+            name="Test",
+            project=english_project,
+            part_of_speech="n",
+            row_labels=["row1"],
+            column_labels=["col1"],
+        )
+        # Valid conjugation
+        conj = models.Conjugation(
+            word=word, paradigm=paradigm, row=0, column=0, conjugation="valid"
+        )
+        conj.full_clean()  # Should not raise
+        conj.save()
+        assert conj.conjugation == "valid"
+
+        # Invalid conjugation (contains a digit)
+        conj2 = models.Conjugation(
+            word=word, paradigm=paradigm, row=0, column=0, conjugation="bad1"
+        )
+        with pytest.raises(ValidationError):
+            conj2.full_clean()
+
+        # Uppercase should be normalized to lowercase on save
+        conj3 = models.Conjugation(
+            word=word, paradigm=paradigm, row=0, column=1, conjugation="UPPER"
+        )
+        # conj3.full_clean()
+        conj3.save()
+        assert conj3.conjugation == "upper"
+
+    def test_unique_conjugation_position(self, english_project):
+        word = models.LexiconEntry.objects.create(
+            tok_ples="word", eng="gloss", project=english_project
+        )
+        paradigm = models.Paradigm.objects.create(
+            name="Test2",
+            project=english_project,
+            part_of_speech="n",
+            row_labels=["row1"],
+            column_labels=["col1"],
+        )
+        models.Conjugation.objects.create(
+            word=word, paradigm=paradigm, row=0, column=0, conjugation="a"
+        )
+        # Same position should fail
+        with pytest.raises(ValidationError):
+            with transaction.atomic():
+                models.Conjugation.objects.create(
+                    word=word, paradigm=paradigm, row=0, column=0, conjugation="b"
+                )
+        # Different position should succeed
+        models.Conjugation.objects.create(
+            word=word, paradigm=paradigm, row=0, column=1, conjugation="c"
+        )
