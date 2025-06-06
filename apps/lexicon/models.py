@@ -8,6 +8,32 @@ from django.urls import reverse
 log = logging.getLogger("lexicon")
 
 
+def regex_validator_factory(project, field_name="value"):
+    """Build a regex to use for entry validation for a given field."""
+
+    def validator(value):
+        pattern = project.tok_ples_validator
+        if pattern:
+            try:
+                regex = re.compile(pattern, re.IGNORECASE)
+            except re.error:
+                raise ValidationError(f"Invalid regex pattern for {field_name}.")
+            if not regex.fullmatch(value):
+                raise ValidationError(
+                    f"{field_name.capitalize()} contains unallowed characters. A project admin set this restriction."
+                )
+
+    return validator
+
+
+def normalize_and_validate(value, project, field_name="value"):
+    """Apply a regex pattern to a value and apply lowercase enforcement."""
+    value = value.lower()
+    validator = regex_validator_factory(project, field_name)
+    validator(value)
+    return value
+
+
 class LexiconProject(models.Model):
     """Represents a unique language to build a lexicon for."""
 
@@ -170,38 +196,12 @@ class LexiconEntry(models.Model):
         Checks tok_ples against the project's tok_ples_validator regex.
         """
         super().clean()  # Call the parent's clean method first
-        # Only attempt validation if project is set (e.g., when creating via a form or directly setting project)
-        # and if the validator is present on the project.
         if (
             self.project_id
         ):  # Use project_id for existence check during initial creation
-            try:
-                # Access the project object only if project_id is set
-                project_instance = self.project  # This will now load the project object
-                if project_instance.tok_ples_validator:
-                    regex_pattern = project_instance.tok_ples_validator
-                    try:
-                        # Compile the regex to ensure it's valid
-                        regex = re.compile(regex_pattern, re.IGNORECASE)
-                    except re.error:
-                        raise ValidationError(
-                            {
-                                "tok_ples": "The associated project's Tok Ples validator regex is invalid. Please contact an administrator."
-                            }
-                        )
-
-                    if not regex.fullmatch(self.tok_ples):
-                        raise ValidationError(
-                            {
-                                "tok_ples": "Tok Ples entry contains characters not allowed by the project's validator."
-                            }
-                        )
-            except LexiconProject.DoesNotExist:
-                # This case should ideally not happen if project_id is set,
-                # but good to handle defensively.
-                raise ValidationError(
-                    {"project": "The selected project does not exist."}
-                )
+            self.tok_ples = normalize_and_validate(
+                self.tok_ples, self.project, "Tok ples"
+            )
 
     def save(self, *args, **kwargs):
         """Code that runs whenever a Lexicon entry is saved.

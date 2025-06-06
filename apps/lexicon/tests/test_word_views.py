@@ -466,7 +466,7 @@ class TestCreateEntry:
         # 3. Assert the validation error message is present
         # Note: HTML encoding might convert ' (apostrophe) to &#x27; or &apos;
         assert (
-            "Tok Ples entry contains characters not allowed by the project&#x27;s validator."
+            "Tok ples contains unallowed characters. A project admin set this restriction."
             in response.content.decode()
         )
         # 4. Assert that no LexiconEntry was created for this project
@@ -613,7 +613,7 @@ class TestUpdateEntry:
 
         # 4. Assert the validation error message is present
         assert (
-            "Tok Ples entry contains characters not allowed by the project&#x27;s validator."
+            "Tok ples contains unallowed characters. A project admin set this restriction."
             in response.content.decode()
         )
 

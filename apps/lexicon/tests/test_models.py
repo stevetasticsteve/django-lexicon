@@ -499,10 +499,10 @@ class TestLexiconEntryModel:
             # The save() method lowercases, so we must test with the post-lowercased value
             # or ensure clean() is called before save(). `full_clean()` is correct here.
             entry.full_clean()
-        assert "tok_ples" in excinfo.value.message_dict
+        assert "Tok ples" in excinfo.value.message_dict["__all__"][0]
         assert (
-            "Tok Ples entry contains characters not allowed by the project's validator."
-            in excinfo.value.message_dict["tok_ples"][0]
+            "Tok ples contains unallowed characters. A project admin set this restriction."
+            in excinfo.value.message_dict["__all__"][0]
         )
 
     def test_clean_with_invalid_project_regex(
@@ -516,11 +516,8 @@ class TestLexiconEntryModel:
                 eng="test",
             )
             entry.full_clean()
-        assert "tok_ples" in excinfo.value.message_dict
-        assert (
-            "The associated project's Tok Ples validator regex is invalid. Please contact an administrator."
-            in excinfo.value.message_dict["tok_ples"][0]
-        )
+        assert "Tok ples" in excinfo.value.message_dict["__all__"][0]
+        assert "Invalid regex pattern" in excinfo.value.message_dict["__all__"][0]
 
     # --- `save()` Method Tests (Version Increment, Timestamps) ---
 
@@ -596,7 +593,8 @@ class TestLexiconEntryModel:
             tok_ples="Unique",
             eng="duplicate",  # Different case
         )
-        entry.full_clean()  # Call full_clean first to ensure validation is hit
+        with pytest.raises(ValidationError):
+            entry.full_clean()  # Call full_clean first to ensure validation is hit
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 entry.save()  # Then save, which will trigger the unique constraint at DB level if full_clean passes
