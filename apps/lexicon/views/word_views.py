@@ -13,6 +13,7 @@ from django.views.generic.list import ListView
 from apps.lexicon import forms, models
 
 user_log = logging.getLogger("user_log")
+log = logging.getLogger("lexicon")
 
 
 class ProjectList(ListView):
@@ -72,6 +73,10 @@ class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
     fields = forms.editable_fields
     template_name = "lexicon/simple_form.html"
 
+    def post(self, request, *args, **kwargs):
+        log.debug("lexicon:create_entry view POST request.")
+        return super().post(request, *args, **kwargs)
+
     def get_form_kwargs(self):
         # When creating a word project cannot be retrieved from the db.
         # project is required for validation, so it is provided for object creation.
@@ -100,6 +105,10 @@ class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
     model = models.LexiconEntry
     fields = forms.editable_fields
     template_name = "lexicon/simple_form.html"
+
+    def post(self, request, *args, **kwargs):
+        log.debug("lexicon:update_entry view POST request.")
+        return super().post(request, *args, **kwargs)
 
     def form_valid(self, form, **kwargs) -> HttpResponse:
         """Code that runs when the form has been submitted and is valid."""
