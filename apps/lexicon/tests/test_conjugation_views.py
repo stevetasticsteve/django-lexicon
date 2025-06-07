@@ -41,7 +41,7 @@ class TestParadigmModal:
 
 
 @pytest.mark.django_db
-class TestParadigmView:
+class TestConjugationsView:
     def test_get_paradigm_view(self, client, user, english_words_with_paradigm):
         """Test that the paradigm view renders correctly."""
         client.force_login(user)
@@ -95,7 +95,7 @@ class TestParadigmView:
 
 
 @pytest.mark.django_db
-class TestParadigmEditAdvanced:
+class TestConjugationsEdit:
     def get_edit_url(self, word, paradigm):
         return reverse("lexicon:paradigm", args=[word.pk, paradigm.pk, "edit"])
 
@@ -189,38 +189,77 @@ class TestParadigmEditAdvanced:
             else:
                 assert conj.conjugation == f"orig_{conj.row}_{conj.column}"
 
+    # can't get the delte test to work
+    def test_remove_conjugation(self, client, user, multirow_paradigm):
+        """Test the view can update a 3x2 paradigm, ensuring blank rows are deleted from db."""
+        client.force_login(user)
+        word, paradigm, conjugations = multirow_paradigm
+        initial_conjugation_number = models.Conjugation.objects.filter(
+            word=word, paradigm=paradigm
+        ).count()
+        assert initial_conjugation_number == 6
+        url = self.get_edit_url(word, paradigm)
+        response = client.get(url)
+        formset = response.context["formset"]
+        data = formset.management_form.initial
 
-# can't get the delte test to work
-# def test_remove_conjugation(self, client, user, multirow_paradigm):
-#     """Test the view can update a 3x2 paradigm, ensuring blank rows are deleted from db."""
-#     client.force_login(user)
-#     word, paradigm, conjugations = multirow_paradigm
-#     initial_conjugation_number = models.Conjugation.objects.filter(
-#         word=word, paradigm=paradigm
-#     ).count()
-#     url = self.get_edit_url(word, paradigm)
-#     response = client.get(url)
-#     formset = response.context["formset"]
-#     data = formset.management_form.initial
+        # Remove the last conjugation by omitting its id and values
+        for i, form in enumerate(formset.forms):
+            data[f"form-{i}-conjugation"] = "changed"
+            data[f"form-{i}-id"] = form.instance.id if form.instance.id else ""
+            if i == len(formset.forms) - 1:
+                # overwrite the last form to submit blank.
+                data[f"form-{i}-conjugation"] = form.instance.conjugation
+        data["form-TOTAL_FORMS"] = formset.total_form_count()
+        data["form-INITIAL_FORMS"] = formset.initial_form_count()
+        data["form-MIN_NUM_FORMS"] = 0
+        data["form-MAX_NUM_FORMS"] = 1000
+        post_response = client.post(url, data)
+        assert post_response.status_code == 200
+        # The last conjugation should be deleted
+        assert (
+            models.Conjugation.objects.filter(word=word, paradigm=paradigm).count()
+            == initial_conjugation_number - 1
+        )
 
-#     # Remove the last conjugation by omitting its id and values
-#     for i, form in enumerate(formset.forms):
-#         data[f"form-{i}-conjugation"] = "changed"
-#         data[f"form-{i}-id"] = form.instance.id if form.instance.id else ""
-#         if i == len(formset.forms) - 1:
-#             print("\nBOOOMSHAKA\n")
-#             # overwrite the last form to submit blank.
-#             data[f"form-{i}-conjugation"] = form.instance.conjugation
-#     data["form-TOTAL_FORMS"] = len(formset.forms) - 1
-#     data["form-INITIAL_FORMS"] = formset.initial_form_count()
-#     data["form-MIN_NUM_FORMS"] = 0
-#     data["form-MAX_NUM_FORMS"] = 1000
-#     print(data)
-#     post_response = client.post(url, data)
-#     assert post_response.status_code == 200
-#     # The last conjugation should be deleted
-#     print(models.Conjugation.objects.all())
-#     assert (
-#         models.Conjugation.objects.filter(word=word, paradigm=paradigm).count()
-#         == initial_conjugation_number - 1
-#     )
+    def test_update_conjugation_invalid_tok_ples_chars(
+        self, client, user, multirow_paradigm, english_project
+    ):
+        """
+        POST data with tok_ples violating the project's regex validator
+        should re-render the form with validation errors and not save the entry.
+        """
+        client.force_login(user)
+
+        word, paradigm, conjugations = multirow_paradigm
+        english_project.tok_ples_validator = "[a-z]+"
+        english_project.save()
+        url = self.get_edit_url(word, paradigm)
+        response = client.get(url)
+        formset = response.context["formset"]
+        data = formset.management_form.initial
+
+        # Remove the last conjugation by omitting its id and values
+        for i, form in enumerate(formset.forms):
+            data[f"form-{i}-conjugation"] = "changed"
+            data[f"form-{i}-id"] = form.instance.id if form.instance.id else ""
+            if i == len(formset.forms) - 1:
+                # overwrite the last form to submit blank.
+                data[f"form-{i}-conjugation"] = "changed 123"
+        data["form-TOTAL_FORMS"] = formset.total_form_count()
+        data["form-INITIAL_FORMS"] = formset.initial_form_count()
+        data["form-MIN_NUM_FORMS"] = 0
+        data["form-MAX_NUM_FORMS"] = 1000
+        post_response = client.post(url, data)
+        # form should be submitted with errors
+        assert post_response.status_code == 200
+        # The last conjugation should be deleted
+        assert (
+            "Conjugation &#x27;changed 123&#x27; contains unallowed characters."
+            in post_response.content.decode()
+        )
+        assert (
+            'name="form-5-conjugation" value="changed 123"'
+            in post_response.content.decode()
+        )
+

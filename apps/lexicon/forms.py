@@ -1,7 +1,6 @@
 import logging
 
 from django import forms
-from django.core.exceptions import ValidationError
 from django.forms import BaseModelFormSet, modelformset_factory
 
 from apps.lexicon.models import Conjugation
@@ -94,19 +93,12 @@ class ConjugationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     def clean(self):
-        cleaned_data = super().clean()
-        # This will call the model's clean() and catch ValidationError
-        try:
-            # Create a temporary instance with the cleaned data
-            instance = self.instance
-            instance.conjugation = cleaned_data.get("conjugation", instance.conjugation)
-            instance.word = self.word or instance.word
-            instance.paradigm = self.paradigm or instance.paradigm
-            instance.clean()
-        except ValidationError as e:
-            # Attach the error to the form's non-field errors
-            self.add_error(None, e)
-        return cleaned_data
+        # Set these on the instance before validation
+        if self.word:
+            self.instance.word = self.word
+        if self.paradigm:
+            self.instance.paradigm = self.paradigm
+        return super().clean()
 
     class Meta:
         model = Conjugation
@@ -128,12 +120,6 @@ class BaseConjugationFormSet(BaseModelFormSet):
         self.word = word
         self.paradigm = paradigm
 
-    def clean(self):
-        super().clean()
-        for form in self.forms:
-            if not form.cleaned_data.get("conjugation", "").strip():
-                form.cleaned_data["DELETE"] = True
-
     def save(self, commit=True):
         if not self.forms:
             return []
@@ -143,8 +129,11 @@ class BaseConjugationFormSet(BaseModelFormSet):
         instances = []
 
         for idx, form in enumerate(self.forms):
-            conjugation_value = form.cleaned_data.get("conjugation", "").strip()
+            # Only process valid forms!
+            if not form.is_valid():
+                continue
 
+            conjugation_value = form.cleaned_data.get("conjugation", "").strip()
             if conjugation_value:  # Only process non-empty conjugations
                 row = idx // num_cols
                 column = idx % num_cols

@@ -24,7 +24,19 @@
           <tbody>
             {% if formset.errors %}
               <div class="alert alert-danger" role="alert">
-                {{ formset.errors }}
+                <ul>
+                  {% for form in formset.forms %}
+                    {% for field, errors in form.errors.items %}
+                      {% for error in errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                    {% endfor %}
+                  {% endfor %}
+                  {# Optionally, show formset non-form errors #}
+                  {% for error in formset.non_form_errors %}
+                    <li>{{ error }}</li>
+                  {% endfor %}
+                </ul>
               </div>
             {% endif %}
             {% for row_idx in forms_grid %}
