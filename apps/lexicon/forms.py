@@ -7,6 +7,8 @@ from apps.lexicon.models import Conjugation
 
 log = logging.getLogger("lexicon")
 
+# fields that can be edited for the LexiconEntry object
+# The view references this var setting up generic edit views
 editable_fields = [
     "tok_ples",
     "eng",
@@ -20,6 +22,9 @@ editable_fields = [
 
 
 class ParadigmSelectForm(forms.Form):
+    """The form that appears in the paradigm modal.
+    Populates the choices dropdown with suitable paradigms."""
+
     paradigm = forms.ChoiceField(choices=[])  # empty choices initially
 
     def __init__(self, *args, paradigms=None, object=None, **kwargs):
@@ -32,37 +37,19 @@ class ParadigmSelectForm(forms.Form):
             choices = [(p.pk, str(p)) for p in self.paradigms]
         else:
             choices = [("none", "No choices available")]
-
         self.fields["paradigm"].choices = choices
 
 
-class ParadigmGridForm(forms.Form):
-    def __init__(self, *args, paradigm, word, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.paradigm = paradigm
-        self.word = word
-        self.row_labels = paradigm.row_labels
-        self.column_labels = paradigm.column_labels
-
-        for i, row in enumerate(self.row_labels):
-            for j, col in enumerate(self.column_labels):
-                field_name = f"cell_{i}_{j}"
-                existing = Conjugation.objects.filter(
-                    paradigm=paradigm, word=word, row=i, column=j
-                ).first()
-                self.fields[field_name] = forms.CharField(
-                    required=False,
-                    initial=existing.form if existing else "",
-                    label=f"{row} / {col}",
-                )
-
-
 class ImportForm(forms.Form):
+    """The form for choosing import format from a dropdown."""
+
     file = forms.FileField()
     format = forms.ChoiceField(choices=(("dic", ".dic"), ("csv", ".csv")))
 
 
 class ExportForm(forms.Form):
+    """The form for choosing export formats from a dropdown."""
+
     checked = forms.BooleanField(
         label="Limit export to only checked entries?", initial=True, required=False
     )
@@ -87,6 +74,10 @@ class ExportForm(forms.Form):
 
 
 class ConjugationForm(forms.ModelForm):
+    """A grid layout form that displays and edits Conjugation objects in a paradigm.
+
+    It is combined with the BaseConjugationFormSet to achieve the grid form."""
+
     def __init__(self, *args, **kwargs):
         self.paradigm = kwargs.pop("paradigm", None)
         self.word = kwargs.pop("word", None)
@@ -113,7 +104,9 @@ class ConjugationForm(forms.ModelForm):
 class BaseConjugationFormSet(BaseModelFormSet):
     """A custom formset to use to save a grid of conjugations.
 
-    Overides the clean method to delete blank conjugation entries"""
+    Overides the clean method to delete blank conjugation entries.
+    Overides the save method to fill in the required row,column, word and paradigm
+    fields."""
 
     def __init__(self, *args, word=None, paradigm=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -129,10 +122,6 @@ class BaseConjugationFormSet(BaseModelFormSet):
         instances = []
 
         for idx, form in enumerate(self.forms):
-            # Only process valid forms!
-            if not form.is_valid():
-                continue
-
             conjugation_value = form.cleaned_data.get("conjugation", "").strip()
             if conjugation_value:  # Only process non-empty conjugations
                 row = idx // num_cols
@@ -155,7 +144,7 @@ class BaseConjugationFormSet(BaseModelFormSet):
 
                 instances.append(instance)
                 log.debug(
-                    f"{'Created' if created else 'Updated'} conjugation: {conjugation_value} at ({row}, {column})"
+                    f"{'Created' if created else 'Updated'} conjugation: '{conjugation_value}' at '({row}, {column})'"
                 )
 
             else:
@@ -168,14 +157,18 @@ class BaseConjugationFormSet(BaseModelFormSet):
                     )
                     if commit:
                         existing.delete()
-                    log.debug(f"Deleted empty conjugation at ('{row}, {column}')")
+                    log.debug(f"Deleted empty conjugation at '({row}, {column})'")
                 except Conjugation.DoesNotExist:
                     pass  # Nothing to delete
 
         return instances
 
 
-def get_conjugation_formset(paradigm, data=None, queryset=None, word=None, extra=None):
+def get_conjugation_formset(paradigm, data=None, queryset=None, word=None):
+    """Creates a conjugation formset suitable for GET and POST requests.
+
+    Combines ConjugationForms together with BaseConjugationFormset and provides
+    a simple function to call in the view."""
     total_cells = len(paradigm.row_labels) * len(paradigm.column_labels)
 
     # Create a formset with the right number of forms, but don't pre-populate with empty instances
