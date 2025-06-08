@@ -5,6 +5,10 @@ An app for centrally managing and then exporting useful formats of a dictionary 
 https://dev.codebysteve.com
 
 # To do
+## Current work
+- Celery task to update search fields.
+  
+
 ## Features
 - An affix system needs to be added. Admins can create an .aff file in the admin and add affix options
 - Spelling variations should be added under entries
@@ -15,13 +19,14 @@ https://dev.codebysteve.com
 - The oxt extension can define an update url. A http endpoint has been defined that correctly returns an xml with update information. Libre office can now see that there are updates for the extension, but can't download it.
 - A way to automate the updating of a paratext spellingstatus file.
 
-## Performance
+## Deployment
 - Docker volume should be a bind mount rather than a named docker volume so it is easier for people to administer?
   
 ## Bugs
 - Libre office can contact the update server and see updated oxt packages, but downloading them fails.
 - The save method on the models that updates the version number should only change if the tok ples changes, and it should only go up a single version number on import
 - Pagination doesn't work in main view, htmx request doesn't have pagination info attached.
+- Validation runs twice for word updates.
 
 ## UI
 - The header looks off on mobile
@@ -54,3 +59,9 @@ https://dev.codebysteve.com
 ## Documentation
 - A documentation app should teach users, particularly admins about all the features available
 - Deployment documentation. Docker commands, nginx config, env file
+
+## Testing
+- Initial tests for all current features needs completing
+
+## Logging
+- Logs need to be read to see if they are useful enough, or if they need tweaking

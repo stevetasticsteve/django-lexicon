@@ -119,6 +119,9 @@ class LexiconEntry(models.Model):
         null=False,
         blank=False,
     )
+    search = models.TextField(
+        blank=True, null=True, help_text="automatically generated search terms"
+    )
     eng = models.CharField(
         verbose_name="English",
         max_length=60,
@@ -250,6 +253,7 @@ class LexiconEntry(models.Model):
                 fields=["project", "tok_ples"], name="unique_tok_ples_per_project"
             )
         ]
+        indexes = [models.Index(fields=["search"])]
 
 
 class Variation(models.Model):

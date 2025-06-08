@@ -1,10 +1,12 @@
 import csv
+import logging
 
 from celery import shared_task
 from django.db import IntegrityError, DataError
 
 from apps.lexicon import models
 
+log = logging.getLogger("lexicon")
 
 @shared_task
 def import_dic(dic_data: bytes, lang_code: str) -> None:
@@ -88,3 +90,7 @@ def parse_pos(pos: str) -> str:
             return "rel"
         case _:
             return "uk"
+
+@shared_task
+def update_lexicon_entry_search_field(entry_pk):
+    log.debug(f"Building search index for '{entry_pk}'")
