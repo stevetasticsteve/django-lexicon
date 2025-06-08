@@ -31,7 +31,9 @@ def regex_validator_factory(project, field_name="value"):
 
 def normalize_and_validate(value, project, field_name="value"):
     """Apply a regex pattern to a value and apply lowercase enforcement."""
-    log.debug(f"Running validation for '{value}'. project = '{project}', regex= '{project.tok_ples_validator}'")
+    log.debug(
+        f"Running validation for '{value}'. project = '{project}', regex= '{project.tok_ples_validator}'"
+    )
     value = value.lower()
     validator = regex_validator_factory(project, field_name)
     validator(value)
@@ -250,29 +252,48 @@ class LexiconEntry(models.Model):
         ]
 
 
-class SpellingVariation(models.Model):
-    """An allowed spelling variation for a LexiconEntry."""
+class Variation(models.Model):
+    """An allowed variation for a LexiconEntry."""
 
     word = models.ForeignKey(
-        LexiconEntry, on_delete=models.CASCADE, related_name="spelling_variation"
+        LexiconEntry, on_delete=models.CASCADE, related_name="variations"
     )
-    spelling_variation = models.CharField(
-        verbose_name="spelling variation",
-        max_length=60,
+    type = models.CharField(
+        max_length=15,
+        choices=[
+            ("spelling", "Spelling Variant"),
+            ("dialect", "Dialectal Variant"),
+            ("abbrv", "Abbreviation"),
+        ],
+    )
+    text = models.CharField(
+        verbose_name="variation",
+        max_length=100,
         blank=False,
         null=False,
-        help_text="write the spelling variation here",
+        help_text="write the variation here",
     )
+    included_in_spellcheck = models.BooleanField(
+        default=False, help_text="Should word be marked in spellcheck as acceptable?"
+    )
+    included_in_search = models.BooleanField(
+        default=False, help_text="Should word appear in search results?"
+    )
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"Spelling variation for: {self.word.tok_ples}"
+        return (
+            f"Variation for: '{self.word}' - '{self.text}' ({self.get_type_display()})"
+        )
 
     def get_absolute_url(self):
         """What page Django should return if asked to show this entry."""
         # Return the detail page for the main word
         return reverse(
-            "lexicon:entry_detail", args=(self.project.language_code, self.pk)
+            "lexicon:entry_detail", args=(self.word.project.language_code, self.word.pk)
         )
 
 
