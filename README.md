@@ -5,16 +5,17 @@ An app for centrally managing and then exporting useful formats of a dictionary 
 https://dev.codebysteve.com
 
 # To do
-## Current work
-- Look into double validation on LexiconEntry saves
-  
+1. Variations views and forms
+2. Project admin area for imports, affix files and utils
+3. Paradigm forms in project admin area
+4. Affix creation forms in project admin area
+5. Affix forms on word objects
+6. Move Project list to home
+7. Restrict access to Django admin to superusers
 
 ## Features
 - An affix system needs to be added. Admins can create an .aff file in the admin and add affix options
-- Spelling variations should be added under entries
-- Common mispellings for words. To be used for searches in lexicon and to help spelling suggestions in hunspell
-- Ignore words. Words to be added to the spell check, but not suggested. For common foreign words.
-- The LexiconProject tok ples validator isn't hooked up yet
+- Common misspellings for words. To be used for searches in lexicon and to help spelling suggestions in hunspell
 - Find a way to centrally host .xml and .dic files and have Libre office/word use them. In other words automated updating of spell checks on multiple machines.
 - The oxt extension can define an update url. A http endpoint has been defined that correctly returns an xml with update information. Libre office can now see that there are updates for the extension, but can't download it.
 - A way to automate the updating of a paratext spellingstatus file.
@@ -26,7 +27,7 @@ https://dev.codebysteve.com
 - Libre office can contact the update server and see updated oxt packages, but downloading them fails.
 - The save method on the models that updates the version number should only change if the tok ples changes, and it should only go up a single version number on import
 - Pagination doesn't work in main view, htmx request doesn't have pagination info attached.
-- Validation runs twice for word updates.
+- When saving a paradigm a button appears for a split second under the grid.
 
 ## UI
 - The header looks off on mobile
@@ -61,7 +62,8 @@ https://dev.codebysteve.com
 - Deployment documentation. Docker commands, nginx config, env file
 
 ## Testing
-- Initial tests for all current features needs completing
+- Tests need writing for config
+- lexicon tests: template tags, tasks, import_export views, urls?, admin?
 
 ## Logging
-- Logs need to be read to see if they are useful enough, or if they need tweaking
+- 
