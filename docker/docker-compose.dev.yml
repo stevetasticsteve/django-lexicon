@@ -5,6 +5,8 @@ services:
     restart: always
     volumes:
       - lexicon_postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
     environment:
      - POSTGRES_DB=lexicon_app_db
      - POSTGRES_USER=django
@@ -36,13 +38,17 @@ services:
     build:
       context: ../
       dockerfile: docker/CeleryDockerfile.dev
+    volumes:
+      - ../apps:/app/apps:ro
+      - ../config:/app/config:ro
+      - ../data/logs:/app/data/logs
+      - ../templates:/app/templates:ro
     restart: always
     command: celery -A config worker
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.dev
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
-    volumes:
-      - ./data:/app/data
+
     depends_on:
       - web1
       - redis

@@ -128,7 +128,7 @@ DATABASES = {
         "NAME": "lexicon_app_db",
         "USER": "django",
         "PASSWORD": os.getenv("DATABASE_PASSWORD", "1234"),
-        "HOST": "db",
+        "HOST": "database_lexicon_app",
         "PORT": 5432,
     }
 }
@@ -198,6 +198,14 @@ LOGGING = {
         "level": "WARNING",
     },
 }
+
+# Celery task manager
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Pacific/Port_Moresby"
 
 try:
     with open("pyproject.toml", "r") as f:
