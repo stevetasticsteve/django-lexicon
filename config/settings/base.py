@@ -128,7 +128,7 @@ DATABASES = {
         "NAME": "lexicon_app_db",
         "USER": "django",
         "PASSWORD": os.getenv("DATABASE_PASSWORD", "1234"),
-        "HOST": "database_lexicon_app",
+        "HOST": "db",
         "PORT": 5432,
     }
 }

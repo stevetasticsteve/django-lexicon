@@ -6,7 +6,7 @@ https://dev.codebysteve.com
 
 # To do
 ## Current work
-- Celery task to update search fields.
+- Look into double validation on LexiconEntry saves
   
 
 ## Features
