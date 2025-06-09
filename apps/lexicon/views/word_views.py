@@ -2,7 +2,6 @@ import datetime
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -85,16 +84,10 @@ class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
         return kwargs
 
     def form_valid(self, form, **kwargs) -> HttpResponse:
-        """When the form saves run this code."""
+        """Add the user to modified and the project to the LexiconEntry."""
         obj = form.save(commit=False)
-        try:
-            obj.full_clean()
-        except ValidationError as e:
-            form.add_error(None, e)
-            return self.form_invalid(form)
         obj.modified_by = self.request.user.username
         obj.project = self.get_project()
-        obj.save()
         user_log.info(f"{self.request.user} created an entry in {obj.project} lexicon.")
         return super().form_valid(form, **kwargs)
 
@@ -111,13 +104,7 @@ class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form, **kwargs) -> HttpResponse:
-        """Code that runs when the form has been submitted and is valid."""
-        # Add user the user who made modifications or requested a review
-        try:
-            self.object.full_clean()
-        except ValidationError as e:
-            form.add_error(None, e)
-            return self.form_invalid(form)
+        """Add the user who submitted the POST"""
         self.object.modified_by = self.request.user.username
         if "review" in form.changed_data:
             self.object.review_user = self.request.user.username
@@ -133,7 +120,6 @@ class DeleteEntry(LoginRequiredMixin, ProjectContextMixin, DeleteView):
 
     model = models.LexiconEntry
     template_name = "lexicon/confirm_entry_delete.html"
-
 
     def get_success_url(self) -> str:
         return reverse("lexicon:entry_list", args=(self.kwargs.get("lang_code"),))

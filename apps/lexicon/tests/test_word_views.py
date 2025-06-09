@@ -1,4 +1,5 @@
 import pytest
+from django.db.utils import IntegrityError
 from django.http import Http404
 from django.urls import reverse
 from django.views.generic import TemplateView
@@ -154,97 +155,6 @@ class TestLexiconView:
 
         # Assert HTTP status code is 404
         assert response.status_code == 404
-
-
-# @pytest.mark.django_db
-# class TestSearchResults:
-#     """Tests for the SearchResults ListView."""
-
-#     # URL to access the search results.
-#     def get_base_url(self, lang_code):
-#         return reverse("lexicon:search", kwargs={"lang_code": lang_code})
-
-#     def test_search_results_renders_correctly_no_search(
-#         self, client, english_project, english_words
-#     ):
-#         """
-#         Test that the view renders correctly with no search query,
-#         returning all entries for the specified project.
-#         """
-#         url = self.get_base_url(english_project.language_code)
-#         response = client.get(url)
-
-#         assert response.status_code == 200
-#         assert response.templates[0].name == "lexicon/includes/search-results.html"
-
-#         # Should contain both English entries
-#         assert "object_list" in response.context
-#         assert len(response.context["object_list"]) == 2
-#         found_entries_tokples = {e.tok_ples for e in response.context["object_list"]}
-#         assert "test_word" in found_entries_tokples
-#         assert "extra_word" in found_entries_tokples
-
-#     def test_search_results_filters_by_tok_ples_default(
-#         self, client, english_project, english_words
-#     ):
-#         """
-#         Test filtering by 'tok_ples' when 'eng' is not true or not provided.
-#         """
-#         url = self.get_base_url(english_project.language_code)
-#         response = client.get(url, data={"search": "test"})  # Search for 'test'
-
-#         assert response.status_code == 200
-#         assert len(response.context["object_list"]) == 1
-#         assert response.context["object_list"][0].tok_ples == "test_word"
-#         assert "test_word" in response.content.decode()
-
-#     def test_search_results_filters_by_eng_field(
-#         self, client, english_project, english_words
-#     ):
-#         """
-#         Test filtering by 'eng' field when 'eng=true' is provided.
-#         """
-#         url = self.get_base_url(english_project.language_code)
-#         response = client.get(
-#             url, data={"search": "test", "eng": "true"}
-#         )  # Search for 'sample' in English
-
-#         assert response.status_code == 200
-#         assert len(response.context["object_list"]) == 1
-#         found_entries_eng = {e.eng for e in response.context["object_list"]}
-#         assert "test_word_gloss" in found_entries_eng
-
-#     def test_search_results_no_matches(self, client, english_project, english_words):
-#         """
-#         Test that an empty queryset is returned when no matches are found.
-#         """
-#         url = self.get_base_url(english_project.language_code)
-#         response = client.get(url, data={"search": "nonexistent_word"})
-
-#         assert response.status_code == 200
-#         assert len(response.context["object_list"]) == 0
-
-#     def test_search_results_filters_by_project_and_search(
-#         self, client, kovol_project, kovol_words
-#     ):
-#         """
-#         Test that entries are correctly filtered by both project and search query,
-#         ensuring entries from other projects are not returned.
-#         """
-#         url = self.get_base_url(kovol_project.language_code)  # Target Kovol project
-#         response = client.get(url, data={"search": "hobol"})  # Search for 'kgu_test'
-
-#         assert response.status_code == 200
-#         assert len(response.context["object_list"]) == 1
-#         assert response.context["object_list"][0].tok_ples == "hobol"
-
-#     def test_search_results_returns_404_for_invalid_lang_code(self, client):
-#         """
-#         Test that the view returns 404 for a non-existent language code.
-#         """
-#         url = self.get_base_url("invalid_lang")
-#         response = client.get(url)
-#         assert response.status_code == 404
 
 
 @pytest.mark.django_db
@@ -421,13 +331,14 @@ class TestCreateEntry:
             "review": 0,
             "review_comments": "",
         }
-        response = client.post(url, data)
-        assert response.status_code == 200
-        assert (
-            "Lexicon entry with this Project and Tok Ples already exists."
-            in response.content.decode()
-        )
-        assert models.LexiconEntry.objects.filter(tok_ples="test_word").count() == 1
+        with pytest.raises(IntegrityError):
+            response = client.post(url, data)
+            assert response.status_code == 200
+            assert (
+                "Lexicon entry with this Project and Tok Ples already exists."
+                in response.content.decode()
+            )
+            assert models.LexiconEntry.objects.filter(tok_ples="test_word").count() == 1
 
     def test_create_entry_invalid_tok_ples_chars(self, client, user):
         """

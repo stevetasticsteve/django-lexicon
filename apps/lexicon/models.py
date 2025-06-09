@@ -236,8 +236,8 @@ class LexiconEntry(models.Model):
             except LexiconEntry.DoesNotExist:
                 # Should not happen if self.pk exists, but defensive
                 pass
-                self.project.save()  # Save the project to update its version
 
+        self.project.save()  # Save the project to update its version
         # Perform the actual save first to ensure it's in the DB
         # and to catch any integrity errors before updating project version.
         super(LexiconEntry, self).save(*args, **kwargs)
