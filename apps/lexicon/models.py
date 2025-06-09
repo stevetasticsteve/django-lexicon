@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 
+from apps.lexicon.tasks import update_lexicon_entry_search_field
+
 log = logging.getLogger("lexicon")
 
 
@@ -246,6 +248,9 @@ class LexiconEntry(models.Model):
             self.project.version += 1
             self.project.save()  # Save the project to update its version
 
+        # trigger a celery task to update the search field
+        update_lexicon_entry_search_field(self.pk)
+
     class Meta:
         ordering = ["tok_ples"]
         constraints = [
@@ -292,6 +297,11 @@ class Variation(models.Model):
         return (
             f"Variation for: '{self.word}' - '{self.text}' ({self.get_type_display()})"
         )
+    
+    def save(self,*args, **kwargs):
+        # trigger a celery task to rebuild search index
+        update_lexicon_entry_search_field(self.word.pk)
+        return super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         """What page Django should return if asked to show this entry."""

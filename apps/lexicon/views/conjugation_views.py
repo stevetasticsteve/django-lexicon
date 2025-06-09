@@ -11,6 +11,7 @@ from django.views.generic import FormView
 
 from apps.lexicon import forms, models
 from apps.lexicon.views.word_views import ProjectContextMixin
+from apps.lexicon.tasks import update_lexicon_entry_search_field
 
 user_log = logging.getLogger("user_log")
 log = logging.getLogger("lexicon")
@@ -85,6 +86,8 @@ class ParadigmView(View):
         if formset.is_valid():
             log.debug("Formset is valid")
             formset.save()
+            # Trigger a celery task to update the search field
+            update_lexicon_entry_search_field(word_pk)
             # Success: re-render the view template
             context = self._context_lookup(word_pk, paradigm_pk, data=request.POST)
             return render(request, self.view_template, context)

@@ -2,11 +2,12 @@ import csv
 import logging
 
 from celery import shared_task
-from django.db import IntegrityError, DataError
+from django.db import DataError, IntegrityError
 
 from apps.lexicon import models
 
 log = logging.getLogger("lexicon")
+
 
 @shared_task
 def import_dic(dic_data: bytes, lang_code: str) -> None:
@@ -54,7 +55,7 @@ def import_csv(csv_data: bytes, lang_code: str) -> None:
                 project=project,
                 tok_ples=w[0],
                 eng=w[1],
-                pos=parse_pos(w[2]),
+                pos=_parse_pos(w[2]),
                 comments=w[3],
                 modified_by="Importer",
             )
@@ -66,7 +67,7 @@ def import_csv(csv_data: bytes, lang_code: str) -> None:
             pass
 
 
-def parse_pos(pos: str) -> str:
+def _parse_pos(pos: str) -> str:
     """Accepts a str representing a pos and maps it to an abbreviation.
 
     The abbreviation matches those expected by LexiconEntry's pos choice field."""
@@ -91,6 +92,40 @@ def parse_pos(pos: str) -> str:
         case _:
             return "uk"
 
+
 @shared_task
-def update_lexicon_entry_search_field(entry_pk):
-    log.debug(f"Building search index for '{entry_pk}'")
+def update_lexicon_entry_search_field(entry_pk: int) -> None:
+    """Updates LexiconEntry's search field with all searchable fields for a word.
+
+    Takes the a word's pk, finds its conjugations and variations and adds them all to a search string.
+    This task is called on LexiconEntry save(), in formset.is_valid() in conjugations and on Variation save()"""
+    try:
+        entry = models.LexiconEntry.objects.prefetch_related(
+            "variations", "conjugation_set"
+        ).get(pk=entry_pk)
+
+        # Build the search string
+        search_terms = [entry.tok_ples]  # Assuming tok_ples is the main word
+
+        for var in entry.variations.all():
+            search_terms.append(var.text)
+
+        for conj in entry.conjugation_set.all():
+            search_terms.append(
+                conj.conjugation
+            )
+
+        new_search_field_value = " ".join(
+            filter(None, search_terms)
+        ).lower()  # Lowercase for case-insensitive search
+
+        # only save if the search field changes
+        if entry.search != new_search_field_value:
+            entry.search = new_search_field_value
+            entry.save(update_fields=["search"])  # Save only the search_field
+            log.debug(f"Search for '{entry_pk}' updated to '{entry.search}'")
+
+    except models.LexiconEntry.DoesNotExist:
+        log.debug(f"LexiconEntry with pk {entry_pk} not found for search field update.")
+    except Exception as e:
+        log.error(f"Error updating search field for LexiconEntry {entry_pk}: {e}")

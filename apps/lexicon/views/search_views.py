@@ -46,7 +46,7 @@ class LexiconSearchResults(ProjectSearchView):
     """Search results for lexicon entries."""
 
     model = models.LexiconEntry
-    search_field = "tok_ples__icontains"
+    search_field = "search__icontains"
 
 
 class IgnoreSearchResults(ProjectSearchView):
