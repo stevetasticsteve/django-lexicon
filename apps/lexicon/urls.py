@@ -1,11 +1,12 @@
 from django.urls import path
 
-import apps.lexicon.views.word_views as word_views
+import apps.lexicon.views.affix_views as affix_views
+import apps.lexicon.views.conjugation_views as conjugation_views
+import apps.lexicon.views.ignore_word_views as ignore_word_views
 import apps.lexicon.views.import_export_views as import_export_views
 import apps.lexicon.views.search_views as search_views
-import apps.lexicon.views.ignore_word_views as ignore_word_views
-import apps.lexicon.views.conjugation_views as conjugation_views
-import apps.lexicon.views.affix_views as affix_views
+import apps.lexicon.views.variation_views as variation_views
+import apps.lexicon.views.word_views as word_views
 
 app_name = "lexicon"
 
@@ -117,5 +118,16 @@ urlpatterns = [
         "<int:word_pk>/paradigm/<int:paradigm_pk>/<str:edit>",
         conjugation_views.ParadigmView.as_view(),
         name="paradigm",
+    ),
+    # variation_views
+    path(
+        "<int:pk>/variations",
+        variation_views.VariationList.as_view(),
+        name="variation_list",
+    ),
+    path(
+        "variation-edit/<int:pk>",
+        variation_views.VariationEdit.as_view(),
+        name="variation_edit",
     ),
 ]

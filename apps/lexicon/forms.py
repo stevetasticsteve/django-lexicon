@@ -3,7 +3,7 @@ import logging
 from django import forms
 from django.forms import BaseModelFormSet, modelformset_factory
 
-from apps.lexicon.models import Conjugation
+from apps.lexicon import models
 
 log = logging.getLogger("lexicon")
 
@@ -92,7 +92,7 @@ class ConjugationForm(forms.ModelForm):
         return super().clean()
 
     class Meta:
-        model = Conjugation
+        model = models.Conjugation
         fields = ["conjugation"]
         widgets = {
             "conjugation": forms.TextInput(
@@ -128,7 +128,7 @@ class BaseConjugationFormSet(BaseModelFormSet):
                 column = idx % num_cols
 
                 # Get or create the conjugation instance
-                instance, created = Conjugation.objects.get_or_create(
+                instance, created = models.Conjugation.objects.get_or_create(
                     word=self.word,
                     paradigm=paradigm,
                     row=row,
@@ -152,13 +152,13 @@ class BaseConjugationFormSet(BaseModelFormSet):
                 row = idx // num_cols
                 column = idx % num_cols
                 try:
-                    existing = Conjugation.objects.get(
+                    existing = models.Conjugation.objects.get(
                         word=self.word, paradigm=paradigm, row=row, column=column
                     )
                     if commit:
                         existing.delete()
                     log.debug(f"Deleted empty conjugation at '({row}, {column})'")
-                except Conjugation.DoesNotExist:
+                except models.Conjugation.DoesNotExist:
                     pass  # Nothing to delete
 
         return instances
@@ -173,7 +173,7 @@ def get_conjugation_formset(paradigm, data=None, queryset=None, word=None):
 
     # Create a formset with the right number of forms, but don't pre-populate with empty instances
     ConjugationFormSet = modelformset_factory(
-        Conjugation,
+        models.Conjugation,
         form=ConjugationForm,
         formset=BaseConjugationFormSet,
         extra=total_cells,  # Create enough forms for the full grid
@@ -195,7 +195,7 @@ def get_conjugation_formset(paradigm, data=None, queryset=None, word=None):
             initial_data.append(existing_conjugations.get(i, {"conjugation": ""}))
 
         return ConjugationFormSet(
-            queryset=Conjugation.objects.none(),  # Don't pre-populate with instances
+            queryset=models.Conjugation.objects.none(),  # Don't pre-populate with instances
             initial=initial_data,
             form_kwargs={"paradigm": paradigm, "word": word},
             word=word,
@@ -205,8 +205,27 @@ def get_conjugation_formset(paradigm, data=None, queryset=None, word=None):
         # For POST requests, use the submitted data
         return ConjugationFormSet(
             data,
-            queryset=Conjugation.objects.none(),
+            queryset=models.Conjugation.objects.none(),
             form_kwargs={"paradigm": paradigm, "word": word},
             word=word,
             paradigm=paradigm,
         )
+
+class VariationForm(forms.ModelForm):
+    """A form for editing a Variation object."""
+
+    class Meta:
+        model = models.Variation
+        fields = ["text", "type", "included_in_spellcheck", "included_in_search"]#
+        widgets = {
+            "text": forms.TextInput(attrs={"class": "form-control"}),
+            "type": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            "included_in_spellcheck": forms.CheckboxInput(
+                attrs={"class": "form-check-input"}
+            ),
+            "included_in_search": forms.CheckboxInput(
+                attrs={"class": "form-check-input"}
+            ),
+        }

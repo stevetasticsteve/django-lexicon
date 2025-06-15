@@ -731,3 +731,73 @@ class TestConjugationModel:
         models.Conjugation.objects.create(
             word=word, paradigm=paradigm, row=0, column=1, conjugation="c"
         )
+
+
+@pytest.mark.django_db
+class TestVariationModel:
+    def test_create_variation(self, english_project):
+        word = models.LexiconEntry.objects.create(
+            project=english_project, tok_ples="word", eng="gloss"
+        )
+        variation = models.Variation.objects.create(
+            word=word,
+            type="spelling",
+            text="spellingvar",
+            included_in_spellcheck=True,
+            included_in_search=True,
+            notes="A note",
+        )
+        assert variation.pk is not None
+        assert variation.word == word
+        assert variation.type == "spelling"
+        assert variation.text == "spellingvar"
+        assert variation.included_in_spellcheck is True
+        assert variation.included_in_search is True
+        assert variation.notes == "A note"
+
+    def test_str_method(self, english_project):
+        word = models.LexiconEntry.objects.create(
+            project=english_project, tok_ples="word", eng="gloss"
+        )
+        variation = models.Variation.objects.create(
+            word=word, type="dialect", text="dialectvar"
+        )
+        s = str(variation)
+        assert "Variation for: 'Word: word in English'" in s
+        assert "dialectvar" in s
+        assert "Dialectal Variant" in s
+
+    def test_type_choices(self, english_project):
+        word = models.LexiconEntry.objects.create(
+            project=english_project, tok_ples="word", eng="gloss"
+        )
+        # Valid type
+        models.Variation.objects.create(word=word, type="spelling", text="ok")
+        # Invalid type
+        with pytest.raises(ValidationError):
+            v = models.Variation(word=word, type="notatype", text="fail")
+            v.full_clean()
+
+    def test_text_required_and_max_length(self, english_project):
+        word = models.LexiconEntry.objects.create(
+            project=english_project, tok_ples="word", eng="gloss"
+        )
+        # Required
+        with pytest.raises(ValidationError):
+            v = models.Variation(word=word, type="spelling", text=None)
+            v.full_clean()
+        # Max length
+        with pytest.raises(ValidationError):
+            v = models.Variation(word=word, type="spelling", text="a" * 101)
+            v.full_clean()
+
+    def test_get_absolute_url(self, english_project):
+        word = models.LexiconEntry.objects.create(
+            project=english_project, tok_ples="word", eng="gloss"
+        )
+        variation = models.Variation.objects.create(
+            word=word, type="spelling", text="spellingvar"
+        )
+        url = variation.get_absolute_url()
+        assert str(word.pk) in url
+        assert word.project.language_code in url

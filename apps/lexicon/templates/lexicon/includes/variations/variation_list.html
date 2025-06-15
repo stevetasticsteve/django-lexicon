@@ -1,0 +1,17 @@
+<!-- lexicon/includes/variations/variation_list.html -->
+{% load static %}
+<div id="variation-container">
+    <h2>Variations</h2>
+    <div class="container">
+        <div class="row fw-bold border-bottom py-2">
+            <div class="col">Variation</div>
+            <div class="col">Type</div>
+            <div class="col text-center">In spellcheck?</div>
+            <div class="col text-center">Searchable?</div>
+            <div class="col-auto"></div>
+        </div>
+        {% for variation in object_list %}
+            {% include "lexicon/includes/variations/variation_display.html" with variation=variation %}
+        {% endfor %}
+    </div>
+</div>

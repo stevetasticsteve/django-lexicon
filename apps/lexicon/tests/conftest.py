@@ -87,6 +87,7 @@ def kovol_words(kovol_project):
 def user(db):
     return User.objects.create_user(username="testuser", password="testpass")
 
+
 @pytest.fixture
 def multirow_paradigm(english_project):
     paradigm = models.Paradigm.objects.create(
@@ -113,3 +114,13 @@ def multirow_paradigm(english_project):
             )
             conjugations.append(conj)
     return word, paradigm, conjugations
+
+
+# Example fixture for logged-in client
+@pytest.fixture
+def logged_in_client(client, django_user_model):
+    _ = django_user_model.objects.create_user(
+        username="testuser", password="testpass"
+    )
+    client.login(username="testuser", password="testpass")
+    return client

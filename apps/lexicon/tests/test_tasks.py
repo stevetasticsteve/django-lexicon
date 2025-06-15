@@ -1,4 +1,5 @@
 import pytest
+
 from apps.lexicon import models
 from apps.lexicon.tasks import update_lexicon_entry_search_field
 
@@ -20,7 +21,9 @@ def test_update_search_field_with_variations_and_conjugations(english_project):
         project=english_project, tok_ples="Word", eng="Meaning"
     )
     # Add a variation
-    models.Variation.objects.create(word=entry, type="spelling", text="Wurd")
+    models.Variation.objects.create(
+        word=entry, type="spelling", text="Wurd", included_in_search=True
+    )
     # Add conjugations
     paradigm = models.Paradigm.objects.create(
         name="TestParadigm",

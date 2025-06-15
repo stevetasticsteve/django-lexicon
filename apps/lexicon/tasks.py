@@ -108,7 +108,8 @@ def update_lexicon_entry_search_field(entry_pk: int) -> None:
         search_terms = [entry.tok_ples]  # Assuming tok_ples is the main word
 
         for var in entry.variations.all():
-            search_terms.append(var.text)
+            if var.included_in_search:
+                search_terms.append(var.text)
 
         for conj in entry.conjugation_set.all():
             search_terms.append(

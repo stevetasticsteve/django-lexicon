@@ -298,11 +298,6 @@ class Variation(models.Model):
             f"Variation for: '{self.word}' - '{self.text}' ({self.get_type_display()})"
         )
     
-    def save(self,*args, **kwargs):
-        # trigger a celery task to rebuild search index
-        update_lexicon_entry_search_field(self.word.pk)
-        return super().save(*args, **kwargs)
-
     def get_absolute_url(self):
         """What page Django should return if asked to show this entry."""
         # Return the detail page for the main word

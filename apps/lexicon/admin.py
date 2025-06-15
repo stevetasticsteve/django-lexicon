@@ -32,3 +32,10 @@ class ConjugationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.Conjugation,ConjugationAdmin)
+
+# Variations
+class VariationAdmin(admin.ModelAdmin):
+    pass
+
+
+admin.site.register(models.Variation, VariationAdmin)
