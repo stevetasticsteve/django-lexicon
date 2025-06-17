@@ -1,7 +1,11 @@
 <!-- lexicon/includes/variations/variation_edit.html -->
 {% load static %}
 <form method="post"
+      {% if form_type == "create" %}
+      hx-post="{% url 'lexicon:variation_create' word.pk %}"
+      {% else %}
       hx-post="{% url 'lexicon:variation_edit' form.instance.pk %}"
+      {% endif %}
       hx-target="#variation-container"
       hx-swap="outerHTML"
       class="row align-items-center py-2"

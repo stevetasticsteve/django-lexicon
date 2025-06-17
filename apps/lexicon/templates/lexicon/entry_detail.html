@@ -95,7 +95,7 @@
         {% include 'lexicon/includes/paradigm_list.html' %}  
 
         <div
-            hx-get="{% url 'lexicon:variation_list' pk=object.pk %}"
+            hx-get="{% url 'lexicon:variation_list' word_pk=object.pk %}"
             hx-target="#variation-container"
             hx-trigger="load"
             hx-swap="innerHTML">

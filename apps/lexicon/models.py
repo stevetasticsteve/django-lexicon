@@ -265,13 +265,13 @@ class Variation(models.Model):
     """An allowed variation for a LexiconEntry."""
 
     word = models.ForeignKey(
-        LexiconEntry, on_delete=models.CASCADE, related_name="variations"
+        LexiconEntry, on_delete=models.CASCADE, related_name="variations", null=False
     )
     type = models.CharField(
         max_length=15,
         choices=[
             ("spelling", "Spelling Variant"),
-            ("dialect", "Dialectal Variant"),
+            ("dialect", "Dialectal Variant"),   
             ("abbrv", "Abbreviation"),
         ],
     )

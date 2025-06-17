@@ -121,13 +121,23 @@ urlpatterns = [
     ),
     # variation_views
     path(
-        "<int:pk>/variations",
+        "<int:word_pk>/variations",
         variation_views.VariationList.as_view(),
         name="variation_list",
     ),
     path(
         "variation-edit/<int:pk>",
-        variation_views.VariationEdit.as_view(),
+        variation_views.UpdateVariation.as_view(),
         name="variation_edit",
+    ),
+    path(
+        "variation-create/<int:word_pk>",
+        variation_views.CreateVariation.as_view(),
+        name="variation_create",
+    ),
+    path(
+        "variation-delete/<int:pk>",
+        variation_views.DeleteVariation.as_view(),
+        name="variation_delete",
     ),
 ]

@@ -21,5 +21,12 @@
            class="svg-button">
             <img src="{% static '/img/pencil.svg' %}" alt="Edit">
         </a>
+        <a href="{% url 'lexicon:variation_delete' variation.pk %}"
+           hx-get="{% url 'lexicon:variation_delete' variation.pk %}"
+           hx-target="#variation-container"
+           hx-swap="outerHTML"
+           class="svg-button">
+            <img src="{% static '/img/trash-can.svg' %}" alt="Edit">
+        </a>
     </div>
 </div>

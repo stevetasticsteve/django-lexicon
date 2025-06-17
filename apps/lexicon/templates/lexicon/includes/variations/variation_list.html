@@ -13,5 +13,14 @@
         {% for variation in object_list %}
             {% include "lexicon/includes/variations/variation_display.html" with variation=variation %}
         {% endfor %}
+        <div id="variation-create-container">
+            <a href="{% url 'lexicon:variation_create' word.pk %}"
+            hx-get="{% url 'lexicon:variation_create' word.pk %}"
+            hx-target="#variation-create-container"
+            hx-swap="outerHTML"
+            class="svg-button">
+            <img src="{% static '/img/plus.svg' %}" alt="add">
+            </a>
+        </div>
     </div>
 </div>
