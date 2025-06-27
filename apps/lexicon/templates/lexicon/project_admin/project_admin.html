@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block header %}
+{% include 'lexicon/includes/project_header.html' %}
+{% endblock %}
+{% block page_content %}
+
+<div class="container">
+    <li>
+        <a href="{% url 'lexicon:import_page' lang_code %}">Import</a>
+    </li>
+    <li>
+        <a href="{% url 'lexicon:affix_tester' lang_code %}">Affixes</a>
+    </li>
+    <li>
+        <a href="{% url 'lexicon:paradigm_manage' lang_code %}">Paradigms</a>
+    </li>
+</div>
+
+{% endblock %}

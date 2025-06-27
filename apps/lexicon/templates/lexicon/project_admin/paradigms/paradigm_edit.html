@@ -1,0 +1,48 @@
+{% load static %}
+<form method="post"
+      {% if form_type == "create" %}
+      hx-post="{% url 'lexicon:paradigm_create' lang_code project.pk %}"
+      {% else %}
+      hx-post="{% url 'lexicon:paradigm_edit' lang_code form.instance.pk %}"
+      {% endif %}
+      hx-target="#paradigm-container"
+      hx-swap="outerHTML"
+      class="row align-items-center py-2"
+      id="paradigm-{{ form.instance.pk }}">
+    {% csrf_token %}
+    <div class="col">{{ form.name }}
+        <p id="form_errors" class="text-danger"></p>
+    </div>
+    <div class="col">{{ form.part_of_speech }}</div>
+    <div class="col text-center">{{ form.column_labels }}
+    </div>
+    <div class="col text-center">{{ form.row_labels }}
+    <div class="col-auto">
+        <button id="submit-btn" type="submit" class="svg-button px-2" disabled>
+            <img src="{% static '/img/check.svg' %}" alt="Save">
+        </button>
+        <a href="{% url 'lexicon:paradigm_list' lang_code %}"
+           hx-get="{% url 'lexicon:paradigm_list' lang_code %}"
+           hx-target="#paradigm-container"
+           hx-swap="innerHTML"
+           class="svg-button px-2">
+            <img src="{% static '/img/ban.svg' %}" alt="Cancel">
+        </a>
+    </div>
+</form>
+
+<script>
+    function updateSubmitButtonState() {
+        const formErrors = document.getElementById('form_errors');
+        const submitBtn = document.getElementById('submit-btn');
+        if (!submitBtn) return;
+        const hasFormErrors = formErrors && formErrors.textContent.trim().length > 0;
+        submitBtn.disabled = hasFormErrors;
+    }
+    
+    // Run on page load
+    document.addEventListener('DOMContentLoaded', updateSubmitButtonState);
+    
+    // Run after every htmx swap (for inline editing)
+    document.body.addEventListener('htmx:afterSwap', updateSubmitButtonState);
+    </script>

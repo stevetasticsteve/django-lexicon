@@ -2,6 +2,7 @@ import logging
 
 from django import forms
 from django.forms import BaseModelFormSet, modelformset_factory
+from django.urls import reverse_lazy
 
 from apps.lexicon import models
 
@@ -211,21 +212,50 @@ def get_conjugation_formset(paradigm, data=None, queryset=None, word=None):
             paradigm=paradigm,
         )
 
+
 class VariationForm(forms.ModelForm):
     """A form for editing a Variation object."""
 
     class Meta:
         model = models.Variation
-        fields = ["text", "type", "included_in_spellcheck", "included_in_search"]#
+        fields = ["text", "type", "included_in_spellcheck", "included_in_search"]  #
         widgets = {
             "text": forms.TextInput(attrs={"class": "form-control"}),
-            "type": forms.Select(
-                attrs={"class": "form-select"}
-            ),
+            "type": forms.Select(attrs={"class": "form-select"}),
             "included_in_spellcheck": forms.CheckboxInput(
                 attrs={"class": "form-check-input"}
             ),
             "included_in_search": forms.CheckboxInput(
                 attrs={"class": "form-check-input"}
+            ),
+        }
+
+
+class ParadigmForm(forms.ModelForm):
+    """A form for editing a Paradigm object."""
+
+    class Meta:
+        model = models.Paradigm
+        fields = ["name", "part_of_speech", "row_labels", "column_labels"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "part_of_speech": forms.Select(attrs={"class": "form-select"}),
+            "row_labels": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "hx-post": reverse_lazy("json-validation"),
+                    "hx-target": "#form_errors",
+                    "hx-swap": "innerHTML",
+                    "hx-trigger": "keyup",
+                }
+            ),
+            "column_labels": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "hx-post": reverse_lazy("json-validation"),
+                    "hx-target": "#form_errors",
+                    "hx-swap": "innerHTML",
+                    "hx-trigger": "keyup",
+                },
             ),
         }

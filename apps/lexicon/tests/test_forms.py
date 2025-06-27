@@ -112,3 +112,70 @@ def test_get_conjugation_formset_initial_data(english_project):
         formset.forms[1].fields["conjugation"].initial is None
     )  # because initial is set on the form, not the field
     assert formset.forms[1].initial["conjugation"] == "existing"
+
+
+@pytest.mark.django_db
+def test_paradigm_form_valid(english_project):
+    form = forms.ParadigmForm(
+        data={
+            "name": "Test",
+            "part_of_speech": "n",
+            "row_labels": '["row1", "row2"]',
+            "column_labels": '["col1", "col2"]',
+        }
+    )
+    assert form.is_valid()
+    instance = form.save(commit=False)
+    assert instance.name == "Test"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field", ["name", "part_of_speech", "row_labels", "column_labels"]
+)
+def test_paradigm_form_required_fields(english_project, field):
+    data = {
+        "name": "Test",
+        "part_of_speech": "n",
+        "row_labels": '["row1"]',
+        "column_labels": '["col1"]',
+    }
+    data[field] = ""
+    form = forms.ParadigmForm(data=data)
+    assert not form.is_valid()
+    assert field in form.errors
+
+
+@pytest.mark.django_db
+def test_paradigm_form_invalid_json_labels(english_project):
+    form = forms.ParadigmForm(
+        data={
+            "name": "Test",
+            "part_of_speech": "n",
+            "row_labels": "not a json",
+            "column_labels": '["col1"]',
+        }
+    )
+    assert not form.is_valid()
+    assert "row_labels" in form.errors
+
+
+@pytest.mark.django_db
+def test_paradigm_form_non_list_json(english_project):
+    form = forms.ParadigmForm(
+        data={
+            "name": "Test",
+            "part_of_speech": "n",
+            "row_labels": '"just a string"',
+            "column_labels": '["col1"]',
+        }
+    )
+    assert not form.is_valid()
+    assert "Row and column labels must be lists." in form.errors["__all__"]
+
+
+def test_paradigm_form_widget_attrs():
+    form = forms.ParadigmForm()
+    row_widget = form.fields["row_labels"].widget
+    assert "hx-post" in row_widget.attrs
+    assert "hx-target" in row_widget.attrs

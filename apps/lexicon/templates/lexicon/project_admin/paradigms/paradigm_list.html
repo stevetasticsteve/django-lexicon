@@ -1,0 +1,26 @@
+
+{% load static %}
+<div id="paradigm-container">
+    <h2>Paradigms for {{ project.language_name }}</h2>
+    <div class="container">
+        <div class="row fw-bold border-bottom py-2">
+            <div class="col">Paradigm</div>
+            <div class="col">Applies to</div>
+            <div class="col text-center">Columns</div>
+            <div class="col text-center">Rows</div>
+            <div class="col-auto"></div>
+        </div>
+        {% for p in paradigm %}
+            {% include "lexicon/project_admin/paradigms/paradigm_display.html" with paradigm=p %}
+        {% endfor %}
+        <div class="mt-4 px-2" id="paradigm-create-container">
+            <a href="{% url 'lexicon:paradigm_create' lang_code project.pk %}"
+            hx-get="{% url 'lexicon:paradigm_create' lang_code project.pk %}"
+            hx-target="#paradigm-create-container"
+            hx-swap="outerHTML"
+            class="svg-button">
+            <img src="{% static '/img/plus.svg' %}" alt="add">
+            </a>
+            </div>
+    </div>
+</div>

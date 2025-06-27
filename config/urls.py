@@ -18,12 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from config import views
+from apps.lexicon.views.word_views import ProjectList
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/login/", views.LoginView.as_view(), name="login"),
     path("accounts/", include("django.contrib.auth.urls")),
-    path("", views.home, name="home"),
-    path("to-do/", views.to_do, name="to_do"),
+    path("", ProjectList.as_view(), name="project_list"),
     path("lexicon/", include("apps.lexicon.urls")),
+    path("json-validate", views.JsonValidation.as_view(), name="json-validation"),
 ]

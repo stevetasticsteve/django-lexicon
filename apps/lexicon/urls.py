@@ -7,6 +7,7 @@ import apps.lexicon.views.import_export_views as import_export_views
 import apps.lexicon.views.search_views as search_views
 import apps.lexicon.views.variation_views as variation_views
 import apps.lexicon.views.word_views as word_views
+import apps.lexicon.views.project_admin_views as project_admin_views
 
 app_name = "lexicon"
 
@@ -139,5 +140,36 @@ urlpatterns = [
         "variation-delete/<int:pk>",
         variation_views.DeleteVariation.as_view(),
         name="variation_delete",
+    ),
+    # Project admin views
+    path(
+        "<str:lang_code>/project-admin",
+        project_admin_views.ProjectAdmin.as_view(),
+        name="project_admin",
+    ),
+    path(
+        "<str:lang_code>/paradigm-admin",
+        project_admin_views.ManageParadigms.as_view(),
+        name="paradigm_manage",
+    ),
+    path(
+        "<str:lang_code>/paradigm-list",
+        project_admin_views.ParadigmList.as_view(),
+        name="paradigm_list",
+    ),
+    path(
+        "<str:lang_code>/paradigm-edit/<int:pk>",
+        project_admin_views.UpdateParadigm.as_view(),
+        name="paradigm_edit",
+    ),
+    path(
+        "<str:lang_code>/paradigm-create/<int:project_pk>",
+        project_admin_views.CreateParadigm.as_view(),
+        name="paradigm_create",
+    ),
+    path(
+        "<str:lang_code>/paradigm-delete/<int:pk>",
+        project_admin_views.DeleteParadigm.as_view(),
+        name="paradigm_delete",
     ),
 ]
