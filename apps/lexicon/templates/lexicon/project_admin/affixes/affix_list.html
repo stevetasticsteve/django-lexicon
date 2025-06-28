@@ -1,0 +1,24 @@
+
+{% load static %}
+<div id="affix-container">
+    <h2>Affixes for {{ project.language_name }}</h2>
+    <div class="container">
+        <div class="row fw-bold border-bottom py-2">
+            <div class="col">Affix name</div>
+            <div class="col">Applies to</div>
+            <div class="col text-center">Affix letter</div>
+        </div>
+        {% for p in affix %}
+            {% include "lexicon/project_admin/affixes/affix_display.html" with affix=p %}
+        {% endfor %}
+        <div class="mt-4 px-2" id="affix-create-container">
+            <a href="{% url 'lexicon:affix_create' lang_code project.pk %}"
+            hx-get="{% url 'lexicon:affix_create' lang_code project.pk %}"
+            hx-target="#affix-create-container"
+            hx-swap="outerHTML"
+            class="svg-button">
+            <img src="{% static '/img/plus.svg' %}" alt="add">
+            </a>
+            </div>
+    </div>
+</div>

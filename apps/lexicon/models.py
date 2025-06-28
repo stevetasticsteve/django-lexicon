@@ -1,5 +1,6 @@
 import logging
 import re
+import string
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -271,7 +272,7 @@ class Variation(models.Model):
         max_length=15,
         choices=[
             ("spelling", "Spelling Variant"),
-            ("dialect", "Dialectal Variant"),   
+            ("dialect", "Dialectal Variant"),
             ("abbrv", "Abbreviation"),
         ],
     )
@@ -297,7 +298,7 @@ class Variation(models.Model):
         return (
             f"Variation for: '{self.word}' - '{self.text}' ({self.get_type_display()})"
         )
-    
+
     def get_absolute_url(self):
         """What page Django should return if asked to show this entry."""
         # Return the detail page for the main word
@@ -498,3 +499,42 @@ class Conjugation(models.Model):
         ]
         verbose_name = "Conjugation"
         verbose_name_plural = "Conjugations"
+
+
+class Affix(models.Model):
+    """Represents an affix that can be used in a lexicon project."""
+
+    project = models.ForeignKey(
+        LexiconProject,
+        on_delete=models.CASCADE,
+        related_name="affixes",
+        blank=False,
+        null=False,
+    )
+    name = models.CharField(max_length=40, help_text="Name of the affix")
+    applies_to = models.CharField(
+        max_length=5,
+        blank=False,
+        null=False,
+        choices=LexiconEntry._meta.get_field("pos").choices,
+        help_text="Part of speech this affix is for (e.g., verb, noun)",
+    )
+    affix_letter = models.CharField(
+        choices=[(char, char) for char in string.ascii_uppercase],
+        max_length=1,
+        help_text="Single letter representing the affix.",
+        blank=False,
+        null=False,
+    )
+
+    def __str__(self):
+        """What Python calls this object when it shows it on screen."""
+        return f"Affix {self.affix_letter} for {self.project.language_name}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "affix_letter"],
+                name="unique_affix_letter_per_project",
+            )
+        ]

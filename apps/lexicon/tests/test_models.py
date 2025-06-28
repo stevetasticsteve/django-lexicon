@@ -801,3 +801,90 @@ class TestVariationModel:
         url = variation.get_absolute_url()
         assert str(word.pk) in url
         assert word.project.language_code in url
+
+@pytest.mark.django_db
+class TestAffixModel:
+    def test_create_valid_affix(self, english_project):
+        affix = models.Affix.objects.create(
+            project=english_project,
+            name="Prefix A",
+            applies_to="n",
+            affix_letter="A",
+        )
+        assert affix.pk is not None
+        assert affix.affix_letter == "A"
+        assert affix.project == english_project
+
+    def test_affix_letter_choices(self, english_project):
+        # Valid uppercase
+        models.Affix.objects.create(
+            project=english_project, name="Prefix B", applies_to="n", affix_letter="B"
+        )
+        # Invalid lowercase
+        affix = models.Affix(
+            project=english_project, name="Prefix b", applies_to="n", affix_letter="b"
+        )
+        with pytest.raises(ValidationError):
+            affix.full_clean()
+        # Invalid non-letter
+        affix = models.Affix(
+            project=english_project, name="Prefix 1", applies_to="n", affix_letter="1"
+        )
+        with pytest.raises(ValidationError):
+            affix.full_clean()
+
+    def test_applies_to_choices(self, english_project):
+        # Valid
+        models.Affix.objects.create(
+            project=english_project, name="Verb Affix", applies_to="v", affix_letter="C"
+        )
+        # Invalid
+        affix = models.Affix(
+            project=english_project,
+            name="Invalid POS",
+            applies_to="xyz",
+            affix_letter="D",
+        )
+        with pytest.raises(ValidationError):
+            affix.full_clean()
+
+    def test_affix_letter_unique_per_project(self, english_project):
+        models.Affix.objects.create(
+            project=english_project, name="Affix1", applies_to="n", affix_letter="E"
+        )
+        with pytest.raises(IntegrityError):
+            models.Affix.objects.create(
+                project=english_project, name="Affix2", applies_to="v", affix_letter="E"
+            )
+
+    def test_affix_letter_can_repeat_across_projects(
+        self, english_project, kovol_project
+    ):
+        models.Affix.objects.create(
+            project=english_project, name="Affix1", applies_to="n", affix_letter="F"
+        )
+        # Should be allowed in a different project
+        affix = models.Affix.objects.create(
+            project=kovol_project, name="Affix2", applies_to="n", affix_letter="F"
+        )
+        assert affix.pk is not None
+
+    def test_name_max_length(self, english_project):
+        affix = models.Affix(
+            project=english_project, name="a" * 41, applies_to="n", affix_letter="G"
+        )
+        with pytest.raises(ValidationError):
+            affix.full_clean()
+
+    def test_affix_letter_max_length(self, english_project):
+        affix = models.Affix(
+            project=english_project, name="Valid", applies_to="n", affix_letter="GH"
+        )
+        with pytest.raises(ValidationError):
+            affix.full_clean()
+
+    def test_str_method(self, english_project):
+        affix = models.Affix.objects.create(
+            project=english_project, name="Suffix", applies_to="n", affix_letter="H"
+        )
+        assert str(affix) == f"Affix H for {english_project.language_name}"

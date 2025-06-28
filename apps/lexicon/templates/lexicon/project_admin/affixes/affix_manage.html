@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block header %}
+{% include 'lexicon/includes/project_header.html' %}
+{% endblock %}
+{% block page_content %}
+
+<div
+    id="affix-container"
+    hx-get="{% url 'lexicon:affix_list' lang_code %}"
+    hx-target="#affix-container"
+    hx-trigger="load"
+    hx-swap="innerHTML">
+</div>
+
+<script>
+    document.body.addEventListener('htmx:responseError', function(evt) {
+    if (evt.target.closest('form[id^="affix-"]') && evt.detail.xhr.status === 400) {
+        const currentForm = evt.target.closest('form[id^="affix-"]');
+        const currentError = currentForm.querySelector('#non_field_errors');
+        if (currentError) {
+            currentError.textContent = evt.detail.xhr.responseText;
+            currentError.style.display = ""; // Ensure it's visible
+        }
+    }
+});
+</script>
+{% endblock %}

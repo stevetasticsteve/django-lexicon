@@ -122,3 +122,142 @@ class TestParadigmAdminViews:
             models.Paradigm.objects.filter(name="", project=english_project).count()
             == 0
         )
+
+@pytest.mark.django_db
+class TestAffixAdminViews:
+    def test_affix_list_view(self, logged_in_client, english_project):
+        """Test the affix list view returns 200 and contains affixes."""
+        url = reverse(
+            "lexicon:affix_list", kwargs={"lang_code": english_project.language_code}
+        )
+        response = logged_in_client.get(url)
+        assert response.status_code == 200
+        assert "Affix" in response.content.decode()
+
+    def test_create_affix_get(self, logged_in_client, english_project):
+        """Test the create affix view returns 200 and contains the form."""
+        url = reverse(
+            "lexicon:affix_create",
+            kwargs={
+                "lang_code": english_project.language_code,
+                "project_pk": english_project.pk,
+            },
+        )
+        response = logged_in_client.get(url)
+        assert response.status_code == 200
+        assert "form" in response.content.decode().lower()
+
+    def test_create_affix_post(self, logged_in_client, english_project):
+        """Test creating an affix via POST request."""
+        url = reverse(
+            "lexicon:affix_create",
+            kwargs={
+                "lang_code": english_project.language_code,
+                "project_pk": english_project.pk,
+            },
+        )
+        data = {
+            "name": "Prefix A",
+            "applies_to": "n",
+            "affix_letter": "A",
+        }
+        response = logged_in_client.post(url, data, follow=True)
+        assert response.status_code == 200
+        assert models.Affix.objects.filter(
+            name="Prefix A", project=english_project
+        ).exists()
+
+    def test_update_affix_get_and_post(self, logged_in_client, english_project):
+        """Test updating an affix via GET and POST requests."""
+        affix = models.Affix.objects.create(
+            project=english_project,
+            name="Old Affix",
+            applies_to="n",
+            affix_letter="B",
+        )
+        url = reverse(
+            "lexicon:affix_edit",
+            kwargs={"lang_code": english_project.language_code, "pk": affix.pk},
+        )
+        # GET
+        response = logged_in_client.get(url)
+        assert response.status_code == 200
+        assert "Old Affix" in response.content.decode()
+        # POST
+        data = {
+            "name": "Updated Affix",
+            "applies_to": "v",
+            "affix_letter": "C",
+        }
+        response = logged_in_client.post(url, data, follow=True)
+        assert response.status_code == 200
+        affix.refresh_from_db()
+        assert affix.name == "Updated Affix"
+        assert affix.applies_to == "v"
+        assert affix.affix_letter == "C"
+
+    def test_delete_affix(self, logged_in_client, english_project):
+        """Test deleting an affix via GET and POST requests."""
+        affix = models.Affix.objects.create(
+            project=english_project,
+            name="Delete Affix",
+            applies_to="n",
+            affix_letter="D",
+        )
+        url = reverse(
+            "lexicon:affix_delete",
+            kwargs={"lang_code": english_project.language_code, "pk": affix.pk},
+        )
+        # GET confirmation
+        response = logged_in_client.get(url)
+        assert response.status_code == 200
+        # POST delete
+        response = logged_in_client.post(url, follow=True)
+        assert response.status_code == 200
+        assert not models.Affix.objects.filter(pk=affix.pk).exists()
+
+    def test_create_affix_invalid_data(self, logged_in_client, english_project):
+        """Test creating an affix with invalid data does not create an object."""
+        url = reverse(
+            "lexicon:affix_create",
+            kwargs={
+                "lang_code": english_project.language_code,
+                "project_pk": english_project.pk,
+            },
+        )
+        data = {
+            "name": "",
+            "applies_to": "",
+            "affix_letter": "",
+        }
+        response = logged_in_client.post(url, data)
+        assert response.status_code == 200
+        assert models.Affix.objects.all().count() == 0
+
+    def test_create_affix_duplicate_letter(self, logged_in_client, english_project):
+        """Test creating an affix with a duplicate letter returns an error."""
+        # Create an affix with letter E
+        models.Affix.objects.create(
+            project=english_project,
+            name="Affix E",
+            applies_to="n",
+            affix_letter="E",
+        )
+        url = reverse(
+            "lexicon:affix_create",
+            kwargs={
+                "lang_code": english_project.language_code,
+                "project_pk": english_project.pk,
+            },
+        )
+        data = {
+            "name": "Duplicate Affix",
+            "applies_to": "n",
+            "affix_letter": "E",
+        }
+        response = logged_in_client.post(url, data, HTTP_HX_REQUEST="true")
+        # Should return 400 and the error message
+        assert response.status_code == 400
+        assert (
+            "Affix letter must be unique for this project." in response.content.decode()
+        )

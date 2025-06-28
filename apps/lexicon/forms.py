@@ -259,3 +259,16 @@ class ParadigmForm(forms.ModelForm):
                 },
             ),
         }
+
+
+class AffixForm(forms.ModelForm):
+    """A form for editing an Affix object."""
+
+    class Meta:
+        model = models.Affix
+        fields = ["name", "applies_to", "affix_letter"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "affix_letter": forms.Select(attrs={"class": "form-select"}),
+            "applies_to": forms.Select(attrs={"class": "form-select"}),
+        }

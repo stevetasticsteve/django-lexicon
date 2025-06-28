@@ -1,0 +1,36 @@
+{% load static %}
+<form method="post"
+      {% if form_type == "create" %}
+      hx-post="{% url 'lexicon:affix_create' lang_code project.pk %}"
+      {% else %}
+      hx-post="{% url 'lexicon:affix_edit' lang_code form.instance.pk %}"
+      {% endif %}
+      hx-target="#affix-container"
+      hx-swap="outerHTML"
+      class="row align-items-center py-2"
+      id="affix-{{ form.instance.pk }}">
+    {% csrf_token %}
+    
+    <div class="col">{{ form.name }}
+        <p id="form_errors" class="text-danger"></p>
+    </div>
+    <div class="col text-center">{{ form.applies_to }}
+    </div>
+    <div class="col text-center">{{ form.affix_letter }}
+    <div class="col-auto">
+        <button id="submit-btn" type="submit" class="svg-button px-2">
+            <img src="{% static '/img/check.svg' %}" alt="Save">
+        </button>
+        <a href="{% url 'lexicon:affix_list' lang_code %}"
+           hx-get="{% url 'lexicon:affix_list' lang_code %}"
+           hx-target="#affix-container"
+           hx-swap="innerHTML"
+           class="svg-button px-2">
+            <img src="{% static '/img/ban.svg' %}" alt="Cancel">
+        </a>
+        <p id="non_field_errors" class="text-danger mb-2"></p>
+    </div>
+    
+    
+</form>
+

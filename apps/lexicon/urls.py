@@ -98,17 +98,6 @@ urlpatterns = [
         ignore_word_views.DeleteIgnoreWordView.as_view(),
         name="delete_ignore",
     ),
-    # affix_views
-    path(
-        "<str:lang_code>/affix-tester",
-        affix_views.AffixTester.as_view(),
-        name="affix_tester",
-    ),
-    path(
-        "<str:lang_code>/affix-results",
-        affix_views.AffixResults.as_view(),
-        name="affix_results",
-    ),
     # conjugation_views
     path(
         "<str:lang_code>/paradigm-modal/<int:pk>",
@@ -147,6 +136,7 @@ urlpatterns = [
         project_admin_views.ProjectAdmin.as_view(),
         name="project_admin",
     ),
+    # Paradigm management
     path(
         "<str:lang_code>/paradigm-admin",
         project_admin_views.ManageParadigms.as_view(),
@@ -171,5 +161,41 @@ urlpatterns = [
         "<str:lang_code>/paradigm-delete/<int:pk>",
         project_admin_views.DeleteParadigm.as_view(),
         name="paradigm_delete",
+    ),
+    # Affix management
+    path(
+        "<str:lang_code>/affix-admin",
+        project_admin_views.ManageAffixes.as_view(),
+        name="affix_manage",
+    ),
+    path(
+        "<str:lang_code>/affix-list",
+        project_admin_views.AffixList.as_view(),
+        name="affix_list",
+    ),
+    path(
+        "<str:lang_code>/affix-edit/<int:pk>",
+        project_admin_views.UpdateAffix.as_view(),
+        name="affix_edit",
+    ),
+    path(
+        "<str:lang_code>/affix-create/<int:project_pk>",
+        project_admin_views.CreateAffix.as_view(),
+        name="affix_create",
+    ),
+    path(
+        "<str:lang_code>/affix-delete/<int:pk>",
+        project_admin_views.DeleteAffix.as_view(),
+        name="affix_delete",
+    ),
+    path(
+        "<str:lang_code>/affix-tester",
+        affix_views.AffixTester.as_view(),
+        name="affix_tester",
+    ),
+    path(
+        "<str:lang_code>/affix-results",
+        affix_views.AffixResults.as_view(),
+        name="affix_results",
     ),
 ]
