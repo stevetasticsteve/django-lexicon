@@ -179,3 +179,19 @@ def test_paradigm_form_widget_attrs():
     row_widget = form.fields["row_labels"].widget
     assert "hx-post" in row_widget.attrs
     assert "hx-target" in row_widget.attrs
+
+@pytest.mark.django_db
+def test_word_affix_form_renders_affixes(kovol_project):
+    models.Affix.objects.create(
+        project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
+    )
+    models.Affix.objects.create(
+        project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
+    )
+    entry = models.LexiconEntry.objects.create(
+        project=kovol_project, tok_ples="hobol", eng="talk"
+    )
+    form = forms.WordAffixForm(instance=entry)
+    html = form.as_p()
+    assert "Prefix A" in html
+    assert "Prefix B" in html

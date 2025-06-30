@@ -189,6 +189,12 @@ class LexiconEntry(models.Model):
         blank=True,
         help_text="Paradigms that this word can use for conjugation/declension",
     )
+    affixes = models.ManyToManyField(
+        "Affix",
+        blank=True,
+        related_name="entries",
+        help_text="Affixes that can be used with this entry.",
+    )
 
     # Methods
     def __str__(self):

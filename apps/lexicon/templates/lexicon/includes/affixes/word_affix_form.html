@@ -1,0 +1,32 @@
+{% load static %}
+<form method="post"
+      hx-post="{% url 'lexicon:update_word_affixes' lang_code word.pk %}"
+      hx-target="#affix-display"
+      hx-swap="innerHTML"
+      class="row">
+    {% csrf_token %}
+    <div class="col-8">
+        <ul class="list-group">
+            {% for aff in form.fields.affixes.queryset %}
+            <li class="list-group-item">
+                <div class="form-check">
+                    <input class="form-check-input"
+                    type="checkbox"
+                    name="affixes"
+                    value="{{ aff.id }}"
+                    id="aff-{{ aff.id }}"
+                    {% if aff.id in form.affixes.value %}checked{% endif %}>
+                    <label class="form-check-label" for="aff-{{ aff.id }}">
+                        {{ aff.name }}
+                    </label>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="col-4 d-flex align-items-start">
+        <button type="submit" class="svg-button px-2 btn btn-link" style="box-shadow:none;">
+            <img src="{% static '/img/check.svg' %}" alt="Save">
+        </button>
+    </div>
+</form>

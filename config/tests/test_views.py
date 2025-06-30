@@ -1,6 +1,5 @@
 import pytest
 from django.urls import reverse
-from django.contrib.auth.models import User
 
 
 @pytest.mark.django_db
@@ -13,7 +12,7 @@ def test_login_view_get(client):
 
 @pytest.mark.django_db
 def test_login_view_post_valid(client, django_user_model):
-    user = django_user_model.objects.create_user(
+    django_user_model.objects.create_user(
         username="testuser", password="testpass"
     )
     url = reverse("login")

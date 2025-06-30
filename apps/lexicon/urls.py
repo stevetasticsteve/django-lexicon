@@ -4,10 +4,10 @@ import apps.lexicon.views.affix_views as affix_views
 import apps.lexicon.views.conjugation_views as conjugation_views
 import apps.lexicon.views.ignore_word_views as ignore_word_views
 import apps.lexicon.views.import_export_views as import_export_views
+import apps.lexicon.views.project_admin_views as project_admin_views
 import apps.lexicon.views.search_views as search_views
 import apps.lexicon.views.variation_views as variation_views
 import apps.lexicon.views.word_views as word_views
-import apps.lexicon.views.project_admin_views as project_admin_views
 
 app_name = "lexicon"
 
@@ -197,5 +197,20 @@ urlpatterns = [
         "<str:lang_code>/affix-results",
         affix_views.AffixResults.as_view(),
         name="affix_results",
+    ),
+    path(
+        "<str:lang_code>/affix-management/<int:pk>",
+        affix_views.AffixManagement.as_view(),
+        name="affix_management",
+    ),
+    path(
+        "<str:lang_code>/affix-list/<int:pk>",
+        affix_views.AffixList.as_view(),
+        name="affix_list",
+    ),
+    path(
+        "<str:lang_code>/update-word-affixes/<int:pk>",
+        affix_views.UpdateWordAffixes.as_view(),
+        name="update_word_affixes",
     ),
 ]

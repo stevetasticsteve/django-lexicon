@@ -17,3 +17,14 @@
     fill: #007bff;
     
 }
+
+/* Make disabled checkboxes look enabled */
+input[type="checkbox"]:disabled {
+    opacity: 1 !important;
+    filter: none !important;
+    pointer-events: none; /* Still not clickable */
+}
+input[type="checkbox"]:disabled + label {
+    color: inherit !important;
+    opacity: 1 !important;
+}

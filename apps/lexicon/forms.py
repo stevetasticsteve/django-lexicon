@@ -272,3 +272,15 @@ class AffixForm(forms.ModelForm):
             "affix_letter": forms.Select(attrs={"class": "form-select"}),
             "applies_to": forms.Select(attrs={"class": "form-select"}),
         }
+
+class WordAffixForm(forms.ModelForm):
+    class Meta:
+        model = models.LexiconEntry
+        fields = ["affixes"]
+        widgets = {
+            "affixes": forms.CheckboxSelectMultiple,
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["affixes"].label_from_instance = lambda obj: obj.name
