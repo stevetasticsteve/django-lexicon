@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "apps.lexicon",
+    "guardian",
 ]
 
 MIDDLEWARE = [
@@ -43,6 +44,12 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "guardian.backends.ObjectPermissionBackend",
+)
+ANONYMOUS_USER_NAME = None  # disables anonymous user object in guardian
 
 ROOT_URLCONF = "config.urls"
 

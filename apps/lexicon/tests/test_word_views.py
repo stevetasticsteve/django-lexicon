@@ -3,6 +3,7 @@ from django.db.utils import IntegrityError
 from django.http import Http404
 from django.urls import reverse
 from django.views.generic import TemplateView
+from guardian.shortcuts import assign_perm
 
 from apps.lexicon import models
 from apps.lexicon.views import word_views
@@ -216,18 +217,20 @@ class TestCreateEntry:
             "lexicon:create_entry", kwargs={"lang_code": english_project.language_code}
         )
 
-    def test_create_entry_get(self, client, english_project, user):
+    def test_create_entry_get(self, client, english_project, permissioned_user):
         """GET request should render the form."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         response = client.get(url)
         assert response.status_code == 200
         assert "form" in response.context
         assert "tok_ples" in response.content.decode()
 
-    def test_create_entry_post_success(self, client, english_project, user):
+    def test_create_entry_post_success(
+        self, client, english_project, permissioned_user
+    ):
         """POST valid data should create a new LexiconEntry and redirect."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
             "tok_ples": "new_word",
@@ -247,9 +250,11 @@ class TestCreateEntry:
             tok_ples="new_word", project=english_project
         ).exists()
 
-    def test_create_entry_missing_required_field(self, client, english_project, user):
+    def test_create_entry_missing_required_field(
+        self, client, english_project, permissioned_user
+    ):
         """POST missing required field should return form with errors."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
             # "tok_ples" is missing
@@ -268,9 +273,11 @@ class TestCreateEntry:
             eng="missing_word", project=english_project
         ).exists()
 
-    def test_create_entry_sets_modified_by(self, client, english_project, user):
+    def test_create_entry_sets_modified_by(
+        self, client, english_project, permissioned_user
+    ):
         """The created entry should have modified_by set to the username."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
             "tok_ples": "audit_word",
@@ -286,14 +293,14 @@ class TestCreateEntry:
         entry = models.LexiconEntry.objects.get(
             tok_ples="audit_word", project=english_project
         )
-        assert entry.modified_by == user.username
+        assert entry.modified_by == permissioned_user.username
 
     def test_create_entry_scope_limited(
-        self, client, english_words, english_project, kovol_project, user
+        self, client, english_words, english_project, kovol_project, permissioned_user
     ):
         """Created entries should be unique within projects only. The unique
         constraint shouldn't affect other projects"""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_create_url(kovol_project)
         data = {
             "tok_ples": "test_word",
@@ -316,10 +323,10 @@ class TestCreateEntry:
         assert models.LexiconEntry.objects.filter(tok_ples="test_word").count() == 2
 
     def test_tok_ples_unique_within_project(
-        self, client, english_words, english_project, user
+        self, client, english_words, english_project, permissioned_user
     ):
         """Test the unique constraint for tok_ples within a project holds."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
             "tok_ples": "test_word",
@@ -340,12 +347,12 @@ class TestCreateEntry:
             )
             assert models.LexiconEntry.objects.filter(tok_ples="test_word").count() == 1
 
-    def test_create_entry_invalid_tok_ples_chars(self, client, user):
+    def test_create_entry_invalid_tok_ples_chars(self, client, permissioned_user):
         """
         POST data with tok_ples violating the project's regex validator
         should re-render the form with validation errors and not save the entry.
         """
-        client.force_login(user)
+        client.force_login(permissioned_user)
 
         # 1. Create a project with a specific tok_ples_validator
         # Only allows lowercase letters
@@ -354,6 +361,7 @@ class TestCreateEntry:
             language_code="vld",
             tok_ples_validator="^[a-z]+$",
         )
+        assign_perm("edit_lexiconproject", permissioned_user, project_with_validator)
 
         url = self.get_create_url(project_with_validator)
 
@@ -404,18 +412,20 @@ class TestUpdateEntry:
             kwargs={"lang_code": english_project.language_code, "pk": entry.pk},
         )
 
-    def test_update_entry_get(self, client, english_project, entry, user):
+    def test_update_entry_get(self, client, english_project, entry, permissioned_user):
         """GET request should render the update form."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_update_url(english_project, entry)
         response = client.get(url)
         assert response.status_code == 200
         assert "form" in response.context
         assert entry.tok_ples in response.content.decode()
 
-    def test_update_entry_post_success(self, client, english_project, entry, user):
+    def test_update_entry_post_success(
+        self, client, english_project, entry, permissioned_user
+    ):
         """POST valid data should update the entry and redirect."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_update_url(english_project, entry)
         data = {
             "tok_ples": "updated_word",
@@ -433,13 +443,13 @@ class TestUpdateEntry:
         assert entry.tok_ples == "updated_word"
         assert entry.eng == "updated_gloss"
         assert entry.comments == "Updated via test"
-        assert entry.modified_by == user.username
+        assert entry.modified_by == permissioned_user.username
 
     def test_update_entry_missing_required_field(
-        self, client, english_project, entry, user
+        self, client, english_project, entry, permissioned_user
     ):
         """POST missing required field should return form with errors."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_update_url(english_project, entry)
         data = {
             # "tok_ples" is missing
@@ -457,9 +467,11 @@ class TestUpdateEntry:
         entry.refresh_from_db()
         assert entry.eng != "should_fail"
 
-    def test_update_entry_sets_review_user(self, client, english_project, entry, user):
+    def test_update_entry_sets_review_user(
+        self, client, english_project, entry, permissioned_user
+    ):
         """If review is changed, review_user and review_time should be set."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_update_url(english_project, entry)
         data = {
             "tok_ples": entry.tok_ples,
@@ -474,15 +486,15 @@ class TestUpdateEntry:
         response = client.post(url, data)
         assert response.status_code == 302
         entry.refresh_from_db()
-        assert entry.review_user == user.username
+        assert entry.review_user == permissioned_user.username
         assert entry.review_time is not None
 
-    def test_update_entry_invalid_tok_ples_chars(self, client, user):
+    def test_update_entry_invalid_tok_ples_chars(self, client, permissioned_user):
         """
         POST data to update an entry with tok_ples violating the project's regex validator
         should re-render the form with validation errors and not update the entry.
         """
-        client.force_login(user)
+        client.force_login(permissioned_user)
 
         # 1. Create a project with a specific tok_ples_validator
         project_with_validator = models.LexiconProject.objects.create(
@@ -490,6 +502,7 @@ class TestUpdateEntry:
             language_code="vul",
             tok_ples_validator="^[a-z]+$",  # Only allows lowercase letters
         )
+        assign_perm("edit_lexiconproject", permissioned_user, project_with_validator)
 
         # 2. Create an initial, valid entry for this project
         original_tok_ples = "validword"
@@ -556,17 +569,21 @@ class TestDeleteEntry:
             kwargs={"lang_code": english_project.language_code, "pk": entry.pk},
         )
 
-    def test_delete_entry_get_confirmation(self, client, english_project, entry, user):
+    def test_delete_entry_get_confirmation(
+        self, client, english_project, entry, permissioned_user
+    ):
         """GET should render the confirmation page for deletion."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_delete_url(english_project, entry)
         response = client.get(url)
         assert response.status_code == 200
         assert "yes, delete it" in response.content.decode().lower()
 
-    def test_delete_entry_post_success(self, client, english_project, entry, user):
+    def test_delete_entry_post_success(
+        self, client, english_project, entry, permissioned_user
+    ):
         """POST should delete the entry and redirect to the entry list."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = self.get_delete_url(english_project, entry)
         response = client.post(url)
         # Should redirect after deletion
@@ -647,3 +664,80 @@ class TestReviewList:
         url = reverse("lexicon:review_list", kwargs={"lang_code": "nonexistent"})
         response = client.get(url)
         assert response.status_code == 404
+
+@pytest.mark.django_db
+class TestEntryPermissions:
+    def get_create_url(self, project):
+        return reverse(
+            "lexicon:create_entry", kwargs={"lang_code": project.language_code}
+        )
+
+    def get_update_url(self, project, entry):
+        return reverse(
+            "lexicon:update_entry",
+            kwargs={"lang_code": project.language_code, "pk": entry.pk},
+        )
+
+    def get_delete_url(self, project, entry):
+        return reverse(
+            "lexicon:delete_entry",
+            kwargs={"lang_code": project.language_code, "pk": entry.pk},
+        )
+
+    def test_create_entry_forbidden(self, client, english_project, user):
+        client.force_login(user)
+        url = self.get_create_url(english_project)
+        data = {
+            "tok_ples": "forbidden_word",
+            "eng": "forbidden_gloss",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 403
+        assert not models.LexiconEntry.objects.filter(
+            tok_ples="forbidden_word", project=english_project
+        ).exists()
+
+    def test_update_entry_forbidden(self, client, english_project, user):
+        entry = models.LexiconEntry.objects.create(
+            tok_ples="forbidden_update",
+            eng="forbidden_update_gloss",
+            project=english_project,
+            checked=False,
+            review=0,
+        )
+        client.force_login(user)
+        url = self.get_update_url(english_project, entry)
+        data = {
+            "tok_ples": "should_not_update",
+            "eng": "should_not_update",
+            "oth_lang": "",
+            "pos": "",
+            "comments": "",
+            "checked": True,
+            "review": 0,
+            "review_comments": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 403
+        entry.refresh_from_db()
+        assert entry.tok_ples == "forbidden_update"
+
+    def test_delete_entry_forbidden(self, client, english_project, user):
+        entry = models.LexiconEntry.objects.create(
+            tok_ples="forbidden_delete",
+            eng="forbidden_delete_gloss",
+            project=english_project,
+            checked=False,
+            review=0,
+        )
+        client.force_login(user)
+        url = self.get_delete_url(english_project, entry)
+        response = client.post(url)
+        assert response.status_code == 403
+        assert models.LexiconEntry.objects.filter(pk=entry.pk).exists()

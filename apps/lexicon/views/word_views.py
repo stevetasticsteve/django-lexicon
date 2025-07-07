@@ -10,6 +10,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
 
 from apps.lexicon import forms, models
+from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
 
 user_log = logging.getLogger("user_log")
 log = logging.getLogger("lexicon")
@@ -65,7 +66,12 @@ class EntryDetail(ProjectContextMixin, DetailView):
         return context
 
 
-class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
+class CreateEntry(
+    LoginRequiredMixin,
+    ProjectEditPermissionRequiredMixin,
+    ProjectContextMixin,
+    CreateView,
+):
     """The view at url lexicon/<lang code>/create. Creates a new word."""
 
     model = models.LexiconEntry
@@ -92,7 +98,12 @@ class CreateEntry(LoginRequiredMixin, ProjectContextMixin, CreateView):
         return super().form_valid(form, **kwargs)
 
 
-class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
+class UpdateEntry(
+    LoginRequiredMixin,
+    ProjectEditPermissionRequiredMixin,
+    ProjectContextMixin,
+    UpdateView,
+):
     """The view at url lexicon/<lang code>/<pk>/update. Updates words."""
 
     model = models.LexiconEntry
@@ -115,7 +126,12 @@ class UpdateEntry(LoginRequiredMixin, ProjectContextMixin, UpdateView):
         return super().form_valid(form, **kwargs)
 
 
-class DeleteEntry(LoginRequiredMixin, ProjectContextMixin, DeleteView):
+class DeleteEntry(
+    LoginRequiredMixin,
+    ProjectEditPermissionRequiredMixin,
+    ProjectContextMixin,
+    DeleteView,
+):
     """The view at url lexicon/<lang code>/<pk>/delete. Deletes a word."""
 
     model = models.LexiconEntry

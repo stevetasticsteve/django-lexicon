@@ -200,6 +200,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-guardian"
+version = "3.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/30/c2/3ed43813dd7313f729dbaa829b4f9ed4a647530151f672cfb5f843c12edf/django_guardian-3.0.3.tar.gz", hash = "sha256:4e59eab4d836da5a027cf0c176d14bc2a4e22cbbdf753159a03946c08c8a196d", size = 85410 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8b/13/e6f629a978ef5fab8b8d2760cacc3e451016cef952cf4c049d672c5c6b07/django_guardian-3.0.3-py3-none-any.whl", hash = "sha256:d2164cea9f03c369d7ade21802710f3ab23ca6734bcc7dfcfb385906783916c7", size = 118198 },
+]
+
+[[package]]
 name = "gunicorn"
 version = "23.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -242,6 +254,7 @@ dependencies = [
     { name = "celery" },
     { name = "crispy-bootstrap5" },
     { name = "django" },
+    { name = "django-guardian" },
     { name = "gunicorn" },
     { name = "psycopg2-binary" },
     { name = "pytest-cov" },
@@ -257,6 +270,7 @@ requires-dist = [
     { name = "celery", specifier = ">=5.4.0" },
     { name = "crispy-bootstrap5", specifier = ">=2024.10" },
     { name = "django", specifier = ">=5.1.3" },
+    { name = "django-guardian", specifier = ">=3.0.3" },
     { name = "gunicorn", specifier = ">=23.0.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pytest-cov", specifier = ">=6.2.1" },

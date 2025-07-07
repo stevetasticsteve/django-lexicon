@@ -103,6 +103,11 @@ NOSUGGEST !""",
                     {"tok_ples_validator": "This is not a valid regular expression."}
                 )
 
+    class Meta:
+        permissions = [
+            ("edit_lexiconproject", "Can edit this lexicon project"),
+        ]
+
 
 class LexiconEntry(models.Model):
     "A representation of a word in a lexicon project."

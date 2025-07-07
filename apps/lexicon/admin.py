@@ -1,4 +1,6 @@
 from django.contrib import admin
+from guardian.admin import GuardedModelAdmin
+
 from apps.lexicon import models
 
 
@@ -20,18 +22,20 @@ admin.site.register(models.Paradigm, ParadigmAdmin)
 
 
 # Project
-class ProjectAdmin(admin.ModelAdmin):
+class ProjectAdmin(GuardedModelAdmin):
     pass
 
 
 admin.site.register(models.LexiconProject, ProjectAdmin)
+
 
 # Conjugations
 class ConjugationAdmin(admin.ModelAdmin):
     pass
 
 
-admin.site.register(models.Conjugation,ConjugationAdmin)
+admin.site.register(models.Conjugation, ConjugationAdmin)
+
 
 # Variations
 class VariationAdmin(admin.ModelAdmin):

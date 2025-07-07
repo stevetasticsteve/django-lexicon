@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import User
+from guardian.shortcuts import assign_perm
 
 from apps.lexicon import models
 
@@ -119,8 +120,13 @@ def multirow_paradigm(english_project):
 # Example fixture for logged-in client
 @pytest.fixture
 def logged_in_client(client, django_user_model):
-    _ = django_user_model.objects.create_user(
-        username="testuser", password="testpass"
-    )
+    _ = django_user_model.objects.create_user(username="testuser", password="testpass")
     client.login(username="testuser", password="testpass")
     return client
+
+
+@pytest.fixture
+def permissioned_user(user, english_project, kovol_project):
+    assign_perm("edit_lexiconproject", user, english_project)
+    assign_perm("edit_lexiconproject", user, kovol_project)
+    return user
