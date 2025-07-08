@@ -84,7 +84,7 @@ class TestWordAffixViews:
         assert 'id="aff-{}"'.format(affix_a.id) in html
         assert 'id="aff-{}"'.format(affix_b.id) in html
 
-    def test_update_word_affixes_get_form(self, logged_in_client, kovol_project):
+    def test_update_word_affixes_get_form(self, client, permissioned_user, kovol_project):
         models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
@@ -98,7 +98,8 @@ class TestWordAffixViews:
             "lexicon:update_word_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
-        response = logged_in_client.get(url)
+        client.force_login(permissioned_user)
+        response = client.get(url)
         assert response.status_code == 200
         html = response.content.decode()
         # Should render checkboxes for both affixes
@@ -107,7 +108,7 @@ class TestWordAffixViews:
         # Should be a form
         assert "<form" in html
 
-    def test_update_word_affixes_post(self, logged_in_client, kovol_project):
+    def test_update_word_affixes_post(self, client, permissioned_user, kovol_project):
         affix_a = models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
@@ -122,8 +123,9 @@ class TestWordAffixViews:
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         # Select both affixes
+        client.force_login(permissioned_user)
         data = {"affixes": [affix_a.id, affix_b.id]}
-        response = logged_in_client.post(url, data, HTTP_HX_REQUEST="true", follow=True)
+        response = client.post(url, data, HTTP_HX_REQUEST="true", follow=True)
         # Should redirect to the affix list fragment (200 or 302 depending on htmx follow)
         assert response.status_code in (200, 302)
         # Refresh word from DB and check affixes
@@ -133,7 +135,7 @@ class TestWordAffixViews:
         assert affix_b.id in affix_ids
 
     def test_update_word_affixes_post_removes_affix(
-        self, logged_in_client, kovol_project
+        self, client, permissioned_user, kovol_project
     ):
         affix_a = models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
@@ -145,20 +147,21 @@ class TestWordAffixViews:
             project=kovol_project, tok_ples="hobol", eng="talk"
         )
         word.affixes.set([affix_a, affix_b])
+        client.force_login(permissioned_user)
         url = reverse(
             "lexicon:update_word_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         # Remove affix_b
         data = {"affixes": [affix_a.id]}
-        response = logged_in_client.post(url, data, HTTP_HX_REQUEST="true", follow=True)
+        response = client.post(url, data, HTTP_HX_REQUEST="true", follow=True)
         assert response.status_code in (200, 302)
         word.refresh_from_db()
         affix_ids = set(word.affixes.values_list("id", flat=True))
         assert affix_a.id in affix_ids
         assert affix_b.id not in affix_ids
 
-    def test_update_word_affixes_post_empty(self, logged_in_client, kovol_project):
+    def test_update_word_affixes_post_empty(self, client, permissioned_user, kovol_project):
         affix_a = models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
@@ -172,7 +175,45 @@ class TestWordAffixViews:
         )
         # Remove all affixes
         data = {}  # No affixes selected
-        response = logged_in_client.post(url, data, HTTP_HX_REQUEST="true", follow=True)
+        client.force_login(permissioned_user)
+        response = client.post(url, data, HTTP_HX_REQUEST="true", follow=True)
         assert response.status_code in (200, 302)
         word.refresh_from_db()
+        assert word.affixes.count() == 0
+
+    def test_update_word_affixes_get_forbidden(self, client, user, kovol_project):
+        """Unpermissioned user should not be able to GET the affix update form."""
+        affix = models.Affix.objects.create(
+            project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
+        )
+        word = models.LexiconEntry.objects.create(
+            project=kovol_project, tok_ples="hobol", eng="talk"
+        )
+        url = reverse(
+            "lexicon:update_word_affixes",
+            kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
+        )
+        client.force_login(user)
+        response = client.get(url)
+        assert response.status_code == 403
+
+
+    def test_update_word_affixes_post_forbidden(self, client, user, kovol_project):
+        """Unpermissioned user should not be able to POST affix updates."""
+        affix = models.Affix.objects.create(
+            project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
+        )
+        word = models.LexiconEntry.objects.create(
+            project=kovol_project, tok_ples="hobol", eng="talk"
+        )
+        url = reverse(
+            "lexicon:update_word_affixes",
+            kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
+        )
+        client.force_login(user)
+        data = {"affixes": [affix.id]}
+        response = client.post(url, data, HTTP_HX_REQUEST="true")
+        assert response.status_code == 403
+        word.refresh_from_db()
+        # Should not have changed
         assert word.affixes.count() == 0

@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect, JsonResponse
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -11,6 +12,7 @@ from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
 
 from apps.lexicon import forms, models
+from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
 from apps.lexicon.utils import hunspell
 from apps.lexicon.views.word_views import ProjectContextMixin
 
@@ -118,7 +120,9 @@ class AffixList(AffixMixin, ListView):
 
 
 @method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
-class UpdateWordAffixes(AffixMixin, UpdateView):
+class UpdateWordAffixes(
+    AffixMixin, LoginRequiredMixin, ProjectEditPermissionRequiredMixin, UpdateView
+):
     """A view for updating word affixes at lexicon/<lang-code>/word-affix/<int:pk>/update/."""
 
     model = models.LexiconEntry
