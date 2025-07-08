@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse
 from django.http.request import HttpRequest as HttpRequest
@@ -8,17 +9,27 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.views.generic import FormView
+from django.template.loader import render_to_string
+
 
 from apps.lexicon import forms, models
-from apps.lexicon.views.word_views import ProjectContextMixin
+from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
 from apps.lexicon.tasks import update_lexicon_entry_search_field
+from apps.lexicon.views.word_views import ProjectContextMixin
 
 user_log = logging.getLogger("user_log")
 log = logging.getLogger("lexicon")
 
 
-class paradigm_modal(ProjectContextMixin, FormView):
-    """A view to select a paradigm for a word.
+@method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
+class paradigm_modal(
+    ProjectContextMixin,
+    LoginRequiredMixin,
+    ProjectEditPermissionRequiredMixin,
+    FormView,
+):
+    """A view to select a paradigm for a word. Accessed by button in the word detail view.
+
     Displays a modal dialog with a form to select a paradigm.
     The form is submitted via htmx and the selected paradigm is applied to the word.
     Found at lexicon/<lang code>/<pk>/paradigm-modal.
@@ -57,17 +68,18 @@ class paradigm_modal(ProjectContextMixin, FormView):
 
 
 @method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
-class ParadigmView(View):
-    """A view to render and edit conjugations for a word.
+class ParadigmView(LoginRequiredMixin, View):
+    """A view to render and edit a conjugation grid for a word.
 
-    GET responds with a html snippet to be inserted into the page.
+    GET responds with a html snippet to be inserted into the page, in view or edit mode.
     POST updates the conjugations and returns a html snippet to be inserted into the page.
     """
 
-    view_template = "lexicon/includes/paradigm_view.html"
-    edit_template = "lexicon/includes/paradigm_edit.html"
+    view_template = "lexicon/includes/conjugation_grid/conjugation_grid_view.html"
+    edit_template = "lexicon/includes/conjugation_grid/conjugation_grid_edit.html"
 
     def get(self, request, word_pk, paradigm_pk, edit):
+        log.debug("lexicon:paradigm view GET request.")
         context = self._context_lookup(word_pk, paradigm_pk)
         template = self.edit_template if edit == "edit" else self.view_template
         return render(request, template, context)
@@ -78,6 +90,14 @@ class ParadigmView(View):
 
         word = models.LexiconEntry.objects.get(pk=word_pk)
         paradigm = models.Paradigm.objects.get(pk=paradigm_pk)
+        project = word.project
+
+        if not self.request.user.has_perm("edit_lexiconproject", project):
+            log.debug(f"User {request.user} does not have permission to edit {project}.")
+            html = render_to_string("lexicon/includes/403_permission_error.html", request=request)
+            return HttpResponse(html, status=403)
+
+        
 
         formset = self._get_or_create_formset_context(word, paradigm, request.POST)
         log.debug(

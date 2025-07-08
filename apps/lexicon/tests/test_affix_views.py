@@ -84,7 +84,9 @@ class TestWordAffixViews:
         assert 'id="aff-{}"'.format(affix_a.id) in html
         assert 'id="aff-{}"'.format(affix_b.id) in html
 
-    def test_update_word_affixes_get_form(self, client, permissioned_user, kovol_project):
+    def test_update_word_affixes_get_form(
+        self, client, permissioned_user, kovol_project
+    ):
         models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
@@ -161,7 +163,9 @@ class TestWordAffixViews:
         assert affix_a.id in affix_ids
         assert affix_b.id not in affix_ids
 
-    def test_update_word_affixes_post_empty(self, client, permissioned_user, kovol_project):
+    def test_update_word_affixes_post_empty(
+        self, client, permissioned_user, kovol_project
+    ):
         affix_a = models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
@@ -183,7 +187,7 @@ class TestWordAffixViews:
 
     def test_update_word_affixes_get_forbidden(self, client, user, kovol_project):
         """Unpermissioned user should not be able to GET the affix update form."""
-        affix = models.Affix.objects.create(
+        models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
         word = models.LexiconEntry.objects.create(
@@ -196,7 +200,6 @@ class TestWordAffixViews:
         client.force_login(user)
         response = client.get(url)
         assert response.status_code == 403
-
 
     def test_update_word_affixes_post_forbidden(self, client, user, kovol_project):
         """Unpermissioned user should not be able to POST affix updates."""

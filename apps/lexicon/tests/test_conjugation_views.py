@@ -7,10 +7,10 @@ from apps.lexicon import models
 @pytest.mark.django_db
 class TestParadigmModal:
     def test_get_paradigm_modal(
-        self, client, user, english_project, english_words_with_paradigm
+        self, client, permissioned_user, english_project, english_words_with_paradigm
     ):
         """Test that the paradigm modal view renders correctly."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
             "lexicon:paradigm_modal", args=[english_project.language_code, words[0].pk]
@@ -22,10 +22,10 @@ class TestParadigmModal:
         assert response.context["object"].pk == words[0].pk
 
     def test_post_paradigm_modal(
-        self, client, user, english_project, english_words_with_paradigm
+        self, client, permissioned_user, english_project, english_words_with_paradigm
     ):
         """Test that the paradigm modal view processes the form correctly."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
             "lexicon:paradigm_modal", args=[english_project.language_code, words[1].pk]
@@ -39,12 +39,35 @@ class TestParadigmModal:
         # Check for HX-Trigger header
         assert response["HX-Trigger"] == "paradigmSaved"
 
+    def test_get_paradigm_modal_forbidden(self, client, user, english_project, english_words_with_paradigm):
+        """Unpermissioned user should not be able to GET the paradigm modal."""
+        client.force_login(user)
+        words, paradigm, _ = english_words_with_paradigm
+        url = reverse(
+            "lexicon:paradigm_modal", args=[english_project.language_code, words[0].pk]
+        )
+        response = client.get(url)
+        assert response.status_code == 403
+
+    def test_post_paradigm_modal_forbidden(self, client, user, english_project, english_words_with_paradigm):
+        """Unpermissioned user should not be able to POST the paradigm modal."""
+        client.force_login(user)
+        words, paradigm, _ = english_words_with_paradigm
+        url = reverse(
+            "lexicon:paradigm_modal", args=[english_project.language_code, words[1].pk]
+        )
+        data = {"paradigm": paradigm.pk}
+        response = client.post(url, data, HTTP_HX_REQUEST="true")
+        assert response.status_code == 403
+
+    
+
 
 @pytest.mark.django_db
 class TestConjugationsView:
-    def test_get_paradigm_view(self, client, user, english_words_with_paradigm):
+    def test_get_paradigm_view(self, client, permissioned_user, english_words_with_paradigm):
         """Test that the paradigm view renders correctly."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         words, paradigm, conjugation = english_words_with_paradigm
         url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "view"])
         response = client.get(url)
@@ -64,9 +87,9 @@ class TestConjugationsView:
         assert "formset" in response.context
         assert "forms_grid" in response.context
 
-    def test_post_paradigm_edit(self, client, user, english_words_with_paradigm):
+    def test_post_paradigm_edit(self, client, permissioned_user, english_words_with_paradigm):
         """Test that the paradigm edit view updates a simple 1x1 conjugation"""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         words, paradigm, conjugation = english_words_with_paradigm
         url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "edit"])
         # Get the formset to get the management form data
@@ -93,15 +116,36 @@ class TestConjugationsView:
         for i, conj in enumerate(conjugations):
             assert conj.conjugation == f"updated_{i}"
 
+    def test_get_paradigm_edit_allowed(
+        self, client, permissioned_user, english_words_with_paradigm
+    ):
+        """Unpermissioned user should be able to GET the paradigm edit view."""
+        client.force_login(permissioned_user)
+        words, paradigm, conjugation = english_words_with_paradigm
+        url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "edit"])
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_post_paradigm_edit_forbidden(
+        self, client, user, english_words_with_paradigm
+    ):
+        """Unpermissioned user should NOT be able to POST the paradigm edit view."""
+        client.force_login(user)
+        words, paradigm, conjugation = english_words_with_paradigm
+        url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "edit"])
+        # Try to post minimal formset data
+        response = client.post(url, {})
+        assert response.status_code == 403
+
 
 @pytest.mark.django_db
 class TestConjugationsEdit:
     def get_edit_url(self, word, paradigm):
         return reverse("lexicon:paradigm", args=[word.pk, paradigm.pk, "edit"])
 
-    def test_all_forms_changed(self, client, user, multirow_paradigm):
+    def test_all_forms_changed(self, client, permissioned_user, multirow_paradigm):
         """Test the view can update a 3x2 paradigm where all forms are changed."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         word, paradigm, conjugations = multirow_paradigm
         url = self.get_edit_url(word, paradigm)
         response = client.get(url)
@@ -125,9 +169,9 @@ class TestConjugationsEdit:
         ):
             assert conj.conjugation == f"changed_{i}"
 
-    def test_only_one_changed(self, client, user, multirow_paradigm):
+    def test_only_one_changed(self, client, permissioned_user, multirow_paradigm):
         """Test the view can update a 3x2 paradigm where 1 form is changed."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         word, paradigm, conjugations = multirow_paradigm
         url = self.get_edit_url(word, paradigm)
         response = client.get(url)
@@ -157,9 +201,9 @@ class TestConjugationsEdit:
             else:
                 assert conj.conjugation == f"orig_{conj.row}_{conj.column}"
 
-    def test_blank_forms_in_middle(self, client, user, multirow_paradigm):
+    def test_blank_forms_in_middle(self, client, permissioned_user, multirow_paradigm):
         """Test the view can update a 3x2 paradigm where there are blank forms."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         word, paradigm, conjugations = multirow_paradigm
         url = self.get_edit_url(word, paradigm)
         response = client.get(url)
@@ -190,9 +234,9 @@ class TestConjugationsEdit:
                 assert conj.conjugation == f"orig_{conj.row}_{conj.column}"
 
     # can't get the delte test to work
-    def test_remove_conjugation(self, client, user, multirow_paradigm):
+    def test_remove_conjugation(self, client, permissioned_user, multirow_paradigm):
         """Test the view can update a 3x2 paradigm, ensuring blank rows are deleted from db."""
-        client.force_login(user)
+        client.force_login(permissioned_user)
         word, paradigm, conjugations = multirow_paradigm
         initial_conjugation_number = models.Conjugation.objects.filter(
             word=word, paradigm=paradigm
@@ -223,13 +267,13 @@ class TestConjugationsEdit:
         )
 
     def test_update_conjugation_invalid_tok_ples_chars(
-        self, client, user, multirow_paradigm, english_project
+        self, client, permissioned_user, multirow_paradigm, english_project
     ):
         """
         POST data with tok_ples violating the project's regex validator
         should re-render the form with validation errors and not save the entry.
         """
-        client.force_login(user)
+        client.force_login(permissioned_user)
 
         word, paradigm, conjugations = multirow_paradigm
         english_project.tok_ples_validator = "[a-z]+"

@@ -20,6 +20,7 @@ user_log = logging.getLogger("user_log")
 log = logging.getLogger("lexicon")
 
 
+@method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
 class AffixTester(ProjectContextMixin, TemplateView):
     """A view for submitting a basic form to test affixes at lexicon/<lang-code>/affix-tester.
 

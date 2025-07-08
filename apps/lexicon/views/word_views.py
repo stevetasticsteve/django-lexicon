@@ -5,6 +5,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_http_methods
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
@@ -16,6 +18,7 @@ user_log = logging.getLogger("user_log")
 log = logging.getLogger("lexicon")
 
 
+@method_decorator(require_http_methods(["GET"]), name="dispatch")
 class ProjectList(ListView):
     """The home page that lists the different lexicon projects."""
 
@@ -39,6 +42,7 @@ class ProjectContextMixin:
         return context
 
 
+@method_decorator(require_http_methods(["GET"]), name="dispatch")
 class LexiconView(ProjectContextMixin, TemplateView):
     """The main display for the lexicon, listing all entries.
 
@@ -48,6 +52,7 @@ class LexiconView(ProjectContextMixin, TemplateView):
     template_name = "lexicon/lexicon_list.html"
 
 
+@method_decorator(require_http_methods(["GET"]), name="dispatch")
 class EntryDetail(ProjectContextMixin, DetailView):
     """The view at url lexicon<lang code>/<pk>/detail. Displays all info in .db for a word."""
 
@@ -66,6 +71,7 @@ class EntryDetail(ProjectContextMixin, DetailView):
         return context
 
 
+@method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
 class CreateEntry(
     LoginRequiredMixin,
     ProjectEditPermissionRequiredMixin,
@@ -98,6 +104,7 @@ class CreateEntry(
         return super().form_valid(form, **kwargs)
 
 
+@method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
 class UpdateEntry(
     LoginRequiredMixin,
     ProjectEditPermissionRequiredMixin,
@@ -126,6 +133,7 @@ class UpdateEntry(
         return super().form_valid(form, **kwargs)
 
 
+@method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
 class DeleteEntry(
     LoginRequiredMixin,
     ProjectEditPermissionRequiredMixin,
@@ -149,6 +157,7 @@ class DeleteEntry(
         return super().post(request, *args, **kwargs)
 
 
+@method_decorator(require_http_methods(["GET"]), name="dispatch")
 class ReviewList(ProjectContextMixin, ListView):
     """Shows entries marked for review at url lexicon/<lang code>/review."""
 
