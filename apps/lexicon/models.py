@@ -331,7 +331,6 @@ class IgnoreWord(models.Model):
         max_length=60,
         blank=False,
         null=False,
-        unique=True,
         help_text="Word to add to spell check.",
     )
     project = models.ForeignKey(
@@ -384,6 +383,11 @@ class IgnoreWord(models.Model):
 
     class Meta:
         ordering = ["tok_ples"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "tok_ples"], name="ignore_word_unique_tok_ples_per_project"
+            )
+        ]
 
 
 class Paradigm(models.Model):

@@ -7,7 +7,14 @@ https://dev.codebysteve.com
 # To do
 
 3. Project edit permissions
+   1. Project model views
+   2. Variation model
+   3. Ignore model
+   4. Paradigm views (responds with htmx 403, not visible on template)
+   6. Affix views (responds with htmx 403, not visible on template)
 4. registration system
+5. Showing Hunspell constructed words in detail view
+6. 403.html not showing
 
 ## Features to implement
 - Common misspellings for words. To be used for searches in lexicon and to help spelling suggestions in hunspell

@@ -154,7 +154,9 @@ class AffixList(AffixMixin, ListView):
     template_name = "lexicon/project_admin/affixes/affix_list.html"
 
     def get_queryset(self) -> dict:
-        return models.Affix.objects.filter(project=self.get_project()).order_by("affix_letter")
+        return models.Affix.objects.filter(project=self.get_project()).order_by(
+            "affix_letter"
+        )
 
 
 @method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
@@ -167,7 +169,6 @@ class CreateAffix(AffixMixin, LoginRequiredMixin, CreateView):
     def form_valid(self, form, *args, **kwargs):
         obj = form.save(commit=False)
         obj.project = self.get_project()
-
         try:
             valid = super().form_valid(form, **kwargs)
             user_log.info(
@@ -199,11 +200,23 @@ class UpdateAffix(AffixMixin, LoginRequiredMixin, UpdateView):
         log.debug("lexicon:affix_edit POST request.")
         return super().post(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        user_log.info(
-            f"{self.request.user} created an affix for project {self.get_project()}."
-        )
-        return super().form_valid(form)
+    def form_valid(self, form, **kwargs):
+        try:
+            valid = super().form_valid(form, **kwargs)
+            user_log.info(
+                f"{self.request.user} created an affix for project {self.get_project()}."
+            )
+            user_log.info(
+                f"{self.request.user} updated an affix for project {self.get_project()}."
+            )
+            return valid
+        except IntegrityError:
+            log.debug("IntegrityError: Affix letter must be unique for this project.")
+            error_msg = "Affix letter must be unique for this project."
+            if self.request.headers.get("HX-Request") == "true":
+                return HttpResponse(error_msg, status=400)
+            form.add_error(None, error_msg)
+            return self.form_invalid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -221,4 +234,3 @@ class DeleteAffix(AffixMixin, LoginRequiredMixin, DeleteView):
         log.debug("lexicon:affix_delete view POST request.")
         user_log.info(f"{request.user} deleted an affix from {self.get_project()}.")
         return super().post(request, *args, **kwargs)
-
