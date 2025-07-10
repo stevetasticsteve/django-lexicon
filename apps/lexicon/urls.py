@@ -136,7 +136,7 @@ urlpatterns = [
         project_admin_views.ProjectAdmin.as_view(),
         name="project_admin",
     ),
-    # Paradigm management
+    # Project admin paradigm management
     path(
         "<str:lang_code>/paradigm-admin",
         project_admin_views.ManageParadigms.as_view(),
@@ -162,7 +162,7 @@ urlpatterns = [
         project_admin_views.DeleteParadigm.as_view(),
         name="paradigm_delete",
     ),
-    # Affix management
+    # Project admin affix management
     path(
         "<str:lang_code>/affix-admin",
         project_admin_views.ManageAffixes.as_view(),
@@ -193,6 +193,7 @@ urlpatterns = [
         affix_views.AffixTester.as_view(),
         name="affix_tester",
     ),
+    # Word affix management views
     path(
         "<str:lang_code>/affix-results",
         affix_views.AffixResults.as_view(),

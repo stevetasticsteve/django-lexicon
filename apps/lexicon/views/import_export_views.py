@@ -1,16 +1,23 @@
 import os
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
 from apps.lexicon import forms, models, tasks
+from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
 from apps.lexicon.utils import export
 from apps.lexicon.views.word_views import ProjectContextMixin
 
 
-class ImportPage(ProjectContextMixin, FormView):
+class ImportPage(
+    LoginRequiredMixin,
+    ProjectEditPermissionRequiredMixin,
+    ProjectContextMixin,
+    FormView,
+):
     """The view at url lexicon/<lang code>/import. Provides an import form."""
 
     template_name = "lexicon/import_page.html"

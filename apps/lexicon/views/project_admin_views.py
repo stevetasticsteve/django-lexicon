@@ -12,17 +12,23 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
 
 from apps.lexicon import forms, models
+from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
 from apps.lexicon.views.word_views import ProjectContextMixin
 
 log = logging.getLogger("lexicon")
 user_log = logging.getLogger("user_log")
 
 
-class ProjectAdmin(ProjectContextMixin, TemplateView):
+class ProjectAdmin(
+    LoginRequiredMixin,
+    ProjectEditPermissionRequiredMixin,
+    ProjectContextMixin,
+    TemplateView,
+):
     template_name = "lexicon/project_admin/project_admin.html"
 
 
-class ParadigmMixin:
+class ParadigmMixin(LoginRequiredMixin, ProjectEditPermissionRequiredMixin):
     """A reusable mixin to provide project context for paradigm views."""
 
     model = models.Paradigm
@@ -117,7 +123,7 @@ class DeleteParadigm(ParadigmMixin, LoginRequiredMixin, DeleteView):
         return super().post(request, *args, **kwargs)
 
 
-class AffixMixin:
+class AffixMixin(LoginRequiredMixin, ProjectEditPermissionRequiredMixin):
     """A reusable mixin to provide project context for affix views."""
 
     model = models.Affix
