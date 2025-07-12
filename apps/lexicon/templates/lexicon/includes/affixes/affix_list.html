@@ -22,8 +22,8 @@
         </ul>
     </div>
     <div class="col-4">
-            <a href="{% url 'lexicon:update_word_affixes' lang_code word.pk %}"
-        hx-get="{% url 'lexicon:update_word_affixes' lang_code word.pk %}"
+            <a href="{% url 'lexicon:word_update_affixes' lang_code word.pk %}"
+        hx-get="{% url 'lexicon:word_update_affixes' lang_code word.pk %}"
         hx-target="#affix-display"
         hx-swap="innerHTML"
         class="svg-button text-decoration-none">

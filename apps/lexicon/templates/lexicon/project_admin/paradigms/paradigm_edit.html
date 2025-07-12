@@ -1,9 +1,9 @@
 {% load static %}
 <form method="post"
       {% if form_type == "create" %}
-      hx-post="{% url 'lexicon:paradigm_create' lang_code project.pk %}"
+      hx-post="{% url 'lexicon:project_admin_paradigm_create' lang_code %}"
       {% else %}
-      hx-post="{% url 'lexicon:paradigm_edit' lang_code form.instance.pk %}"
+      hx-post="{% url 'lexicon:project_admin_paradigm_update' lang_code form.instance.pk %}"
       {% endif %}
       hx-target="#paradigm-container"
       hx-swap="outerHTML"
@@ -21,8 +21,8 @@
         <button id="submit-btn" type="submit" class="svg-button px-2" disabled>
             <img src="{% static '/img/check.svg' %}" alt="Save">
         </button>
-        <a href="{% url 'lexicon:paradigm_list' lang_code %}"
-           hx-get="{% url 'lexicon:paradigm_list' lang_code %}"
+        <a href="{% url 'lexicon:project_admin_paradigm_list' lang_code %}"
+           hx-get="{% url 'lexicon:project_admin_paradigm_list' lang_code %}"
            hx-target="#paradigm-container"
            hx-swap="innerHTML"
            class="svg-button px-2">

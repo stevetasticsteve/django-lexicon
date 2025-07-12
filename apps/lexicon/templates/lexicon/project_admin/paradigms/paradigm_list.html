@@ -14,8 +14,8 @@
             {% include "lexicon/project_admin/paradigms/paradigm_display.html" with paradigm=p %}
         {% endfor %}
         <div class="mt-4 px-2" id="paradigm-create-container">
-            <a href="{% url 'lexicon:paradigm_create' lang_code project.pk %}"
-            hx-get="{% url 'lexicon:paradigm_create' lang_code project.pk %}"
+            <a href="{% url 'lexicon:project_admin_paradigm_create' lang_code %}"
+            hx-get="{% url 'lexicon:project_admin_paradigm_create' lang_code %}"
             hx-target="#paradigm-create-container"
             hx-swap="outerHTML"
             class="svg-button">

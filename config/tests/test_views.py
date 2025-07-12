@@ -12,9 +12,7 @@ def test_login_view_get(client):
 
 @pytest.mark.django_db
 def test_login_view_post_valid(client, django_user_model):
-    django_user_model.objects.create_user(
-        username="testuser", password="testpass"
-    )
+    django_user_model.objects.create_user(username="testuser", password="testpass")
     url = reverse("login")
     response = client.post(url, {"username": "testuser", "password": "testpass"})
     # Should redirect to home on success
@@ -47,7 +45,7 @@ def test_login_view_post_invalid(client):
 def test_json_validation_view(
     client, row_labels, column_labels, expected_status, expected_error
 ):
-    url = reverse("json-validation")
+    url = reverse("json_validation")
     response = client.post(
         url, {"row_labels": row_labels, "column_labels": column_labels}
     )

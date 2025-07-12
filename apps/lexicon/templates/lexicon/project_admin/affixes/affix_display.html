@@ -4,15 +4,15 @@
     <div class="col">{{ affix.get_applies_to_display }}</div>
     <div class="col">{{ affix.affix_letter }}</div>
     <div class="col-auto">
-        <a href="{% url 'lexicon:affix_edit' lang_code affix.pk %}"
-           hx-get="{% url 'lexicon:affix_edit' lang_code affix.pk %}"
+        <a href="{% url 'lexicon:project_admin_affix_update' lang_code affix.pk %}"
+           hx-get="{% url 'lexicon:project_admin_affix_update' lang_code affix.pk %}"
            hx-target="#affix-{{ affix.pk }}"
            hx-swap="outerHTML"
            class="svg-button text-decoration-none">
             <img src="{% static '/img/pencil.svg' %}" alt="Edit">
         </a>
-        <a href="{% url 'lexicon:affix_delete' lang_code affix.pk %}"
-           hx-get="{% url 'lexicon:affix_delete' lang_code affix.pk %}"
+        <a href="{% url 'lexicon:project_admin_affix_delete' lang_code affix.pk %}"
+           hx-get="{% url 'lexicon:project_admin_affix_delete' lang_code affix.pk %}"
            hx-target="#affix-container"
            hx-swap="outerHTML"
            class="svg-button">

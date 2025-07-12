@@ -11,62 +11,13 @@ import apps.lexicon.views.word_views as word_views
 
 app_name = "lexicon"
 
+# Using _ in url names and - in url patterns.
 urlpatterns = [
-    # word_views
+    # project selection.
     path("", word_views.ProjectList.as_view(), name="project_list"),
+    # main page for the lexicon. Includes search view via htmx.
     path("<str:lang_code>", word_views.LexiconView.as_view(), name="entry_list"),
-    path(
-        "<str:lang_code>/<int:pk>/detail",
-        word_views.EntryDetail.as_view(),
-        name="entry_detail",
-    ),
-    path(
-        "<str:lang_code>/create",
-        word_views.CreateEntry.as_view(),
-        name="create_entry",
-    ),
-    path(
-        "<str:lang_code>/<int:pk>/update",
-        word_views.UpdateEntry.as_view(),
-        name="update_entry",
-    ),
-    path(
-        "<str:lang_code>/<int:pk>/delete",
-        word_views.DeleteEntry.as_view(),
-        name="delete_entry",
-    ),
-    path(
-        "<str:lang_code>/review",
-        word_views.ReviewList.as_view(),
-        name="review_list",
-    ),
-    # import_export_views
-    path(
-        "<str:lang_code>/import",
-        import_export_views.ImportPage.as_view(),
-        name="import_page",
-    ),
-    path(
-        "<str:lang_code>/import-result",
-        import_export_views.ImportSuccess.as_view(),
-        name="import-success",
-    ),
-    path(
-        "<str:lang_code>/export",
-        import_export_views.ExportPage.as_view(),
-        name="export_page",
-    ),
-    path(
-        "<str:lang_code>/latest-oxt",
-        import_export_views.latest_oxt,
-        name="latest-oxt",
-    ),
-    path(
-        "<str:lang_code>/oxt-update",
-        import_export_views.oxt_update_service,
-        name="update-oxt",
-    ),
-    # search_views
+    # search box functionality. Html snippets added to entry_list via htmx.
     path(
         "<str:lang_code>/search",
         search_views.LexiconSearchResults.as_view(),
@@ -77,58 +28,111 @@ urlpatterns = [
         search_views.IgnoreSearchResults.as_view(),
         name="ignore_search",
     ),
-    # ignore_word_views
+    # word views for creating, updating and deleting LexiconEntries
     path(
-        "<str:lang_code>/ignore",
-        ignore_word_views.IgnoreList.as_view(),
-        name="ignore_list",
+        "<str:lang_code>/word-<int:pk>/detail",
+        word_views.EntryDetail.as_view(),
+        name="entry_detail",
     ),
     path(
-        "<str:lang_code>/ignore/create",
-        ignore_word_views.CreateIgnoreWordView.as_view(),
-        name="create_ignore",
+        "<str:lang_code>/word-create",
+        word_views.CreateEntry.as_view(),
+        name="create_entry",
     ),
     path(
-        "<str:lang_code>/ignore/<int:pk>/update",
-        ignore_word_views.UpdateIgnoreWordView.as_view(),
-        name="update_ignore",
+        "<str:lang_code>/word-<int:pk>/update",
+        word_views.UpdateEntry.as_view(),
+        name="update_entry",
     ),
     path(
-        "<str:lang_code>/ignore/<int:pk>/delete",
-        ignore_word_views.DeleteIgnoreWordView.as_view(),
-        name="delete_ignore",
+        "<str:lang_code>/word-<int:pk>/delete",
+        word_views.DeleteEntry.as_view(),
+        name="delete_entry",
     ),
-    # conjugation_views
+    # conjugation views that attach and display conjugation grids to words.
+    # these return html snippets attached to the word_detail view via htmx.
+    # the views are visible on the entry detail page.
     path(
-        "<str:lang_code>/paradigm-modal/<int:pk>",
+        "<str:lang_code>/word-<int:pk>/attach-paradigm",
         conjugation_views.paradigm_modal.as_view(),
-        name="paradigm_modal",
+        name="word_paradigm_modal",
     ),
     path(
-        "<int:word_pk>/paradigm/<int:paradigm_pk>/<str:edit>",
-        conjugation_views.ParadigmView.as_view(),
-        name="paradigm",
+        "<str:lang_code>/word-<int:word_pk>/conjugation-grid/<int:paradigm_pk>/<str:edit>",
+        conjugation_views.ConjugationGridView.as_view(),
+        name="conjugation_grid",
     ),
-    # variation_views
+    # variation views that manage word variations on the word detail page.
+    # these return html snippets that attach via htmx.
     path(
-        "<int:word_pk>/variations",
+        "<str:lang_code>/word-<int:word_pk>/variations",
         variation_views.VariationList.as_view(),
         name="variation_list",
     ),
     path(
-        "variation-edit/<int:pk>",
-        variation_views.UpdateVariation.as_view(),
-        name="variation_edit",
-    ),
-    path(
-        "variation-create/<int:word_pk>",
+        "<str:lang_code>/word-<int:word_pk>/variation-create",
         variation_views.CreateVariation.as_view(),
         name="variation_create",
     ),
     path(
-        "variation-delete/<int:pk>",
+        "<str:lang_code>/variation-<int:pk>/update",
+        variation_views.UpdateVariation.as_view(),
+        name="variation_update",
+    ),
+    path(
+        "<str:lang_code>/variation-<int:pk>/delete",
         variation_views.DeleteVariation.as_view(),
         name="variation_delete",
+    ),
+    # views for managing a word's affixes on it's detail page.
+    # these return html snippets that attach via htmx.
+    path(
+        "<str:lang_code>/word-<int:pk>/affix-management",
+        affix_views.AffixManagement.as_view(),
+        name="word_affix_management",
+    ),
+    # TODO name class name collision AffixList. Better to rename.
+    path(
+        "<str:lang_code>/word-<int:pk>/affix-list",
+        affix_views.AffixList.as_view(),
+        name="word_affix_list",
+    ),
+    path(
+        "<str:lang_code>/word-<int:pk>/update-affixes",
+        affix_views.UpdateWordAffixes.as_view(),
+        name="word_update_affixes",
+    ),
+    path(
+        "<str:lang_code>/affix-results",
+        affix_views.AffixResults.as_view(),
+        name="word_affix_results",
+    ),
+    # review list displaying words marked for review
+    path(
+        "<str:lang_code>/review-list",
+        word_views.ReviewList.as_view(),
+        name="review_list",
+    ),
+    # views for creating, updating and deleting ignore words.
+    path(
+        "<str:lang_code>/ignore-words",
+        ignore_word_views.IgnoreList.as_view(),
+        name="ignore_list",
+    ),
+    path(
+        "<str:lang_code>/ignore-words/create",
+        ignore_word_views.CreateIgnoreWordView.as_view(),
+        name="create_ignore",
+    ),
+    path(
+        "<str:lang_code>/ignore-words/ignore-word-<int:pk>/update",
+        ignore_word_views.UpdateIgnoreWordView.as_view(),
+        name="update_ignore",
+    ),
+    path(
+        "<str:lang_code>/ignore-words/ignore-word-<int:pk>/delete",
+        ignore_word_views.DeleteIgnoreWordView.as_view(),
+        name="delete_ignore",
     ),
     # Project admin views
     path(
@@ -138,80 +142,87 @@ urlpatterns = [
     ),
     # Project admin paradigm management
     path(
-        "<str:lang_code>/paradigm-admin",
+        "<str:lang_code>/project-admin/paradigm-manage",
         project_admin_views.ManageParadigms.as_view(),
-        name="paradigm_manage",
+        name="project_admin_paradigm_manage",
     ),
     path(
-        "<str:lang_code>/paradigm-list",
+        "<str:lang_code>/project-admin/paradigm-list",
         project_admin_views.ParadigmList.as_view(),
-        name="paradigm_list",
+        name="project_admin_paradigm_list",
     ),
     path(
-        "<str:lang_code>/paradigm-edit/<int:pk>",
-        project_admin_views.UpdateParadigm.as_view(),
-        name="paradigm_edit",
-    ),
-    path(
-        "<str:lang_code>/paradigm-create/<int:project_pk>",
+        "<str:lang_code>/project-admin/paradigm-create",
         project_admin_views.CreateParadigm.as_view(),
-        name="paradigm_create",
+        name="project_admin_paradigm_create",
     ),
     path(
-        "<str:lang_code>/paradigm-delete/<int:pk>",
+        "<str:lang_code>/project-admin/paradigm-<int:pk>/update",
+        project_admin_views.UpdateParadigm.as_view(),
+        name="project_admin_paradigm_update",
+    ),
+    path(
+        "<str:lang_code>/project-admin/paradigm-<int:pk>/delete",
         project_admin_views.DeleteParadigm.as_view(),
-        name="paradigm_delete",
+        name="project_admin_paradigm_delete",
     ),
     # Project admin affix management
     path(
-        "<str:lang_code>/affix-admin",
+        "<str:lang_code>/project-admin/affix-manage",
         project_admin_views.ManageAffixes.as_view(),
-        name="affix_manage",
+        name="project_admin_affix_manage",
     ),
     path(
-        "<str:lang_code>/affix-list",
+        "<str:lang_code>/project-admin/affix-list",
         project_admin_views.AffixList.as_view(),
-        name="affix_list",
+        name="project_admin_affix_list",
     ),
     path(
-        "<str:lang_code>/affix-edit/<int:pk>",
-        project_admin_views.UpdateAffix.as_view(),
-        name="affix_edit",
-    ),
-    path(
-        "<str:lang_code>/affix-create/<int:project_pk>",
+        "<str:lang_code>/project-admin/affix-create",
         project_admin_views.CreateAffix.as_view(),
-        name="affix_create",
+        name="project_admin_affix_create",
     ),
     path(
-        "<str:lang_code>/affix-delete/<int:pk>",
+        "<str:lang_code>/project-admin/affix-<int:pk>/update",
+        project_admin_views.UpdateAffix.as_view(),
+        name="project_admin_affix_update",
+    ),
+    path(
+        "<str:lang_code>/project-admin/affix-<int:pk>/delete",
         project_admin_views.DeleteAffix.as_view(),
-        name="affix_delete",
+        name="project_admin_affix_delete",
     ),
+    # TODO think about location
     path(
-        "<str:lang_code>/affix-tester",
+        "<str:lang_code>/project-admin/affix-tester",
         affix_views.AffixTester.as_view(),
-        name="affix_tester",
+        name="project_admin_affix_tester",
     ),
-    # Word affix management views
+    # TODO roll into project-admin?
+    # import_export_views
     path(
-        "<str:lang_code>/affix-results",
-        affix_views.AffixResults.as_view(),
-        name="affix_results",
-    ),
-    path(
-        "<str:lang_code>/affix-management/<int:pk>",
-        affix_views.AffixManagement.as_view(),
-        name="affix_management",
+        "<str:lang_code>/import",
+        import_export_views.ImportPage.as_view(),
+        name="import_page",
     ),
     path(
-        "<str:lang_code>/affix-list/<int:pk>",
-        affix_views.AffixList.as_view(),
-        name="affix_list",
+        "<str:lang_code>/import-result",
+        import_export_views.ImportSuccess.as_view(),
+        name="import_success",
     ),
     path(
-        "<str:lang_code>/update-word-affixes/<int:pk>",
-        affix_views.UpdateWordAffixes.as_view(),
-        name="update_word_affixes",
+        "<str:lang_code>/export",
+        import_export_views.ExportPage.as_view(),
+        name="export_page",
+    ),
+    path(
+        "<str:lang_code>/latest-oxt",
+        import_export_views.latest_oxt,
+        name="latest_oxt",
+    ),
+    path(
+        "<str:lang_code>/oxt-update",
+        import_export_views.oxt_update_service,
+        name="update_oxt",
     ),
 ]

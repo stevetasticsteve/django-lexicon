@@ -12,7 +12,7 @@
     <button 
     type="button" 
     class="btn btn-secondary"
-    hx-get="{% url 'lexicon:paradigm_modal' project.language_code object.pk %}"
+    hx-get="{% url 'lexicon:word_paradigm_modal' project.language_code object.pk %}"
     hx-target="#modal-container"
     hx-trigger="click">
     Add a paradigm</button>
@@ -96,7 +96,7 @@
 
         <div
             class="my-4"
-            hx-get="{% url 'lexicon:variation_list' word_pk=object.pk %}"
+            hx-get="{% url 'lexicon:variation_list' lang_code word_pk=object.pk %}"
             hx-target="#variation-container"
             hx-trigger="load"
             hx-swap="innerHTML">
@@ -105,7 +105,7 @@
 
         <div
             class="my-4"
-            hx-get="{% url 'lexicon:affix_management' lang_code object.pk %}"
+            hx-get="{% url 'lexicon:word_affix_management' lang_code object.pk %}"
             hx-target="#affix-container"
             hx-trigger="load"
             hx-swap="innerHTML">

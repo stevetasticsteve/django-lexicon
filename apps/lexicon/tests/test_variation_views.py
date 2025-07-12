@@ -11,7 +11,9 @@ def test_variation_list_view(client, english_project):
     )
     var1 = models.Variation.objects.create(word=word, type="spelling", text="foo1")
     var2 = models.Variation.objects.create(word=word, type="dialect", text="foo2")
-    url = reverse("lexicon:variation_list", kwargs={"word_pk": word.pk})
+    url = reverse(
+        "lexicon:variation_list", kwargs={"lang_code": "eng", "word_pk": word.pk}
+    )
     response = client.get(url)
     assert response.status_code == 200
     assert var1.text in response.content.decode()
@@ -24,7 +26,7 @@ def test_variation_edit_get_requires_login(client, english_project):
         project=english_project, tok_ples="foo", eng="bar"
     )
     var = models.Variation.objects.create(word=word, type="spelling", text="foo1")
-    url = reverse("lexicon:variation_edit", kwargs={"pk": var.pk})
+    url = reverse("lexicon:variation_update", kwargs={"lang_code": "eng", "pk": var.pk})
     response = client.get(url)
     # Should redirect to login
     assert response.status_code in (302, 403)
@@ -37,7 +39,7 @@ def test_variation_edit_get_and_post(logged_in_client, english_project):
         project=english_project, tok_ples="foo", eng="bar"
     )
     var = models.Variation.objects.create(word=word, type="spelling", text="foo1")
-    url = reverse("lexicon:variation_edit", kwargs={"pk": var.pk})
+    url = reverse("lexicon:variation_update", kwargs={"lang_code": "eng", "pk": var.pk})
 
     # GET
     response = logged_in_client.get(url)
@@ -65,7 +67,7 @@ def test_variation_edit_htmx_response(logged_in_client, english_project):
         project=english_project, tok_ples="foo", eng="bar"
     )
     var = models.Variation.objects.create(word=word, type="spelling", text="foo1")
-    url = reverse("lexicon:variation_edit", kwargs={"pk": var.pk})
+    url = reverse("lexicon:variation_update", kwargs={"lang_code": "eng", "pk": var.pk})
     data = {
         "text": "foo1-edited",
         "type": "spelling",
@@ -80,7 +82,9 @@ def test_variation_edit_htmx_response(logged_in_client, english_project):
 @pytest.mark.django_db
 class TestCreateVariation:
     def get_create_url(self, word_pk):
-        return reverse("lexicon:variation_create", kwargs={"word_pk": word_pk})
+        return reverse(
+            "lexicon:variation_create", kwargs={"lang_code": "eng", "word_pk": word_pk}
+        )
 
     def test_variation_create_get_requires_login(self, client, english_words):
         word = english_words[0]
@@ -133,7 +137,7 @@ class TestCreateVariation:
         assert new_variation.included_in_search is True
 
         expected_redirect_url = reverse(
-            "lexicon:variation_list", kwargs={"word_pk": word.pk}
+            "lexicon:variation_list", kwargs={"lang_code": "eng", "word_pk": word.pk}
         )
         assert len(response.redirect_chain) == 1
         actual_redirect_url, status_code = response.redirect_chain[0]
@@ -180,7 +184,9 @@ class TestCreateVariation:
 @pytest.mark.django_db
 class TestDeleteVariation:
     def get_delete_url(self, pk):
-        return reverse("lexicon:variation_delete", kwargs={"pk": pk})
+        return reverse(
+            "lexicon:variation_delete", kwargs={"lang_code": "eng", "pk": pk}
+        )
 
     def test_delete_requires_login(self, client, english_words):
         word = english_words[0]
@@ -219,7 +225,9 @@ class TestDeleteVariation:
         assert response.status_code == 200
         assert models.Variation.objects.count() == initial_count - 1
         # Should redirect to the variation list for the word
-        expected_url = reverse("lexicon:variation_list", kwargs={"word_pk": word.pk})
+        expected_url = reverse(
+            "lexicon:variation_list", kwargs={"lang_code": "eng", "word_pk": word.pk}
+        )
         assert expected_url in response.request["PATH_INFO"]
 
     def test_delete_invalid_pk_404(self, logged_in_client):

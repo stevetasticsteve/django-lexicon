@@ -14,15 +14,15 @@
         {% endif %}
     </div>
     <div class="col-auto">
-        <a href="{% url 'lexicon:variation_edit' variation.pk %}"
-           hx-get="{% url 'lexicon:variation_edit' variation.pk %}"
+        <a href="{% url 'lexicon:variation_update' lang_code variation.pk %}"
+           hx-get="{% url 'lexicon:variation_update' lang_code variation.pk %}"
            hx-target="#variation-{{ variation.pk }}"
            hx-swap="outerHTML"
            class="svg-button text-decoration-none">
             <img src="{% static '/img/pencil.svg' %}" alt="Edit">
         </a>
-        <a href="{% url 'lexicon:variation_delete' variation.pk %}"
-           hx-get="{% url 'lexicon:variation_delete' variation.pk %}"
+        <a href="{% url 'lexicon:variation_delete' lang_code variation.pk %}"
+           hx-get="{% url 'lexicon:variation_delete' lang_code variation.pk %}"
            hx-target="#variation-container"
            hx-swap="outerHTML"
            class="svg-button">

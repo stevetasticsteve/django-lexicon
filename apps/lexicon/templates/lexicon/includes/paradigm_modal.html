@@ -9,7 +9,7 @@
         <div class="modal-body">
           <form 
             id="paradigm-form" 
-            hx-post="{% url 'lexicon:paradigm_modal' project.language_code object.pk %}"
+            hx-post="{% url 'lexicon:word_paradigm_modal' project.language_code object.pk %}"
             hx-target="this" 
             hx-swap="outerHTML">
             {% csrf_token %}

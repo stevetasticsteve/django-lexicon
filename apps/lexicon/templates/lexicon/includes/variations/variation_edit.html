@@ -2,9 +2,9 @@
 {% load static %}
 <form method="post"
       {% if form_type == "create" %}
-      hx-post="{% url 'lexicon:variation_create' word.pk %}"
+      hx-post="{% url 'lexicon:variation_create' lang_code word.pk %}"
       {% else %}
-      hx-post="{% url 'lexicon:variation_edit' form.instance.pk %}"
+      hx-post="{% url 'lexicon:variation_update' lang_code form.instance.pk %}"
       {% endif %}
       hx-target="#variation-container"
       hx-swap="outerHTML"
@@ -19,8 +19,8 @@
         <button type="submit" class="svg-button px-2">
             <img src="{% static '/img/check.svg' %}" alt="Save">
         </button>
-        <a href="{% url 'lexicon:variation_list' word.pk %}"
-           hx-get="{% url 'lexicon:variation_list' word.pk %}"
+        <a href="{% url 'lexicon:variation_list' lang_code word.pk %}"
+           hx-get="{% url 'lexicon:variation_list' lang_code word.pk %}"
            hx-target="#variation-container"
            hx-swap="innerHTML"
            class="svg-button px-2">

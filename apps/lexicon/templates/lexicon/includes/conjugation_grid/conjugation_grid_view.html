@@ -46,7 +46,7 @@
     {# --- Action button area (2 columns wide) --- #}
     <div class="col-md-2 d-flex align-items-start justify-content-end">
       <button class="btn btn-primary"
-              hx-get="{% url 'lexicon:paradigm' word.pk paradigm.pk 'edit' %}"
+              hx-get="{% url 'lexicon:conjugation_grid' lang_code word.pk paradigm.pk 'edit' %}"
               hx-target="#paradigm-{{ paradigm.pk }}"
               hx-swap="outerHTML"
               hx-trigger="click">

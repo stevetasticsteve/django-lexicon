@@ -11,7 +11,8 @@ class TestParadigmAdminViews:
     ):
         """Test the list view returns 200 and contains paradigms."""
         url = reverse(
-            "lexicon:paradigm_list", kwargs={"lang_code": english_project.language_code}
+            "lexicon:project_admin_paradigm_list",
+            kwargs={"lang_code": english_project.language_code},
         )
         client.force_login(permissioned_user)
         response = client.get(url)
@@ -22,10 +23,9 @@ class TestParadigmAdminViews:
     def test_create_paradigm_get(self, client, permissioned_user, english_project):
         """Test the create paradigm view returns 200 and contains the form."""
         url = reverse(
-            "lexicon:paradigm_create",
+            "lexicon:project_admin_paradigm_create",
             kwargs={
                 "lang_code": english_project.language_code,
-                "project_pk": english_project.pk,
             },
         )
         client.force_login(permissioned_user)
@@ -36,10 +36,9 @@ class TestParadigmAdminViews:
     def test_create_paradigm_post(self, client, permissioned_user, english_project):
         """Test creating a paradigm via POST request."""
         url = reverse(
-            "lexicon:paradigm_create",
+            "lexicon:project_admin_paradigm_create",
             kwargs={
                 "lang_code": english_project.language_code,
-                "project_pk": english_project.pk,
             },
         )
         data = {
@@ -67,7 +66,7 @@ class TestParadigmAdminViews:
             project=english_project,
         )
         url = reverse(
-            "lexicon:paradigm_edit",
+            "lexicon:project_admin_paradigm_update",
             kwargs={"lang_code": english_project.language_code, "pk": paradigm.pk},
         )
         # GET
@@ -99,7 +98,7 @@ class TestParadigmAdminViews:
             project=english_project,
         )
         url = reverse(
-            "lexicon:paradigm_delete",
+            "lexicon:project_admin_paradigm_delete",
             kwargs={"lang_code": english_project.language_code, "pk": paradigm.pk},
         )
         # GET confirmation
@@ -117,10 +116,9 @@ class TestParadigmAdminViews:
     ):
         """Test creating a paradigm with invalid data does not create an object."""
         url = reverse(
-            "lexicon:paradigm_create",
+            "lexicon:project_admin_paradigm_create",
             kwargs={
                 "lang_code": english_project.language_code,
-                "project_pk": english_project.pk,
             },
         )
         data = {
@@ -143,7 +141,8 @@ class TestAffixAdminViews:
     def test_affix_list_view(self, client, permissioned_user, english_project):
         """Test the affix list view returns 200 and contains affixes."""
         url = reverse(
-            "lexicon:affix_list", kwargs={"lang_code": english_project.language_code}
+            "lexicon:project_admin_affix_list",
+            kwargs={"lang_code": english_project.language_code},
         )
         client.force_login(permissioned_user)
         response = client.get(url)
@@ -153,10 +152,9 @@ class TestAffixAdminViews:
     def test_create_affix_get(self, client, permissioned_user, english_project):
         """Test the create affix view returns 200 and contains the form."""
         url = reverse(
-            "lexicon:affix_create",
+            "lexicon:project_admin_affix_create",
             kwargs={
                 "lang_code": english_project.language_code,
-                "project_pk": english_project.pk,
             },
         )
         client.force_login(permissioned_user)
@@ -167,10 +165,9 @@ class TestAffixAdminViews:
     def test_create_affix_post(self, client, permissioned_user, english_project):
         """Test creating an affix via POST request."""
         url = reverse(
-            "lexicon:affix_create",
+            "lexicon:project_admin_affix_create",
             kwargs={
                 "lang_code": english_project.language_code,
-                "project_pk": english_project.pk,
             },
         )
         data = {
@@ -195,8 +192,9 @@ class TestAffixAdminViews:
             applies_to="n",
             affix_letter="B",
         )
+        print(affix.pk)
         url = reverse(
-            "lexicon:affix_edit",
+            "lexicon:project_admin_affix_update",
             kwargs={"lang_code": english_project.language_code, "pk": affix.pk},
         )
         # GET
@@ -227,7 +225,7 @@ class TestAffixAdminViews:
             affix_letter="D",
         )
         url = reverse(
-            "lexicon:affix_delete",
+            "lexicon:project_admin_affix_delete",
             kwargs={"lang_code": english_project.language_code, "pk": affix.pk},
         )
         # GET confirmation
@@ -245,10 +243,9 @@ class TestAffixAdminViews:
     ):
         """Test creating an affix with invalid data does not create an object."""
         url = reverse(
-            "lexicon:affix_create",
+            "lexicon:project_admin_affix_create",
             kwargs={
                 "lang_code": english_project.language_code,
-                "project_pk": english_project.pk,
             },
         )
         data = {
@@ -273,10 +270,9 @@ class TestAffixAdminViews:
             affix_letter="E",
         )
         url = reverse(
-            "lexicon:affix_create",
+            "lexicon:project_admin_affix_create",
             kwargs={
                 "lang_code": english_project.language_code,
-                "project_pk": english_project.pk,
             },
         )
         data = {
@@ -303,43 +299,43 @@ class TestProjectAdminPermissions:
                 kwargs={"lang_code": english_project.language_code},
             ),
             reverse(
-                "lexicon:paradigm_manage",
+                "lexicon:project_admin_paradigm_manage",
                 kwargs={"lang_code": english_project.language_code},
             ),
             reverse(
-                "lexicon:paradigm_list",
+                "lexicon:project_admin_paradigm_list",
                 kwargs={"lang_code": english_project.language_code},
             ),
             reverse(
-                "lexicon:paradigm_edit",
+                "lexicon:project_admin_paradigm_update",
                 kwargs={"lang_code": english_project.language_code, "pk": 1},
             ),
             reverse(
-                "lexicon:paradigm_create",
-                kwargs={"lang_code": english_project.language_code, "project_pk": 1},
-            ),
-            reverse(
-                "lexicon:paradigm_delete",
-                kwargs={"lang_code": english_project.language_code, "pk": 1},
-            ),
-            reverse(
-                "lexicon:affix_manage",
+                "lexicon:project_admin_paradigm_create",
                 kwargs={"lang_code": english_project.language_code},
             ),
             reverse(
-                "lexicon:affix_list",
-                kwargs={"lang_code": english_project.language_code},
-            ),
-            reverse(
-                "lexicon:affix_edit",
+                "lexicon:project_admin_paradigm_delete",
                 kwargs={"lang_code": english_project.language_code, "pk": 1},
             ),
             reverse(
-                "lexicon:affix_create",
-                kwargs={"lang_code": english_project.language_code, "project_pk": 1},
+                "lexicon:project_admin_affix_manage",
+                kwargs={"lang_code": english_project.language_code},
             ),
             reverse(
-                "lexicon:affix_delete",
+                "lexicon:project_admin_affix_list",
+                kwargs={"lang_code": english_project.language_code},
+            ),
+            reverse(
+                "lexicon:project_admin_affix_update",
+                kwargs={"lang_code": english_project.language_code, "pk": 1},
+            ),
+            reverse(
+                "lexicon:project_admin_affix_create",
+                kwargs={"lang_code": english_project.language_code},
+            ),
+            reverse(
+                "lexicon:project_admin_affix_delete",
                 kwargs={"lang_code": english_project.language_code, "pk": 1},
             ),
         ]

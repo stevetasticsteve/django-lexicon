@@ -8,14 +8,14 @@
 </div>
 <div class="modal-footer">
 
-  <form method="post" action="{% url 'lexicon:paradigm_delete' lang_code paradigm.pk %}"
-        hx-post="{% url 'lexicon:paradigm_delete' lang_code paradigm.pk %}"
+  <form method="post" action="{% url 'lexicon:project_admin_paradigm_delete' lang_code paradigm.pk %}"
+        hx-post="{% url 'lexicon:project_admin_paradigm_delete' lang_code paradigm.pk %}"
         hx-target="#paradigm-modal"
         hx-swap="outerHTML">
         {% csrf_token %}
 
     <button
-       hx-get="{% url 'lexicon:paradigm_list' lang_code %}"
+       hx-get="{% url 'lexicon:project_admin_paradigm_list' lang_code %}"
         hx-target="#paradigm-modal"
         hx-swap="innerHTML"type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
     <button type="submit" class="btn btn-danger">Delete Paradigm</button>

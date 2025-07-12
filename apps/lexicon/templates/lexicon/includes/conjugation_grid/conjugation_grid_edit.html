@@ -62,7 +62,7 @@
       </div>
       <div class="col-md-2 d-flex align-items-start justify-content-end">
         <button class="btn btn-success"
-                hx-post="{% url 'lexicon:paradigm' word.pk paradigm.pk 'view' %}"
+                hx-post="{% url 'lexicon:conjugation_grid' lang_code word.pk paradigm.pk 'view' %}"
                 hx-target="#paradigm-{{ paradigm.pk }}"
                 hx-swap="outerHTML"
                 hx-trigger="click">

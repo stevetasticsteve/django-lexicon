@@ -13,7 +13,7 @@ class TestParadigmModal:
         client.force_login(permissioned_user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
-            "lexicon:paradigm_modal", args=[english_project.language_code, words[0].pk]
+            "lexicon:word_paradigm_modal", args=[english_project.language_code, words[0].pk]
         )
         response = client.get(url)
         assert response.status_code == 200
@@ -28,7 +28,7 @@ class TestParadigmModal:
         client.force_login(permissioned_user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
-            "lexicon:paradigm_modal", args=[english_project.language_code, words[1].pk]
+            "lexicon:word_paradigm_modal", args=[english_project.language_code, words[1].pk]
         )
         data = {"paradigm": paradigm.pk}
         response = client.post(url, data, HTTP_HX_REQUEST="true")
@@ -44,7 +44,7 @@ class TestParadigmModal:
         client.force_login(user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
-            "lexicon:paradigm_modal", args=[english_project.language_code, words[0].pk]
+            "lexicon:word_paradigm_modal", args=[english_project.language_code, words[0].pk]
         )
         response = client.get(url)
         assert response.status_code == 403
@@ -54,7 +54,7 @@ class TestParadigmModal:
         client.force_login(user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
-            "lexicon:paradigm_modal", args=[english_project.language_code, words[1].pk]
+            "lexicon:word_paradigm_modal", args=[english_project.language_code, words[1].pk]
         )
         data = {"paradigm": paradigm.pk}
         response = client.post(url, data, HTTP_HX_REQUEST="true")
@@ -69,7 +69,7 @@ class TestConjugationsView:
         """Test that the paradigm view renders correctly."""
         client.force_login(permissioned_user)
         words, paradigm, conjugation = english_words_with_paradigm
-        url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "view"])
+        url = reverse("lexicon:conjugation_grid", args=["eng", words[0].pk, paradigm.pk, "view"])
         response = client.get(url)
         assert response.status_code == 200
         assert "conjugation_grid" in response.context
@@ -81,7 +81,9 @@ class TestConjugationsView:
         """Test that the paradigm edit view renders correctly."""
         client.force_login(user)
         words, paradigm, conjugation = english_words_with_paradigm
-        url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "edit"])
+        url = reverse(
+            "lexicon:conjugation_grid", args=["eng", words[0].pk, paradigm.pk, "edit"]
+        )
         response = client.get(url)
         assert response.status_code == 200
         assert "formset" in response.context
@@ -91,7 +93,9 @@ class TestConjugationsView:
         """Test that the paradigm edit view updates a simple 1x1 conjugation"""
         client.force_login(permissioned_user)
         words, paradigm, conjugation = english_words_with_paradigm
-        url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "edit"])
+        url = reverse(
+            "lexicon:conjugation_grid", args=["eng", words[0].pk, paradigm.pk, "edit"]
+        )
         # Get the formset to get the management form data
         response = client.get(url)
         formset = response.context["formset"]
@@ -122,7 +126,9 @@ class TestConjugationsView:
         """Unpermissioned user should be able to GET the paradigm edit view."""
         client.force_login(permissioned_user)
         words, paradigm, conjugation = english_words_with_paradigm
-        url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "edit"])
+        url = reverse(
+            "lexicon:conjugation_grid", args=["eng", words[0].pk, paradigm.pk, "edit"]
+        )
         response = client.get(url)
         assert response.status_code == 200
 
@@ -132,7 +138,9 @@ class TestConjugationsView:
         """Unpermissioned user should NOT be able to POST the paradigm edit view."""
         client.force_login(user)
         words, paradigm, conjugation = english_words_with_paradigm
-        url = reverse("lexicon:paradigm", args=[words[0].pk, paradigm.pk, "edit"])
+        url = reverse(
+            "lexicon:conjugation_grid", args=["eng", words[0].pk, paradigm.pk, "edit"]
+        )
         # Try to post minimal formset data
         response = client.post(url, {})
         assert response.status_code == 403
@@ -141,7 +149,9 @@ class TestConjugationsView:
 @pytest.mark.django_db
 class TestConjugationsEdit:
     def get_edit_url(self, word, paradigm):
-        return reverse("lexicon:paradigm", args=[word.pk, paradigm.pk, "edit"])
+        return reverse(
+            "lexicon:conjugation_grid", args=["eng", word.pk, paradigm.pk, "edit"]
+        )
 
     def test_all_forms_changed(self, client, permissioned_user, multirow_paradigm):
         """Test the view can update a 3x2 paradigm where all forms are changed."""

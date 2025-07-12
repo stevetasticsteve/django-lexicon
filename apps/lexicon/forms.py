@@ -243,7 +243,7 @@ class ParadigmForm(forms.ModelForm):
             "row_labels": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "hx-post": reverse_lazy("json-validation"),
+                    "hx-post": reverse_lazy("json_validation"),
                     "hx-target": "#form_errors",
                     "hx-swap": "innerHTML",
                     "hx-trigger": "keyup",
@@ -252,7 +252,7 @@ class ParadigmForm(forms.ModelForm):
             "column_labels": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "hx-post": reverse_lazy("json-validation"),
+                    "hx-post": reverse_lazy("json_validation"),
                     "hx-target": "#form_errors",
                     "hx-swap": "innerHTML",
                     "hx-trigger": "keyup",
@@ -272,6 +272,7 @@ class AffixForm(forms.ModelForm):
             "affix_letter": forms.Select(attrs={"class": "form-select"}),
             "applies_to": forms.Select(attrs={"class": "form-select"}),
         }
+
 
 class WordAffixForm(forms.ModelForm):
     class Meta:

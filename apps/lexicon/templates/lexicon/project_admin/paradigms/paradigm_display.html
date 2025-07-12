@@ -5,15 +5,15 @@
     <div class="col">{{ paradigm.column_labels }}</div>
     <div class="col">{{ paradigm.row_labels }}</div>
     <div class="col-auto">
-        <a href="{% url 'lexicon:paradigm_edit' lang_code paradigm.pk %}"
-           hx-get="{% url 'lexicon:paradigm_edit' lang_code paradigm.pk %}"
+        <a href="{% url 'lexicon:project_admin_paradigm_update' lang_code paradigm.pk %}"
+           hx-get="{% url 'lexicon:project_admin_paradigm_update' lang_code paradigm.pk %}"
            hx-target="#paradigm-{{ paradigm.pk }}"
            hx-swap="outerHTML"
            class="svg-button text-decoration-none">
             <img src="{% static '/img/pencil.svg' %}" alt="Edit">
         </a>
-        <a href="{% url 'lexicon:paradigm_delete' lang_code paradigm.pk %}"
-           hx-get="{% url 'lexicon:paradigm_delete' lang_code paradigm.pk %}"
+        <a href="{% url 'lexicon:project_admin_paradigm_delete' lang_code paradigm.pk %}"
+           hx-get="{% url 'lexicon:project_admin_paradigm_delete' lang_code paradigm.pk %}"
            hx-target="#paradigm-container"
            hx-swap="outerHTML"
            class="svg-button">

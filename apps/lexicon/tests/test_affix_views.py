@@ -11,7 +11,7 @@ class TestAffixViews:
         english_project.affix_file = "SFX A Y 1\nSFX A 0 ing ."
         english_project.save()
         client.force_login(user)
-        url = reverse("lexicon:affix_tester", args=[english_project.language_code])
+        url = reverse("lexicon:project_admin_affix_tester", args=[english_project.language_code])
         response = client.get(url)
         assert response.status_code == 200
         assert "affix_file" in response.context
@@ -27,7 +27,7 @@ class TestAffixViews:
             else [],
         )
         client.force_login(user)
-        url = reverse("lexicon:affix_results", args=[english_project.language_code])
+        url = reverse("lexicon:word_affix_results", args=[english_project.language_code])
         response = client.get(url, {"words": "walk", "affix": "SFX"})
         assert response.status_code == 200
         assert "generated_words" in response.context
@@ -43,7 +43,7 @@ class TestAffixViews:
 
         monkeypatch.setattr("apps.lexicon.utils.hunspell.unmunch", raise_error)
         client.force_login(user)
-        url = reverse("lexicon:affix_results", args=[english_project.language_code])
+        url = reverse("lexicon:word_affix_results", args=[english_project.language_code])
         response = client.get(url, {"words": "walk", "affix": "bad"})
         assert response.status_code == 500
         assert (
@@ -70,7 +70,7 @@ class TestWordAffixViews:
         )
         word.affixes.add(affix_a)
         url = reverse(
-            "lexicon:affix_list",
+            "lexicon:word_affix_list",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         response = logged_in_client.get(url)
@@ -97,7 +97,7 @@ class TestWordAffixViews:
             project=kovol_project, tok_ples="hobol", eng="talk"
         )
         url = reverse(
-            "lexicon:update_word_affixes",
+            "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         client.force_login(permissioned_user)
@@ -121,7 +121,7 @@ class TestWordAffixViews:
             project=kovol_project, tok_ples="hobol", eng="talk"
         )
         url = reverse(
-            "lexicon:update_word_affixes",
+            "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         # Select both affixes
@@ -151,7 +151,7 @@ class TestWordAffixViews:
         word.affixes.set([affix_a, affix_b])
         client.force_login(permissioned_user)
         url = reverse(
-            "lexicon:update_word_affixes",
+            "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         # Remove affix_b
@@ -174,7 +174,7 @@ class TestWordAffixViews:
         )
         word.affixes.add(affix_a)
         url = reverse(
-            "lexicon:update_word_affixes",
+            "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         # Remove all affixes
@@ -194,7 +194,7 @@ class TestWordAffixViews:
             project=kovol_project, tok_ples="hobol", eng="talk"
         )
         url = reverse(
-            "lexicon:update_word_affixes",
+            "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         client.force_login(user)
@@ -210,7 +210,7 @@ class TestWordAffixViews:
             project=kovol_project, tok_ples="hobol", eng="talk"
         )
         url = reverse(
-            "lexicon:update_word_affixes",
+            "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
         )
         client.force_login(user)

@@ -16,9 +16,10 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
-from config import views
+from django.urls import include, path
+
 from apps.lexicon.views.word_views import ProjectList
+from config import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,5 +27,5 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("", ProjectList.as_view(), name="project_list"),
     path("lexicon/", include("apps.lexicon.urls")),
-    path("json-validate", views.JsonValidation.as_view(), name="json-validation"),
+    path("json-validate", views.JsonValidation.as_view(), name="json_validation"),
 ]

@@ -44,13 +44,18 @@ class WordContextMixin:
         # add the edit context variable so the edit view uses right link
         # the create view overwrites this to get it's correct link
         context["form_type"] = "edit"
+        context["lang_code"] = word.project.language_code
         return context
 
     # success url is same for all views that need it
     def get_success_url(self):
         # Redirect to the variation list for the current word
         return reverse(
-            "lexicon:variation_list", kwargs={"word_pk": self.object.word.pk}
+            "lexicon:variation_list",
+            kwargs={
+                "lang_code": self.object.word.project.language_code,
+                "word_pk": self.object.word.pk,
+            },
         )
 
 
@@ -97,7 +102,7 @@ class UpdateVariation(WordContextMixin, LoginRequiredMixin, UpdateView):
     form_class = forms.VariationForm
 
     def post(self, request, *args, **kwargs):
-        log.debug("lexicon:variation_edit POST request.")
+        log.debug("lexicon:variation_update POST request.")
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):

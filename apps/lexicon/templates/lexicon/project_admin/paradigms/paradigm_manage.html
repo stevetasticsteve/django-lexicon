@@ -5,7 +5,7 @@
 {% block page_content %}
 
 <div
-    hx-get="{% url 'lexicon:paradigm_list' lang_code %}"
+    hx-get="{% url 'lexicon:project_admin_paradigm_list' lang_code %}"
     hx-target="#paradigm-container"
     hx-trigger="load"
     hx-swap="innerHTML">

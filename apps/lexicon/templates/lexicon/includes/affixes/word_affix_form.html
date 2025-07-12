@@ -1,6 +1,6 @@
 {% load static %}
 <form method="post"
-      hx-post="{% url 'lexicon:update_word_affixes' lang_code word.pk %}"
+      hx-post="{% url 'lexicon:word_update_affixes' lang_code word.pk %}"
       hx-target="#affix-display"
       hx-swap="innerHTML"
       class="row">

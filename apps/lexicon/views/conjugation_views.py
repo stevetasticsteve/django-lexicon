@@ -39,7 +39,7 @@ class paradigm_modal(
     form_class = forms.ParadigmSelectForm
 
     def post(self, request, *args, **kwargs):
-        log.debug("lexicon:paradigm_modal POST request.")
+        log.debug("lexicon:word_paradigm_modal POST request.")
         return super().post(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -68,7 +68,7 @@ class paradigm_modal(
 
 
 @method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
-class ParadigmView(LoginRequiredMixin, View):
+class ConjugationGridView(ProjectContextMixin, LoginRequiredMixin, View):
     """A view to render and edit a conjugation grid for a word.
 
     GET responds with a html snippet to be inserted into the page, in view or edit mode.
@@ -78,14 +78,15 @@ class ParadigmView(LoginRequiredMixin, View):
     view_template = "lexicon/includes/conjugation_grid/conjugation_grid_view.html"
     edit_template = "lexicon/includes/conjugation_grid/conjugation_grid_edit.html"
 
-    def get(self, request, word_pk, paradigm_pk, edit):
-        log.debug("lexicon:paradigm view GET request.")
+
+    def get(self, request, lang_code, word_pk, paradigm_pk, edit):
+        log.debug(f"lexicon:conjugation_grid view GET request. {lang_code}")
         context = self._context_lookup(word_pk, paradigm_pk)
         template = self.edit_template if edit == "edit" else self.view_template
         return render(request, template, context)
 
     @transaction.atomic
-    def post(self, request, word_pk, paradigm_pk, *args, **kwargs):
+    def post(self, request, lang_code, word_pk, paradigm_pk, *args, **kwargs):
         """Upon a post request save the conjugation values to the database."""
 
         word = models.LexiconEntry.objects.get(pk=word_pk)
@@ -101,7 +102,7 @@ class ParadigmView(LoginRequiredMixin, View):
 
         formset = self._get_or_create_formset_context(word, paradigm, request.POST)
         log.debug(
-            f"lexicon:paradigm view POST submitted.\nFormset post data = '{formset.data}'"
+            f"lexicon:conjugation_grid view POST submitted. {lang_code} \nFormset post data = '{formset.data}'"
         )
         if formset.is_valid():
             log.debug("Formset is valid")
@@ -148,6 +149,7 @@ class ParadigmView(LoginRequiredMixin, View):
             "paradigm": paradigm,
             "formset": formset,
             "forms_grid": forms_grid,
+            "lang_code": word.project.language_code,
         }
 
     def _get_or_create_formset_context(self, word, paradigm, data=None):

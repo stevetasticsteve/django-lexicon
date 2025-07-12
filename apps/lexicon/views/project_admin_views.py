@@ -48,7 +48,7 @@ class ParadigmMixin(LoginRequiredMixin, ProjectEditPermissionRequiredMixin):
 
     def get_success_url(self):
         return reverse(
-            "lexicon:paradigm_list",
+            "lexicon:project_admin_paradigm_list",
             args=(self.get_project().language_code,),
         )
 
@@ -95,7 +95,7 @@ class UpdateParadigm(ParadigmMixin, LoginRequiredMixin, UpdateView):
     form_class = forms.ParadigmForm
 
     def post(self, request, *args, **kwargs):
-        log.debug("lexicon:paradigm_edit POST request.")
+        log.debug("lexicon:conjugation_grid_edit POST request.")
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -118,7 +118,7 @@ class DeleteParadigm(ParadigmMixin, LoginRequiredMixin, DeleteView):
     template_name = "lexicon/project_admin/paradigms/paradigm_confirm_delete.html"
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
-        log.debug("lexicon:paradigm_delete view POST request.")
+        log.debug("lexicon:project_admin_paradigm_delete view POST request.")
         user_log.info(f"{request.user} deleted an Paradigm from {self.get_project()}.")
         return super().post(request, *args, **kwargs)
 
@@ -143,7 +143,7 @@ class AffixMixin(LoginRequiredMixin, ProjectEditPermissionRequiredMixin):
 
     def get_success_url(self):
         return reverse(
-            "lexicon:affix_list",
+            "lexicon:project_admin_affix_list",
             args=(self.get_project().language_code,),
         )
 
@@ -203,7 +203,7 @@ class UpdateAffix(AffixMixin, LoginRequiredMixin, UpdateView):
     form_class = forms.AffixForm
 
     def post(self, request, *args, **kwargs):
-        log.debug("lexicon:affix_edit POST request.")
+        log.debug("lexicon:project_admin_affix_update POST request.")
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form, **kwargs):
@@ -237,6 +237,6 @@ class DeleteAffix(AffixMixin, LoginRequiredMixin, DeleteView):
     template_name = "lexicon/project_admin/affixes/affix_confirm_delete.html"
 
     def post(self, request, *args, **kwargs) -> HttpResponse:
-        log.debug("lexicon:affix_delete view POST request.")
+        log.debug("lexicon:project_admin_affix_delete view POST request.")
         user_log.info(f"{request.user} deleted an affix from {self.get_project()}.")
         return super().post(request, *args, **kwargs)

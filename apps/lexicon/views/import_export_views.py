@@ -35,7 +35,7 @@ class ImportPage(
 
     def get_success_url(self):
         return reverse(
-            "lexicon:import-success",
+            "lexicon:import_success",
             args=(self.kwargs.get("lang_code"),),
         )
 

@@ -137,7 +137,7 @@ class UpdateWordAffixes(
         to ensure that the form submission can be handled correctly in both htmx and non-htmx contexts."""
         # Return to the affix list fragment for this word
         return reverse(
-            "lexicon:affix_list",
+            "lexicon:word_affix_list",
             kwargs={
                 "lang_code": self.get_project().language_code,
                 "pk": self.get_word().pk,
@@ -155,7 +155,7 @@ class UpdateWordAffixes(
         response = super().form_valid(form)
         if self.request.headers.get("HX-Request") == "true":
             url = reverse(
-                "lexicon:affix_list",
+                "lexicon:word_affix_list",
                 kwargs={
                     "lang_code": self.get_project().language_code,
                     "pk": self.object.pk,
