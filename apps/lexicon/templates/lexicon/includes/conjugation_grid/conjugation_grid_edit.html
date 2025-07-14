@@ -5,85 +5,72 @@
 
 {% load dict_utils %}
 
-<div id="permission-errors"></div>
+<div class="htmx-action-container">
+  <div class="permission-errors"></div> {# Area to display permission errors #}
 
-<div class="border rounded-lg p-3" id="paradigm-{{ paradigm.pk }}">
-  <form>
-    {% csrf_token %}
-    {{ formset.management_form }}
+  <div class="border rounded-lg p-3" id="paradigm-{{ paradigm.pk }}">
+    <form>
+      {% csrf_token %}
+      {{ formset.management_form }}
 
-    <div class="row">
-      <div class="col-md-10">
-        <table class="table">
-          <thead>
-            <tr>
-              <th></th>
-              {% for col in paradigm.column_labels %}
-                <th>{{ col }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% if formset.errors %}
-              <div class="alert alert-danger" role="alert">
-                <ul>
-                  {% for form in formset.forms %}
-                    {% for field, errors in form.errors.items %}
-                      {% for error in errors %}
-                        <li>{{ error }}</li>
-                      {% endfor %}
-                    {% endfor %}
-                  {% endfor %}
-                  {# Optionally, show formset non-form errors #}
-                  {% for error in formset.non_form_errors %}
-                    <li>{{ error }}</li>
-                  {% endfor %}
-                </ul>
-              </div>
-            {% endif %}
-            {% for row_idx in forms_grid %}
+      <div class="row">
+        <div class="col-md-10">
+          <table class="table">
+            <thead>
               <tr>
-                <th>{{ paradigm.row_labels|index:forloop.counter0 }}</th>
-                {% for form in row_idx %}
-                  <td>
-                    {{ form.conjugation.errors }}
-                    {% if form %}
-                      {{ form.id }}
-                      {{ form.conjugation}}
-                  {% else %}
-                    <input type="text" name="empty-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" data-row="{{ forloop.parentloop.counter0 }}" data-col="{{ forloop.counter0 }}" placeholder="—" />
-                  {% endif %}
-                  </td>
+                <th></th>
+                {% for col in paradigm.column_labels %}
+                  <th>{{ col }}</th>
                 {% endfor %}
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% if formset.errors %}
+                <div class="alert alert-danger" role="alert">
+                  <ul>
+                    {% for form in formset.forms %}
+                      {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                          <li>{{ error }}</li>
+                        {% endfor %}
+                      {% endfor %}
+                    {% endfor %}
+                    {# Optionally, show formset non-form errors #}
+                    {% for error in formset.non_form_errors %}
+                      <li>{{ error }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
+              {% for row_idx in forms_grid %}
+                <tr>
+                  <th>{{ paradigm.row_labels|index:forloop.counter0 }}</th>
+                  {% for form in row_idx %}
+                    <td>
+                      {{ form.conjugation.errors }}
+                      {% if form %}
+                        {{ form.id }}
+                        {{ form.conjugation}}
+                    {% else %}
+                      <input type="text" name="empty-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" data-row="{{ forloop.parentloop.counter0 }}" data-col="{{ forloop.counter0 }}" placeholder="—" />
+                    {% endif %}
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-2 d-flex align-items-start justify-content-end">
+          <button class="btn btn-success"
+                  hx-post="{% url 'lexicon:conjugation_grid' lang_code word.pk paradigm.pk 'view' %}"
+                  hx-target="#paradigm-{{ paradigm.pk }}"
+                  hx-swap="outerHTML"
+                  hx-trigger="click">
+            Save
+          </button>
+        </div>
       </div>
-      <div class="col-md-2 d-flex align-items-start justify-content-end">
-        <button class="btn btn-success"
-                hx-post="{% url 'lexicon:conjugation_grid' lang_code word.pk paradigm.pk 'view' %}"
-                hx-target="#paradigm-{{ paradigm.pk }}"
-                hx-swap="outerHTML"
-                hx-trigger="click">
-          Save
-        </button>
-      </div>
-    </div>
-  </form>
+    </form>
+  </div>
 </div>
-
-<script>
-  document.body.addEventListener('htmx:responseError', function(event) {
-      if (event.detail.xhr.status === 403) {
-          // Choose your target container
-          var target = document.querySelector('#permission-errors');
-          if (target) {
-              target.innerHTML = event.detail.xhr.responseText;
-          } else {
-              // fallback: alert
-              alert("Permission denied.");
-          }
-      }
-  });
-  </script>

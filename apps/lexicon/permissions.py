@@ -2,7 +2,9 @@
 
 import logging
 
-from django.http import HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 
 log = logging.getLogger("lexicon")
 
@@ -21,13 +23,19 @@ class ProjectEditPermissionRequiredMixin:
     def dispatch(self, request, *args, **kwargs):
         if not self.has_project_permission():
             log.debug(
-                f"User {request.user} does not have permission to edit project {self.get_project()}"
+                f"User '{request.user}' does not have permission to edit project '{self.get_project()}'"
             )
-            return HttpResponseForbidden(
-                "You do not have permission to edit this project."
-            )
+            if request.headers.get("HX-Request"):
+                html = render_to_string(
+                    "lexicon/includes/403_permission_error.html", request=request
+                )
+                return HttpResponse(html, status=403)
+
+            else:
+                raise PermissionDenied()
+
         else:
             log.debug(
-                f"User {request.user} has permission to edit project {self.get_project()}"
+                f"User '{request.user}' has permission to edit project '{self.get_project()}'"
             )
         return super().dispatch(request, *args, **kwargs)

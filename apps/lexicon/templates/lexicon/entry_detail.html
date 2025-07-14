@@ -4,6 +4,8 @@
 {% endblock %}
 {% block page_content %}
 
+{% include "lexicon/includes/403_js_response.html" %}
+
 <div class="container">
 
     <div class="btn-group my-4" role="group">
@@ -22,7 +24,10 @@
     <h1 class="my-2">{{object.tok_ples}}</h1>
 
     <!-- Container for dynamically loaded modal -->
-    <div id="modal-container"></div>
+    <div class="htmx-action-container">
+        <div class="permission-errors"></div> {# Area to display permission errors #}
+        <div id="modal-container"></div>
+    </div>
 
     <div class="container p-2">
         <table class="table table-striped">
@@ -92,6 +97,7 @@
 
         </tbody>
         </table>
+        
         {% include 'lexicon/includes/paradigm_list.html' %}  
 
         <div
@@ -101,6 +107,7 @@
             hx-trigger="load"
             hx-swap="innerHTML">
         </div>
+
         <div id="variation-container"></div>
 
         <div

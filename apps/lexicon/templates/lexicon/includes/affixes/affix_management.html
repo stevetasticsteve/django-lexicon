@@ -1,10 +1,12 @@
 <h2>Affixes</h2>
-
-<div
-class="my-4"
-hx-get="{% url 'lexicon:word_affix_list' lang_code pk %}"
-hx-target="#affix-display"
-hx-trigger="load"
-hx-swap="innerHTML">
+<div class="htmx-action-container">
+  <div class="permission-errors"></div> {# Area to display permission errors #}
+    <div
+    class="my-4"
+    hx-get="{% url 'lexicon:word_affix_list' lang_code pk %}"
+    hx-target="#affix-display"
+    hx-trigger="load"
+    hx-swap="innerHTML">
+    </div>
+    <div id="affix-display"></div>
 </div>
-<div id="affix-display"></div>

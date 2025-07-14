@@ -1,26 +1,30 @@
 <!-- lexicon/includes/variations/variation_list.html -->
 {% load static %}
-<div id="variation-container">
-    <h2>Variations</h2>
-    <div class="container">
-        <div class="row fw-bold border-bottom py-2">
-            <div class="col">Variation</div>
-            <div class="col">Type</div>
-            <div class="col text-center">In spellcheck?</div>
-            <div class="col text-center">Searchable?</div>
-            <div class="col-auto"></div>
-        </div>
-        {% for variation in object_list %}
-            {% include "lexicon/includes/variations/variation_display.html" with variation=variation %}
-        {% endfor %}
-        <div class="mt-2 px-2" id="variation-create-container">
-            <a href="{% url 'lexicon:variation_create' lang_code word.pk %}"
-            hx-get="{% url 'lexicon:variation_create' lang_code word.pk %}"
-            hx-target="#variation-create-container"
-            hx-swap="outerHTML"
-            class="svg-button">
-            <img src="{% static '/img/plus.svg' %}" alt="add">
-            </a>
+<div class="htmx-action-container">
+  <div class="permission-errors"></div> {# Area to display permission errors #}
+
+    <div id="variation-container">
+        <h2>Variations</h2>
+        <div class="container">
+            <div class="row fw-bold border-bottom py-2">
+                <div class="col">Variation</div>
+                <div class="col">Type</div>
+                <div class="col text-center">In spellcheck?</div>
+                <div class="col text-center">Searchable?</div>
+                <div class="col-auto"></div>
+            </div>
+            {% for variation in object_list %}
+                {% include "lexicon/includes/variations/variation_display.html" with variation=variation %}
+            {% endfor %}
+            <div class="mt-2 px-2" id="variation-create-container">
+                <a href="{% url 'lexicon:variation_create' lang_code word.pk %}"
+                hx-get="{% url 'lexicon:variation_create' lang_code word.pk %}"
+                hx-target="#variation-create-container"
+                hx-swap="outerHTML"
+                class="svg-button">
+                <img src="{% static '/img/plus.svg' %}" alt="add">
+                </a>
+            </div>
         </div>
     </div>
 </div>

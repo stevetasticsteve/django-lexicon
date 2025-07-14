@@ -1,0 +1,31 @@
+<script>
+  document.body.addEventListener('htmx:responseError', function(event) {
+    if (event.detail.xhr.status === 403) {
+        // The element that triggered the htmx request, e.g., the button that was clicked.
+        var triggerElement = event.detail.target;
+
+        // Find the closest ancestor element that acts as a container for this action.
+        // You'll need to add a class like 'htmx-action-container' to your HTML.
+        var parentContainer = triggerElement.closest('.htmx-action-container');
+
+        if (parentContainer) {
+            // Within that container, find the element where you want to display the error.
+            // You should change your '#permission-errors' id to a class.
+            var errorDisplay = parentContainer.querySelector('.permission-errors');
+
+            if (errorDisplay) {
+                // Inject the HTML from the 403 response into the error display area.
+                errorDisplay.innerHTML = event.detail.xhr.responseText;
+            } else {
+                // Fallback if the container is found but the error display area isn't.
+                console.error("HTMX: Found .htmx-action-container but no .permission-errors inside.", parentContainer);
+                alert("Permission denied. (Error display area not found).");
+            }
+        } else {
+            // Fallback for when no parent container is found for the triggering element.
+            console.error("HTMX: Could not find a .htmx-action-container ancestor for", triggerElement);
+            alert("Permission denied.");
+        }
+    }
+});
+</script>

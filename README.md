@@ -6,15 +6,12 @@ https://dev.codebysteve.com
 
 # To do
 
-3. Project edit permissions
-   1. Project model views
-   2. Variation model
-   3. Ignore model
-   4. Paradigm views (responds with htmx 403, not visible on template)
-   6. Affix views (responds with htmx 403, not visible on template)
-4. registration system
-5. Showing Hunspell constructed words in detail view
-6. 403.html not showing
+1. registration system
+2. Showing Hunspell constructed words in detail view
+3. Affix tester needs linking in project admin
+4. type checker for adding affixes and paradigms
+5. contact form for getting permissions
+6. per project backup
 
 ## Features to implement
 - Common misspellings for words. To be used for searches in lexicon and to help spelling suggestions in hunspell
@@ -35,6 +32,7 @@ https://dev.codebysteve.com
 - Pagination doesn't work in main view, htmx request doesn't have pagination info attached.
 - When saving a paradigm a button appears for a split second under the grid.
 - Paradigms and Affixes are currently __all__. There needs to be filtering to only allow attaching to the correct POS.
+- Login rendered in paradigm box on detail page when logged out.
 
 ## UI
 - The header looks off on mobile
@@ -69,6 +67,7 @@ https://dev.codebysteve.com
 
 ## Testing
 - check test coverage
+- import and export
 
 ## Logging
 - 
