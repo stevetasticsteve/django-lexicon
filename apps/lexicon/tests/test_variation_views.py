@@ -33,16 +33,16 @@ def test_variation_edit_get_requires_login(client, english_project):
 
 
 @pytest.mark.django_db
-def test_variation_edit_get_and_post(logged_in_client, english_project):
+def test_variation_edit_get_and_post(client, permissioned_user, english_project):
     # logged_in_client is a fixture that logs in a user
     word = models.LexiconEntry.objects.create(
         project=english_project, tok_ples="foo", eng="bar"
     )
     var = models.Variation.objects.create(word=word, type="spelling", text="foo1")
     url = reverse("lexicon:variation_update", kwargs={"lang_code": "eng", "pk": var.pk})
-
+    client.force_login(permissioned_user)
     # GET
-    response = logged_in_client.get(url)
+    response = client.get(url)
     assert response.status_code == 200
     assert 'name="text"' in response.content.decode()
 
@@ -53,7 +53,7 @@ def test_variation_edit_get_and_post(logged_in_client, english_project):
         "included_in_spellcheck": "on",
         "included_in_search": "on",
     }
-    response = logged_in_client.post(url, data, follow=True, HTTP_HX_REQUEST="true")
+    response = client.post(url, data, follow=True, HTTP_HX_REQUEST="true")
     assert response.status_code == 200
     var.refresh_from_db()
     assert var.text == "foo1-edited"
@@ -62,10 +62,11 @@ def test_variation_edit_get_and_post(logged_in_client, english_project):
 
 
 @pytest.mark.django_db
-def test_variation_edit_htmx_response(logged_in_client, english_project):
+def test_variation_edit_htmx_response(client, permissioned_user, english_project):
     word = models.LexiconEntry.objects.create(
         project=english_project, tok_ples="foo", eng="bar"
     )
+    client.force_login(permissioned_user)
     var = models.Variation.objects.create(word=word, type="spelling", text="foo1")
     url = reverse("lexicon:variation_update", kwargs={"lang_code": "eng", "pk": var.pk})
     data = {
@@ -74,7 +75,7 @@ def test_variation_edit_htmx_response(logged_in_client, english_project):
         "included_in_spellcheck": "on",
         "included_in_search": "on",
     }
-    response = logged_in_client.post(url, data, HTTP_HX_REQUEST="true")
+    response = client.post(url, data, HTTP_HX_REQUEST="true")
     assert response.status_code == 302
     assert models.Variation.objects.get(pk=var.pk).text == "foo1-edited"
 
@@ -93,10 +94,13 @@ class TestCreateVariation:
         assert response.status_code == 302
         assert "/login/" in response.url or "/accounts/login/" in response.url
 
-    def test_variation_create_get_renders_form(self, logged_in_client, english_words):
+    def test_variation_create_get_renders_form(
+        self, client, permissioned_user, english_words
+    ):
         word = english_words[0]
         url = self.get_create_url(word.pk)
-        response = logged_in_client.get(url)
+        client.force_login(permissioned_user)
+        response = client.get(url)
 
         assert response.status_code == 200
         assert (
@@ -108,14 +112,20 @@ class TestCreateVariation:
         assert "word" in response.context
         assert response.context["word"] == word
 
-    def test_variation_create_get_invalid_word_pk_raises_404(self, logged_in_client):
+    def test_variation_create_get_invalid_word_pk_raises_404(
+        self, permissioned_user, client
+    ):
         invalid_word_pk = 99999  # An ID that's unlikely to exist
         url = self.get_create_url(invalid_word_pk)
-        response = logged_in_client.get(url)
+        client.force_login(permissioned_user)
+        response = client.get(url)
         assert response.status_code == 404
 
-    def test_variation_create_post_success(self, logged_in_client, english_words):
+    def test_variation_create_post_success(
+        self, client, permissioned_user, english_words
+    ):
         word = english_words[0]
+        client.force_login(permissioned_user)
         url = self.get_create_url(word.pk)
         initial_variation_count = models.Variation.objects.count()
         data = {
@@ -124,7 +134,7 @@ class TestCreateVariation:
             "included_in_spellcheck": True,
             "included_in_search": True,
         }
-        response = logged_in_client.post(url, data, follow=True)
+        response = client.post(url, data, follow=True)
 
         assert response.status_code == 200  # After redirect
         assert models.Variation.objects.count() == initial_variation_count + 1
@@ -148,15 +158,18 @@ class TestCreateVariation:
         assert response.resolver_match.view_name == "lexicon:variation_list"
         assert new_variation.text in response.content.decode()
 
-    def test_variation_create_post_invalid_data(self, logged_in_client, english_words):
+    def test_variation_create_post_invalid_data(
+        self, client, permissioned_user, english_words
+    ):
         word = english_words[0]
         url = self.get_create_url(word.pk)
+        client.force_login(permissioned_user)
         initial_variation_count = models.Variation.objects.count()
         data = {
             "text": "",  # Invalid: text is required by Variation model/form
             "type": "spelling",
         }
-        response = logged_in_client.post(url, data)
+        response = client.post(url, data)
 
         assert response.status_code == 200  # Re-renders form with errors
         assert models.Variation.objects.count() == initial_variation_count
@@ -201,27 +214,31 @@ class TestDeleteVariation:
         response = client.post(url)
         assert response.status_code in (302, 403)
 
-    def test_delete_get_renders_confirm(self, logged_in_client, english_words):
+    def test_delete_get_renders_confirm(self, client, permissioned_user, english_words):
         word = english_words[0]
         variation = models.Variation.objects.create(
             word=word, type="spelling", text="todelete"
         )
+        client.force_login(permissioned_user)
         url = self.get_delete_url(variation.pk)
-        response = logged_in_client.get(url)
+        response = client.get(url)
         assert response.status_code == 200
         assert (
             "form" in response.content.decode()
             or "Are you sure" in response.content.decode()
         )
 
-    def test_delete_post_deletes_and_redirects(self, logged_in_client, english_words):
+    def test_delete_post_deletes_and_redirects(
+        self, client, permissioned_user, english_words
+    ):
         word = english_words[0]
         variation = models.Variation.objects.create(
             word=word, type="spelling", text="todelete"
         )
+        client.force_login(permissioned_user)
         url = self.get_delete_url(variation.pk)
         initial_count = models.Variation.objects.count()
-        response = logged_in_client.post(url, follow=True)
+        response = client.post(url, follow=True)
         assert response.status_code == 200
         assert models.Variation.objects.count() == initial_count - 1
         # Should redirect to the variation list for the word
@@ -236,3 +253,69 @@ class TestDeleteVariation:
         assert response.status_code == 404
         response = logged_in_client.post(url)
         assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_variation_edit_forbidden_for_unpermissioned_user(
+    client, user, english_project
+):
+    word = models.LexiconEntry.objects.create(
+        project=english_project, tok_ples="foo", eng="bar"
+    )
+    variation = models.Variation.objects.create(word=word, type="spelling", text="v1")
+    url = reverse(
+        "lexicon:variation_update", kwargs={"lang_code": "eng", "pk": variation.pk}
+    )
+    client.force_login(user)
+    response = client.get(url)
+    assert response.status_code == 403
+
+    post_data = {
+        "text": "changed",
+        "type": "spelling",
+        "included_in_spellcheck": "on",
+        "included_in_search": "on",
+    }
+    response = client.post(url, post_data)
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_variation_create_forbidden_for_unpermissioned_user(
+    client, user, english_words
+):
+    word = english_words[0]
+    url = reverse(
+        "lexicon:variation_create", kwargs={"lang_code": "eng", "word_pk": word.pk}
+    )
+    client.force_login(user)
+    response = client.get(url)
+    assert response.status_code == 403
+
+    post_data = {
+        "text": "unauthorized",
+        "type": "dialect",
+        "included_in_spellcheck": True,
+        "included_in_search": True,
+    }
+    response = client.post(url, post_data)
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_variation_delete_forbidden_for_unpermissioned_user(
+    client, user, english_words
+):
+    word = english_words[0]
+    variation = models.Variation.objects.create(
+        word=word, type="spelling", text="to block"
+    )
+    url = reverse(
+        "lexicon:variation_delete", kwargs={"lang_code": "eng", "pk": variation.pk}
+    )
+    client.force_login(user)
+    response = client.get(url)
+    assert response.status_code == 403
+
+    response = client.post(url)
+    assert response.status_code == 403

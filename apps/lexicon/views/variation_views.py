@@ -10,6 +10,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
 
 from apps.lexicon import forms, models, tasks
+from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
 
 log = logging.getLogger("lexicon")
 user_log = logging.getLogger("user_log")
@@ -58,7 +59,13 @@ class WordContextMixin:
             },
         )
 
+    def get_project(self) -> models.LexiconProject:
+        """Retrieve the project based on the language code."""
+        lang_code = self.kwargs.get("lang_code")
+        return get_object_or_404(models.LexiconProject, language_code=lang_code)
 
+
+@method_decorator(require_http_methods(["GET"]), name="dispatch")
 class VariationList(WordContextMixin, ListView):
     """A list of all available variations to be shown by htmx.
 
@@ -74,7 +81,9 @@ class VariationList(WordContextMixin, ListView):
 
 
 @method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
-class CreateVariation(WordContextMixin, LoginRequiredMixin, CreateView):
+class CreateVariation(
+    WordContextMixin, LoginRequiredMixin, ProjectEditPermissionRequiredMixin, CreateView
+):
     """Show an in row form and uses that to create new variations."""
 
     template_name = "lexicon/includes/variations/variation_edit.html"
@@ -95,7 +104,9 @@ class CreateVariation(WordContextMixin, LoginRequiredMixin, CreateView):
 
 
 @method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
-class UpdateVariation(WordContextMixin, LoginRequiredMixin, UpdateView):
+class UpdateVariation(
+    WordContextMixin, LoginRequiredMixin, ProjectEditPermissionRequiredMixin, UpdateView
+):
     """Provides a table row edit form for the Variation List."""
 
     template_name = "lexicon/includes/variations/variation_edit.html"
@@ -114,7 +125,9 @@ class UpdateVariation(WordContextMixin, LoginRequiredMixin, UpdateView):
 
 
 @method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
-class DeleteVariation(WordContextMixin, LoginRequiredMixin, DeleteView):
+class DeleteVariation(
+    WordContextMixin, LoginRequiredMixin, ProjectEditPermissionRequiredMixin, DeleteView
+):
     """Delete Variations inline from the table."""
 
     template_name = "lexicon/includes/variations/variation_confirm_delete.html"
