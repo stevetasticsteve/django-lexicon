@@ -13,7 +13,7 @@ log = logging.getLogger("lexicon")
 
 class LoginView(View):
     form_class = AuthenticationForm
-    template_name = "registration/login.html"
+    template_name = "login.html"
 
     def get(self, request, *args, **kwargs):
         form = self.form_class()

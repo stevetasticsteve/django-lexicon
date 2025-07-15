@@ -22,7 +22,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.office365.com"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv("EMAIL_SENDER", "localhost").split(",")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASDWORD", "localhost").split(",")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD", "localhost").split(",")
 EMAIL_USE_TLS = True
 log.debug(f"Email in use {EMAIL_HOST_USER}")
 

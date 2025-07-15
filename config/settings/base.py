@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "apps.lexicon",
     "guardian",
+    "django_registration",
 ]
 
 MIDDLEWARE = [
@@ -127,6 +128,8 @@ LOGOUT_REDIRECT_URL = "/"
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
 
 # postgres used in both dev and prod in a container workflow
 DATABASES = {
