@@ -6,3 +6,4 @@ apps/lexicon/utils/upload.py
 .venv
 *.sh
 .vscode/
+.coverage

@@ -1,6 +1,13 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block header %}
+{% include 'includes/header.html' %}
+{% endblock %}
 
-{% block content %}
+{% block page_content %}
+
+<div class="container">
   <h2>Registration closed</h2>
   <p>The site is not accepting registrations at this time.</p>
+</div>
+
 {% endblock %}

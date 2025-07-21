@@ -15,6 +15,9 @@
     <button type="input" id="submit-btn" class="btn btn-primary">Login</button>
   </form>
 
+  <h2 class="mt-4">Forgot your password?</h2>
+  <a href="{% url 'password_reset' %}">Reset Password</a>
+
   <h2 class="mt-4">Not registered?</h2>
   <a href="{% url 'django_registration_register' %}">Register</a>
 </div>

@@ -1,1 +1,1 @@
-Activate your account at {{ site.name }}
+Activate your Lexicon account

@@ -1,0 +1,10 @@
+Hello,
+
+Thank you for signing up for a Lexicon account.
+
+To activate your account, please click the link below or copy and paste it into your browser:
+
+http://{{ site.domain }}{% url 'django_registration_activate' %}?activation_key={{ activation_key }}
+
+
+This activation link will expire in {{ expiration_days }} days.
