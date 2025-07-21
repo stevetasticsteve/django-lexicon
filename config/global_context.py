@@ -1,4 +1,4 @@
-from config.settings.base import version
+from config.settings import version
 
 
 def global_template_variables(request):

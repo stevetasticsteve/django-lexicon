@@ -1,8 +1,8 @@
 import os
 
-from config.settings.base import *  # noqa: F403
+from config.settings import *  # noqa: F403
 
-SECRET_KEY = "test"
+SECRET_KEY = "test settings secret key"
 STATIC_ROOT = None
 STORAGES = {
     "staticfiles": {

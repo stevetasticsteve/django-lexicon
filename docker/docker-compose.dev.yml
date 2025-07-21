@@ -7,13 +7,10 @@ services:
       - lexicon_postgres:/var/lib/postgresql/data
     ports:
       - 5432:5432
-    environment:
-     - POSTGRES_DB=lexicon_app_db
-     - POSTGRES_USER=django
-     - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    env_file:
+      - .env
   
    web1:
-    image: stevetasticsteve/lexicon
     container_name: lexicon_app1
     restart: always
     build:
@@ -26,14 +23,12 @@ services:
       - ../templates:/app/templates:ro
     ports:
       - 8000:8000
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.dev
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    env_file:
+      - .env
     depends_on:
       - db
    
    celery:
-    image: stevetasticsteve/celery_lexicon
     container_name: celery_lexicon
     build:
       context: ../
@@ -45,9 +40,8 @@ services:
       - ../templates:/app/templates:ro
     restart: always
     command: celery -A config worker
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.dev
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    env_file:
+      - .env
 
     depends_on:
       - web1

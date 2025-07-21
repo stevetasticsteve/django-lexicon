@@ -32,5 +32,5 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN mkdir -p /app/data/exports /app/data/logs
 
 # Collect static assets
-RUN uv run manage.py collectstatic --noinput --clear --settings config.settings.dev
+RUN uv run manage.py collectstatic --noinput --clear
 

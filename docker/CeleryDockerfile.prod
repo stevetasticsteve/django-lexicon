@@ -31,4 +31,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 RUN mkdir -p /app/data/exports
 RUN mkdir -p /app/data/logs
 
-RUN uv run manage.py collectstatic --noinput --clear --settings config.settings.prod
+RUN uv run manage.py collectstatic --noinput --clear

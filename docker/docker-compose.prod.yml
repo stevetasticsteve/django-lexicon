@@ -5,10 +5,8 @@ services:
     restart: always
     volumes:
       - lexicon_postgres:/var/lib/postgresql/data
-    environment:
-     - POSTGRES_DB=lexicon_app_db
-     - POSTGRES_USER=django
-     - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    env_file:
+      - .env
   
    web1:
     image: stevetasticsteve/lexicon
@@ -18,11 +16,8 @@ services:
       - ./data/logs:/app/data/logs
     ports:
       - 8000:8000
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.prod
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - SECRET_KEY=${SECRET_KEY}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    env_file:
+      - .env
     depends_on:
       - db
    
@@ -31,9 +26,8 @@ services:
     container_name: celery_lexicon
     restart: always
     command: celery -A config worker
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.prod
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    env_file:
+      - .env
     volumes:
       - ./data:/app/data
     depends_on:

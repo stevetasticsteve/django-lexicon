@@ -96,13 +96,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "Pacific/Port_Moresby"
-
+TIME_ZONE = os.getenv("TIME_ZONE", "Pacific/Port_Moresby")
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -117,7 +113,6 @@ STORAGES = {
     },
 }
 
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -126,12 +121,15 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
+# Crispy Forms settings
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# django-registration settings
 ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
+REGISTRATION_OPEN = os.getenv("REGISTRATION_OPEN", "True").lower() in ("true", "1", "t", "yes")
 
-# postgres used in both dev and prod in a container workflow
+# postgres settings
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -142,6 +140,28 @@ DATABASES = {
         "PORT": 5432,
     }
 }
+
+# email settings
+admins_env = os.getenv("ADMINS")
+if admins_env:
+    ADMINS = [tuple(admin.strip().split(":", 1)) for admin in admins_env.split(",")]
+else:
+    ADMINS = []
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.office365.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv("EMAIL_SENDER", "NOT SET")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD", "NOT SET")
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER
+
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-24#+mypq*=1v77s(37v+_$t!p7+iwdnq)$q&djz85vo$9f5sym"
+)
+ALLOWED_HOSTS = [host for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host]
+DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t", "yes")
+
 
 # Create a rotating log file data/lexicon.log
 LOGGING_DIR = os.path.join("data", "logs")
@@ -172,10 +192,15 @@ LOGGING = {
             "backupCount": 3,  # Keep 5 backup log files
             "formatter": "standard",
         },
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
     },
     "loggers": {
         "lexicon": {
-            "handlers": ["lexicon_log_file"],
+            "handlers": ["lexicon_log_file", "console"],
             "level": "DEBUG",
             "propagate": False,
         },
@@ -215,8 +240,9 @@ CELERY_RESULT_BACKEND = "redis://redis:6379/0"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "Pacific/Port_Moresby"
+CELERY_TIMEZONE = os.getenv("TIME_ZONE", "Pacific/Port_Moresby")
 
+# load the version from pyproject.toml
 try:
     with open("pyproject.toml", "r") as f:
         pyproject_data = toml.load(f)
@@ -225,3 +251,29 @@ except FileNotFoundError:
     version = "0.0.0"  # Default if the file isn't found
 except KeyError:
     version = "0.0.0"  # Default if the 'project' or 'version' keys are missing
+
+# Production only settings, triggered by DEBUG=False
+if not DEBUG:
+    import sentry_sdk
+
+    CSRF_COOKIE_SECURE = True
+    CSRF_TRUSTED_ORIGINS = [f"https://{site}" for site in ALLOWED_HOSTS]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+
+
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN", ""),
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        _experiments={
+            # Set continuous_profiling_auto_start to True
+            # to automatically start the profiler on when
+            # possible.
+            "continuous_profiling_auto_start": True,
+        },
+    )
+
+
