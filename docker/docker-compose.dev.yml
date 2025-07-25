@@ -15,12 +15,13 @@ services:
     restart: always
     build:
       context: ../
-      dockerfile: docker/Dockerfile.dev 
+      dockerfile: docker/Dockerfile 
     volumes:
       - ../apps:/app/apps:ro
       - ../config:/app/config:ro
       - ../data/logs:/app/data/logs
       - ../templates:/app/templates:ro
+      - ../import_kovol_data.py:/app/import_kovol_data.py:ro
     ports:
       - 8000:8000
     env_file:
@@ -32,7 +33,7 @@ services:
     container_name: celery_lexicon
     build:
       context: ../
-      dockerfile: docker/CeleryDockerfile.dev
+      dockerfile: docker/CeleryDockerfile
     volumes:
       - ../apps:/app/apps:ro
       - ../config:/app/config:ro

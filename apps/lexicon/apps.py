@@ -1,6 +1,7 @@
 import logging
 import toml
 import sys
+import os
 
 from django.apps import AppConfig
 from django.conf import settings
@@ -54,6 +55,7 @@ class LexiconConfig(AppConfig):
         SECRET_KEY: {settings.SECRET_KEY[0:4]}*****... (truncated for security)
         STATIC_ROOT: {settings.STATIC_ROOT}
         TIME_ZONE: {settings.TIME_ZONE}
+        Gunicorn workers: {os.getenv("GUNICORN_WORKERS", "Not set")}
 
         DATABASE: 
         Backend - {settings.DATABASES["default"]["ENGINE"]} 

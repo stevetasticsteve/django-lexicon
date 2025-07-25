@@ -17,8 +17,6 @@ import toml
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -148,7 +146,7 @@ if admins_env:
 else:
     ADMINS = []
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.office365.com"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "NOT SET")
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv("EMAIL_SENDER", "NOT SET")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD", "NOT SET")
