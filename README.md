@@ -6,7 +6,6 @@ https://dev.codebysteve.com
 
 # To do
 
-1. registration system
 2. Showing Hunspell constructed words in detail view
 3. Affix tester needs linking in project admin
 4. type checker for adding affixes and paradigms
@@ -46,8 +45,6 @@ https://dev.codebysteve.com
 - templates/registration/password_change_form.html
 - templates/registration/password_change_done.html
 - sign up form. Need a registration app
-- password reset functionality
-- Different users need roles. You should only be able to edit pages you have permission to
 - Eventually use office 365 logins and have integration with member services
 
 ## Exports
@@ -70,4 +67,6 @@ https://dev.codebysteve.com
 - import and export
 
 ## Logging
-- 
+
+Manual Kovol data import command:
+podman-compose -f docker/docker-compose.dev.yml exec web1 uv run import_kovol_data.py
