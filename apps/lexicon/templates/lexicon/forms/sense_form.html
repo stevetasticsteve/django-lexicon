@@ -33,11 +33,29 @@
             {% endif %}
         </div>
         
-        <div>
-            Delete?
-            {% if sense_form.DELETE %}
-                {{ sense_form.DELETE }}
-            {% endif %}
-        </div>
+        {# This is the actual DELETE field Django uses. We can hide it. #}
+        <div style="display: none;">
+            {{ sense_form.DELETE }}
+        </div>   
     </div>
+    {% if form_id > 0 %}
+        {# A user-friendly button to remove the form #}
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeSenseForm(this)">Remove</button>
+    {% endif %}
 </div>
+
+<script>
+    function removeSenseForm(button) {
+        console.log("Removing sense form");
+        const formWrapper = button.closest('.sense-form-row');
+        
+        // Find the DELETE checkbox within this form and check it
+        const deleteInput = formWrapper.querySelector('input[type=checkbox][name$="-DELETE"]');
+        if (deleteInput) {
+            deleteInput.checked = true;
+        }
+        
+        // Hide the form from the user for a better experience
+        formWrapper.style.display = 'none';
+    }
+</script>

@@ -9,7 +9,7 @@ load_dotenv()
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
-from apps.lexicon import models
+from apps.lexicon import models # noqa: E402
 
 
 def import_kovol_data(file_path):
@@ -55,7 +55,7 @@ def __main__():
         word = models.LexiconEntry(
             pk=pk,
             project=kovol_project,
-            tok_ples=kw["fields"]["kgu"],
+            text=kw["fields"]["kgu"],
             eng=lexicon_entry["fields"]["eng"],
             oth_lang=lexicon_entry["fields"]["tpi"],
             checked=kw["fields"]["checked"],

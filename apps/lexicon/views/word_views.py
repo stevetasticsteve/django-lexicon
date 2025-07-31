@@ -218,16 +218,22 @@ class ReviewList(ProjectContextMixin, ListView):
 @require_http_methods(["GET"])
 def add_sense_form(request):
     """Return a new empty sense form for the formset."""
-    # Get current total forms
-    total_forms = int(request.GET.get("form_count", 0))
-    SenseFormSet = forms.SenseFormSet
-    formset = SenseFormSet(prefix="senses", queryset=models.Sense.objects.none())
-    # Create a new empty form with the correct prefix/index
-    form = formset.empty_form
-    form.prefix = f"senses-{total_forms}"
+    form_count = int(request.GET.get("form_count", 0))
+    log.debug(f"form_count: {form_count}")
+
+    # Use the formset's `empty_form` property to get a form with the
+    # `__prefix__` placeholder.
+    formset = forms.SenseFormSet(prefix="senses")
+    empty_form = formset.empty_form
+
+    # Render the form template with the placeholder.
     html = render_to_string(
         "lexicon/forms/sense_form.html",
-        {"sense_form": form, "form_id": total_forms},
+        {"sense_form": empty_form, "form_id": form_count},
         request=request,
     )
+
+    # Replace the placeholder in the form fields with the actual form index.
+    html = html.replace("__prefix__", str(form_count))
+    log.debug(html)
     return HttpResponse(html)

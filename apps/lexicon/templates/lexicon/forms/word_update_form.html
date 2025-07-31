@@ -53,7 +53,8 @@
                 {% include "lexicon/forms/sense_form.html" with sense_form=sense_form form_id=forloop.counter0 %}
             {% endfor %}
             <div id="new-sense-forms"></div>
-            <a  href="{% url 'lexicon:add-sense-form' %}?form_count={{ sense_formset.total_form_count }}"
+            <a  id="add-sense-button"
+                href="{% url 'lexicon:add-sense-form' %}?form_count={{ sense_formset.total_form_count }}"
                 hx-get="{% url 'lexicon:add-sense-form' %}?form_count={{ sense_formset.total_form_count }}"
                 hx-target="#new-sense-forms"
                 hx-swap="beforeend"
@@ -62,7 +63,6 @@
             </a>
         </div>
 
-        <div id="new-sense-forms"></div>
     </div>
 
          <!-- Sticky submit button -->
@@ -77,14 +77,33 @@
 </form>
 
 <script>
-document.body.addEventListener('htmx:afterSwap', function(evt) {
-    if (evt.detail.target && evt.detail.target.id && evt.detail.target.id.startsWith('new-sense-form')) {
-        let totalForms = document.querySelector('[name="senses-TOTAL_FORMS"]');
-        if (totalForms) {
-            totalForms.value = parseInt(totalForms.value) + 1;
+document.body.addEventListener('htmx:afterRequest', function(event) {
+    // This event fires after an htmx request is completed.
+    // We check if the request was successful and was triggered by our 'add-sense-button'.
+    const addButton = document.getElementById('add-sense-button');
+    if (event.detail.elt === addButton && event.detail.successful) {
+        const totalFormsInput = document.querySelector('[name="senses-TOTAL_FORMS"]');
+        if (totalFormsInput) {
+            // A new form has been successfully added.
+            // We need to increment the TOTAL_FORMS count for the main form submission.
+            let currentTotal = parseInt(totalFormsInput.value);
+            totalFormsInput.value = currentTotal + 1;
+
+            // We also need to update the 'add' button so the *next* click
+            // requests a form with the correct new index.
+            const baseUrl = "{% url 'lexicon:add-sense-form' %}";
+            const newUrl = `${baseUrl}?form_count=${totalFormsInput.value}`;
+            addButton.setAttribute('hx-get', newUrl);
+            addButton.setAttribute('href', newUrl); // Also update href for consistency
+
+            // It's good practice to tell htmx to re-process the element
+            // after we've modified its hx-* attributes.
+            htmx.process(addButton);
+        } else {
+            console.error('Could not find the "senses-TOTAL_FORMS" input.');
         }
-        console.log("Sense form added");
     }
 });
 </script>
+
 {% endblock %}
