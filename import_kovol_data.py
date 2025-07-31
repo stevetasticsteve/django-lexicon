@@ -25,6 +25,8 @@ def __main__():
     kovol_word_model = []
     lexicon_entry_model = []
     lexicon_word_affix = []
+    lexicon_kovolwordsense = []
+    lexicon_kovolwordspellingvariation = []
 
     for item in old_data:
         match item["model"]:
@@ -34,6 +36,11 @@ def __main__():
                 lexicon_entry_model.append(item)
             case "lexicon.wordaffix":
                 lexicon_word_affix.append(item)
+            case "lexicon.kovolwordsense":
+                lexicon_kovolwordsense.append(item)
+            case "lexicon.kovolwordspellingvariation":
+                lexicon_kovolwordspellingvariation.append(item)
+
     # create or get Kovol project
     try:
         kovol_project = models.LexiconProject.objects.get(language_code="kgu")
@@ -51,13 +58,10 @@ def __main__():
             (record for record in lexicon_entry_model if record.get("pk") == pk),
             None,
         )
-        print(kw, lexicon_entry)
-        word = models.LexiconEntry(
+        word = models.LexiconEntry.objects.create(
             pk=pk,
             project=kovol_project,
             text=kw["fields"]["kgu"],
-            eng=lexicon_entry["fields"]["eng"],
-            oth_lang=lexicon_entry["fields"]["tpi"],
             checked=kw["fields"]["checked"],
             pos=kw["fields"]["pos"],
             comments=lexicon_entry["fields"]["comments"],
@@ -69,10 +73,34 @@ def __main__():
             modified=lexicon_entry["fields"]["modified"],
             modified_by=lexicon_entry["fields"]["modified_by"],
         )
-        # kw.matat
-        # kw.affixes
-        print(word)
-        break
+
+        # get the additional senses
+        models.Sense.objects.create(entry=word, eng=lexicon_entry["fields"]["eng"], oth_lang=lexicon_entry["fields"]["tpi"])
+        senses = [s for s in lexicon_kovolwordsense if s["fields"]["word"] == pk]
+        if senses:
+            for sense in senses:
+                models.Sense.objects.create(
+                    entry=word,
+                    eng=sense["fields"]["sense"])
+        
+        # get the matat spelling
+        if kw["fields"]["matat"] and kw["fields"]["matat"] != kw["fields"]["kgu"]:
+            models.Variation.objects.create(word=word, type="dialect", text=kw["fields"]["matat"])
+        
+        # get the spelling variations
+        spelling_variations = [
+            sv for sv in lexicon_kovolwordspellingvariation if sv["fields"]["word"] == pk
+        ]
+        for sv in spelling_variations:
+            models.Variation.objects.create(
+                word=word,
+                type="spelling",
+                text=sv["fields"]["spelling_variation"],
+            )
+
+        # lexicon_kovolword_affixes
+        # verbs
+        # phrases
 
 
 if __name__ == "__main__":

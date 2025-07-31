@@ -298,7 +298,7 @@ class Sense(models.Model):
 
 class Variation(models.Model):
     """An allowed variation for a LexiconEntry."""
-
+    # TODO inconsistent naming, word should be entry
     word = models.ForeignKey(
         LexiconEntry, on_delete=models.CASCADE, related_name="variations", null=False
     )
@@ -461,7 +461,7 @@ class Conjugation(models.Model):
     Each instance represents one form of a word based on a paradigm,
     identified by its row and column index in the grid.
     """
-
+    # TODO naming inconsistency, should be entry
     word = models.ForeignKey(
         LexiconEntry,
         on_delete=models.CASCADE,
