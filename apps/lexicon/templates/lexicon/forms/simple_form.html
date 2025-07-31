@@ -1,0 +1,11 @@
+{% extends 'lexicon/forms/base_form.html' %}
+
+{% block form %}
+<form action="" method="post">
+    {% load crispy_forms_tags %}
+    {% csrf_token %}
+    {{form|crispy}}
+
+    <button type="input" id="submit-btn" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}

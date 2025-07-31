@@ -10,8 +10,8 @@
 <a href="{% url 'lexicon:create_entry' lang_code %}"><button type="button" class="btn btn-secondary">Add a word</button></a>
 </div>
 
-{% include 'lexicon/includes/search_bar.html' with search_view="lexicon:lexicon_search" %}
-{% include 'lexicon/includes/search-results.html' %}
+{% include 'lexicon/includes/search/search_bar.html' with search_view="lexicon:lexicon_search" %}
+{% include 'lexicon/includes/search/results_list.html' %}
 
 
 <footer class="footer text-center bg-dark fixed-bottom py-2">

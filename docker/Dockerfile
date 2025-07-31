@@ -37,4 +37,4 @@ RUN uv run manage.py collectstatic --noinput --clear
 # Migrate and runserver at startup
 CMD set -xe; \
     uv run manage.py migrate; \
-    gunicorn config.wsgi:application --workers ${GUNICORN_WORKERS} --timeout 60 --access-logfile /app/data/logs/requests.log --error-logfile /app/data/logs/gunicorn_errors.log --bind 0.0.0.0:8000
+    gunicorn config.wsgi:application --workers ${GUNICORN_WORKERS} --timeout 60 --access-logfile /app/data/logs/requests.log --error-logfile /app/data/logs/gunicorn_errors.log --bind 0.0.0.0:8000 --reload    

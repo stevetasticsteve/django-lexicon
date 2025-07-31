@@ -128,7 +128,7 @@ class UpdateWordAffixes(
 
     model = models.LexiconEntry
     form_class = forms.WordAffixForm
-    template_name = "lexicon/includes/affixes/word_affix_form.html"
+    template_name = "lexicon/forms/word_affix_form.html"
 
     def get_success_url(self) -> str:
         """Return the URL to redirect to after successfully updating word affixes.
@@ -150,7 +150,7 @@ class UpdateWordAffixes(
         A redirect is used to make a GET request to the list view."""
         log.debug(f"Form valid for affix update: {form.cleaned_data}")
         user_log.info(
-            f"{self.request.user} updated affixes for word {self.get_word().tok_ples}"
+            f"{self.request.user} updated affixes for word {self.get_word().text}"
         )
         response = super().form_valid(form)
         if self.request.headers.get("HX-Request") == "true":

@@ -183,8 +183,9 @@ class TestEntryDetail:
         response = client.get(url)
         assert response.status_code == 200
         content = response.content.decode()
-        assert entry.tok_ples in content
-        assert entry.eng in content
+        assert entry.text in content
+        eng = models.Sense.objects.filter(entry=entry).first().eng
+        assert eng in content
 
     def test_entry_detail_view_404(self, client, english_project):
         """Test that the entry detail view returns 404 for a non-existent entry."""
@@ -224,7 +225,8 @@ class TestCreateEntry:
         response = client.get(url)
         assert response.status_code == 200
         assert "form" in response.context
-        assert "tok_ples" in response.content.decode()
+        assert "text" in response.content.decode()
+        assert "senses" in response.content.decode()
 
     def test_create_entry_post_success(
         self, client, english_project, permissioned_user
@@ -233,22 +235,30 @@ class TestCreateEntry:
         client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
-            "tok_ples": "new_word",
-            "eng": "new_word_gloss",
-            "oth_lang": "",
+            "text": "new_word",
             "pos": "",
             "comments": "",
             "checked": False,
             "review": 0,
             "review_comments": "",
+            "senses-TOTAL_FORMS": 1,
+            "senses-INITIAL_FORMS": 0,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            "senses-0-eng": "new_word_gloss",
+            "senses-0-oth_lang": "",
+            "senses-0-order": 1,
+            "senses-0-example": "",
         }
         response = client.post(url, data)
+
         # Should redirect after successful creation
         assert response.status_code == 302
         # The entry should exist in the database
         assert models.LexiconEntry.objects.filter(
-            tok_ples="new_word", project=english_project
+            text="new_word", project=english_project
         ).exists()
+        assert models.Sense.objects.filter(eng="new_word_gloss").exists()
 
     def test_create_entry_missing_required_field(
         self, client, english_project, permissioned_user
@@ -257,21 +267,66 @@ class TestCreateEntry:
         client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
-            # "tok_ples" is missing
-            "eng": "missing_word",
-            "oth_lang": "",
+            # "text" is missing
             "pos": "",
             "comments": "",
             "checked": False,
             "review": 0,
             "review_comments": "",
+            
         }
         response = client.post(url, data)
         assert response.status_code == 200  # Form re-rendered with errors
         assert "This field is required" in response.content.decode()
-        assert not models.LexiconEntry.objects.filter(
-            eng="missing_word", project=english_project
-        ).exists()
+
+    def test_create_entry_fails_without_senseform(self, client, english_project, permissioned_user):
+        """POST without any sense form should return form with errors."""
+        client.force_login(permissioned_user)
+        url = self.get_create_url(english_project)
+        data = {
+            "text": "no_sense_word",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+            # No senses data at all
+        }
+        response = client.post(url, data)
+        assert response.status_code == 200
+        assert "This field is required" in response.content.decode()
+
+    def test_create_entry_handles_multiple_senses(
+        self, client, english_project, permissioned_user
+    ):
+        """POST with multiple senses should create them correctly."""
+        client.force_login(permissioned_user)
+        url = self.get_create_url(english_project)
+        data = {
+            "text": "multi_sense_word",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+            "senses-TOTAL_FORMS": 2,
+            "senses-INITIAL_FORMS": 0,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            "senses-0-eng": "first_gloss",
+            "senses-0-oth_lang": "",
+            "senses-0-order": 1,
+            "senses-0-example": "",
+            "senses-1-eng": "second_gloss",
+            "senses-1-oth_lang": "",
+            "senses-1-order": 2,
+            "senses-1-example": "",
+        }
+        response = client.post(url, data)
+        assert response.status_code == 302
+        # Check both senses were created
+        assert models.Sense.objects.filter(eng="first_gloss").exists()
+        assert models.Sense.objects.filter(eng="second_gloss").exists()
 
     def test_create_entry_sets_modified_by(
         self, client, english_project, permissioned_user
@@ -280,18 +335,24 @@ class TestCreateEntry:
         client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
-            "tok_ples": "audit_word",
-            "eng": "audit_gloss",
-            "oth_lang": "",
+            "text": "audit_word",
             "pos": "",
             "comments": "",
             "checked": False,
             "review": 0,
             "review_comments": "",
+            "senses-TOTAL_FORMS": 1,
+            "senses-INITIAL_FORMS": 0,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            "senses-0-eng": "new_word_gloss",
+            "senses-0-oth_lang": "",
+            "senses-0-order": 1,
+            "senses-0-example": "",
         }
         client.post(url, data)
         entry = models.LexiconEntry.objects.get(
-            tok_ples="audit_word", project=english_project
+            text="audit_word", project=english_project
         )
         assert entry.modified_by == permissioned_user.username
 
@@ -303,40 +364,52 @@ class TestCreateEntry:
         client.force_login(permissioned_user)
         url = self.get_create_url(kovol_project)
         data = {
-            "tok_ples": "test_word",
-            "eng": "test_word_eng",
-            "oth_lang": "",
+            "text": "test_word",
             "pos": "",
             "comments": "",
             "checked": False,
             "review": 0,
             "review_comments": "",
+            "senses-TOTAL_FORMS": 1,
+            "senses-INITIAL_FORMS": 0,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            "senses-0-eng": "new_word_gloss",
+            "senses-0-oth_lang": "",
+            "senses-0-order": 1,
+            "senses-0-example": "",
         }
         response = client.post(url, data)
         assert response.status_code == 302
         assert models.LexiconEntry.objects.filter(
-            project=kovol_project, tok_ples="test_word"
+            project=kovol_project, text="test_word"
         )
         assert models.LexiconEntry.objects.filter(
-            project=english_project, tok_ples="test_word"
+            project=english_project, text="test_word"
         )
-        assert models.LexiconEntry.objects.filter(tok_ples="test_word").count() == 2
+        assert models.LexiconEntry.objects.filter(text="test_word").count() == 2
 
-    def test_tok_ples_unique_within_project(
+    def test_text_unique_within_project(
         self, client, english_words, english_project, permissioned_user
     ):
         """Test the unique constraint for tok_ples within a project holds."""
         client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
-            "tok_ples": "test_word",
-            "eng": "test_word_eng",
-            "oth_lang": "",
+            "text": "test_word",
             "pos": "",
             "comments": "",
             "checked": False,
             "review": 0,
             "review_comments": "",
+            "senses-TOTAL_FORMS": 1,
+            "senses-INITIAL_FORMS": 0,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            "senses-0-eng": "new_word_gloss",
+            "senses-0-oth_lang": "",
+            "senses-0-order": 1,
+            "senses-0-example": "",
         }
         with pytest.raises(IntegrityError):
             response = client.post(url, data)
@@ -345,9 +418,9 @@ class TestCreateEntry:
                 "Lexicon entry with this Project and Tok Ples already exists."
                 in response.content.decode()
             )
-            assert models.LexiconEntry.objects.filter(tok_ples="test_word").count() == 1
+            assert models.LexiconEntry.objects.filter(text="test_word").count() == 1
 
-    def test_create_entry_invalid_tok_ples_chars(self, client, permissioned_user):
+    def test_create_entry_invalid_text_chars(self, client, permissioned_user):
         """
         POST data with tok_ples violating the project's regex validator
         should re-render the form with validation errors and not save the entry.
@@ -359,7 +432,7 @@ class TestCreateEntry:
         project_with_validator = models.LexiconProject.objects.create(
             language_name="Validated Lang",
             language_code="vld",
-            tok_ples_validator="^[a-z]+$",
+            text_validator="^[a-z]+$",
         )
         assign_perm("edit_lexiconproject", permissioned_user, project_with_validator)
 
@@ -367,8 +440,7 @@ class TestCreateEntry:
 
         # Data with invalid characters (space, number, uppercase)
         invalid_data = {
-            "tok_ples": "Invalid Word 123",
-            "eng": "an invalid word",
+            "text": "Invalid Word 123",
             "oth_lang": "",
             "pos": "n",
             "comments": "",
@@ -390,7 +462,7 @@ class TestCreateEntry:
         )
         # 4. Assert that no LexiconEntry was created for this project
         assert not models.LexiconEntry.objects.filter(
-            tok_ples="invalid word 123", project=project_with_validator
+            text="invalid word 123", project=project_with_validator
         ).exists()  # Note: tok_ples is lowercased on save if it ever got there
 
 
@@ -399,8 +471,7 @@ class TestUpdateEntry:
     @pytest.fixture
     def entry(self, english_project):
         return models.LexiconEntry.objects.create(
-            tok_ples="update_me",
-            eng="update_me_gloss",
+            text="update_me",
             project=english_project,
             checked=False,
             review=0,
@@ -419,7 +490,7 @@ class TestUpdateEntry:
         response = client.get(url)
         assert response.status_code == 200
         assert "form" in response.context
-        assert entry.tok_ples in response.content.decode()
+        assert entry.text in response.content.decode()
 
     def test_update_entry_post_success(
         self, client, english_project, entry, permissioned_user
@@ -428,20 +499,25 @@ class TestUpdateEntry:
         client.force_login(permissioned_user)
         url = self.get_update_url(english_project, entry)
         data = {
-            "tok_ples": "updated_word",
-            "eng": "updated_gloss",
-            "oth_lang": "",
+            "text": "updated_word",
             "pos": "",
             "comments": "Updated via test",
             "checked": True,
             "review": 0,
             "review_comments": "",
+            "senses-TOTAL_FORMS": 1,
+            "senses-INITIAL_FORMS": 0,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            "senses-0-eng": "new_word_gloss",
+            "senses-0-oth_lang": "",
+            "senses-0-order": 1,
+            "senses-0-example": "",
         }
         response = client.post(url, data)
         assert response.status_code == 302
         entry.refresh_from_db()
-        assert entry.tok_ples == "updated_word"
-        assert entry.eng == "updated_gloss"
+        assert entry.text == "updated_word"
         assert entry.comments == "Updated via test"
         assert entry.modified_by == permissioned_user.username
 
@@ -452,20 +528,70 @@ class TestUpdateEntry:
         client.force_login(permissioned_user)
         url = self.get_update_url(english_project, entry)
         data = {
-            # "tok_ples" is missing
-            "eng": "should_fail",
-            "oth_lang": "",
+            # "text" is missing
             "pos": "",
             "comments": "",
             "checked": False,
             "review": 0,
             "review_comments": "",
+            "senses-TOTAL_FORMS": 1,
+            "senses-INITIAL_FORMS": 0,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            "senses-0-eng": "new_word_gloss",
+            "senses-0-oth_lang": "",
+            "senses-0-order": 1,
+            "senses-0-example": "",
         }
         response = client.post(url, data)
         assert response.status_code == 200  # Form re-rendered with errors
         assert "This field is required" in response.content.decode()
         entry.refresh_from_db()
-        assert entry.eng != "should_fail"
+    
+    def test_update_entry_can_delete_sense(
+        self, client, english_project, entry, permissioned_user
+    ):
+        """POST with a sense marked for deletion should remove it."""
+        client.force_login(permissioned_user)
+        url = self.get_update_url(english_project, entry)
+        # Create an initial sense to delete
+        sense = models.Sense.objects.create(
+            entry=entry, eng="keep_me", oth_lang="", order=1, example=""
+        )
+        delete_sense = models.Sense.objects.create(
+            entry=entry, eng="to_delete", oth_lang="", order=2, example=""
+        )
+        data = {
+            "text": "updated_word",
+            "pos": "",
+            "comments": "",
+            "checked": False,
+            "review": 0,
+            "review_comments": "",
+            "senses-TOTAL_FORMS": 2,
+            "senses-INITIAL_FORMS": 2,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            # Form 0 (to keep)
+            "senses-0-eng": sense.eng,
+            "senses-0-oth_lang": sense.oth_lang,
+            "senses-0-order": sense.order,
+            "senses-0-example": sense.example,
+            "senses-0-id": sense.pk,
+            # Form 1 (to delete)
+            "senses-1-eng": delete_sense.eng,
+            "senses-1-oth_lang": delete_sense.oth_lang,
+            "senses-1-order": delete_sense.order,
+            "senses-1-example": delete_sense.example,
+            "senses-1-id": delete_sense.pk,
+            "senses-1-entry": entry.pk,
+            "senses-1-DELETE": "on",  # Mark for deletion
+        }
+        response = client.post(url, data)
+        print(models.Sense.objects.all())
+
+        assert response.status_code == 302
+        assert not models.Sense.objects.filter(pk=delete_sense.pk).exists()
 
     def test_update_entry_sets_review_user(
         self, client, english_project, entry, permissioned_user
@@ -474,14 +600,20 @@ class TestUpdateEntry:
         client.force_login(permissioned_user)
         url = self.get_update_url(english_project, entry)
         data = {
-            "tok_ples": entry.tok_ples,
-            "eng": entry.eng,
-            "oth_lang": "",
+            "text": entry.text,
             "pos": "",
             "comments": "",
             "checked": False,
             "review": 1,  # Change review value
             "review_comments": "",
+            "senses-TOTAL_FORMS": 1,
+            "senses-INITIAL_FORMS": 0,
+            "senses-MIN_NUM_FORMS": 1,
+            "senses-MAX_NUM_FORMS": 1000,
+            "senses-0-eng": "new_word_gloss",
+            "senses-0-oth_lang": "",
+            "senses-0-order": 1,
+            "senses-0-example": "",
         }
         response = client.post(url, data)
         assert response.status_code == 302
@@ -489,27 +621,25 @@ class TestUpdateEntry:
         assert entry.review_user == permissioned_user.username
         assert entry.review_time is not None
 
-    def test_update_entry_invalid_tok_ples_chars(self, client, permissioned_user):
+    def test_update_entry_invalid_text_chars(self, client, permissioned_user):
         """
         POST data to update an entry with tok_ples violating the project's regex validator
         should re-render the form with validation errors and not update the entry.
         """
         client.force_login(permissioned_user)
 
-        # 1. Create a project with a specific tok_ples_validator
+        # 1. Create a project with a specific txt_validator
         project_with_validator = models.LexiconProject.objects.create(
             language_name="Validated Update Lang",
             language_code="vul",
-            tok_ples_validator="^[a-z]+$",  # Only allows lowercase letters
+            text_validator="^[a-z]+$",  # Only allows lowercase letters
         )
         assign_perm("edit_lexiconproject", permissioned_user, project_with_validator)
 
         # 2. Create an initial, valid entry for this project
-        original_tok_ples = "validword"
-        original_eng = "validgloss"
+        original_text = "validword"
         entry_to_update = models.LexiconEntry.objects.create(
-            tok_ples=original_tok_ples,
-            eng=original_eng,
+            text=original_text,
             project=project_with_validator,
             checked=False,
             review=0,
@@ -518,10 +648,9 @@ class TestUpdateEntry:
         url = self.get_update_url(project_with_validator, entry_to_update)
 
         # Data with an invalid tok_ples (contains spaces, numbers, uppercase)
-        invalid_tok_ples_attempt = "Invalid Word 456"
+        invalid_text_attempt = "Invalid Word 456"
         data = {
-            "tok_ples": invalid_tok_ples_attempt,  # This violates the regex
-            "eng": "new_gloss_for_invalid",  # This field would otherwise update
+            "text": invalid_text_attempt,  # This violates the regex
             "oth_lang": "",
             "pos": "n",
             "comments": "",
@@ -534,21 +663,18 @@ class TestUpdateEntry:
 
         # 3. Assert status code is 200 (form re-rendered with errors)
         assert response.status_code == 200
+        print(response.content.decode())
 
         # 4. Assert the validation error message is present
         assert (
-            "Tok ples &#x27;invalid word 456&#x27; contains unallowed characters. A project admin set this restriction."
+            "contains unallowed characters. A project admin set this restriction."
             in response.content.decode()
         )
 
         # 5. Assert that the entry in the database was NOT updated
         entry_to_update.refresh_from_db()  # Get the latest state from the database
-        assert (
-            entry_to_update.tok_ples == original_tok_ples
-        )  # Should still be the original
-        assert (
-            entry_to_update.eng == original_eng
-        )  # Other fields should also not have changed
+        assert entry_to_update.text == original_text  # Should still be the original
+
 
 
 @pytest.mark.django_db
@@ -556,8 +682,7 @@ class TestDeleteEntry:
     @pytest.fixture
     def entry(self, english_project):
         return models.LexiconEntry.objects.create(
-            tok_ples="delete_me",
-            eng="delete_me_gloss",
+            text="delete_me",
             project=english_project,
             checked=False,
             review=0,
@@ -611,14 +736,12 @@ class TestReviewList:
     def reviewed_entries(self, english_project):
         """Create entries with and without review marks."""
         reviewed = models.LexiconEntry.objects.create(
-            tok_ples="needs_review",
-            eng="review_gloss",
+            text="needs_review",
             project=english_project,
             review=1,
         )
         not_reviewed = models.LexiconEntry.objects.create(
-            tok_ples="no_review",
-            eng="no_review_gloss",
+            text="no_review",
             project=english_project,
             review=0,
         )
@@ -638,8 +761,8 @@ class TestReviewList:
         assert not_reviewed not in object_list
         # Content check
         content = response.content.decode()
-        assert reviewed.tok_ples in content
-        assert not_reviewed.tok_ples not in content
+        assert reviewed.text in content
+        assert not_reviewed.text not in content
 
     def test_review_list_uses_correct_template(
         self, client, english_project, reviewed_entries
@@ -665,6 +788,40 @@ class TestReviewList:
         response = client.get(url)
         assert response.status_code == 404
 
+
+@pytest.mark.django_db
+class TestAddSenseForm:
+    def test_add_sense_form_get_request(self, client):
+        """Test that a GET request to add_sense_form returns a new form."""
+        url = reverse("lexicon:add-sense-form")
+        response = client.get(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        # Check for some form fields. The prefix should default to senses-0
+        assert 'name="senses-0-eng"' in content
+        assert 'name="senses-0-oth_lang"' in content
+        assert 'name="senses-0-example"' in content
+        assert 'name="senses-0-order"' in content
+
+    def test_add_sense_form_with_form_count(self, client):
+        """Test that the form_count parameter correctly sets the form prefix."""
+        url = reverse("lexicon:add-sense-form")
+        response = client.get(url, {"form_count": "3"})
+        assert response.status_code == 200
+        content = response.content.decode()
+        # The prefix should be senses-3
+        assert 'name="senses-3-eng"' in content
+        assert 'name="senses-3-oth_lang"' in content
+        assert 'name="senses-3-example"' in content
+        assert 'name="senses-3-order"' in content
+
+    def test_add_sense_form_disallows_post(self, client):
+        """Test that POST requests are not allowed."""
+        url = reverse("lexicon:add-sense-form")
+        response = client.post(url)
+        assert response.status_code == 405  # Method Not Allowed
+
+
 @pytest.mark.django_db
 class TestEntryPermissions:
     def get_create_url(self, project):
@@ -688,7 +845,7 @@ class TestEntryPermissions:
         client.force_login(user)
         url = self.get_create_url(english_project)
         data = {
-            "tok_ples": "forbidden_word",
+            "text": "forbidden_word",
             "eng": "forbidden_gloss",
             "oth_lang": "",
             "pos": "",
@@ -700,13 +857,12 @@ class TestEntryPermissions:
         response = client.post(url, data)
         assert response.status_code == 403
         assert not models.LexiconEntry.objects.filter(
-            tok_ples="forbidden_word", project=english_project
+            text="forbidden_word", project=english_project
         ).exists()
 
     def test_update_entry_forbidden(self, client, english_project, user):
         entry = models.LexiconEntry.objects.create(
-            tok_ples="forbidden_update",
-            eng="forbidden_update_gloss",
+            text="forbidden_update",
             project=english_project,
             checked=False,
             review=0,
@@ -714,7 +870,7 @@ class TestEntryPermissions:
         client.force_login(user)
         url = self.get_update_url(english_project, entry)
         data = {
-            "tok_ples": "should_not_update",
+            "text": "should_not_update",
             "eng": "should_not_update",
             "oth_lang": "",
             "pos": "",
@@ -726,12 +882,11 @@ class TestEntryPermissions:
         response = client.post(url, data)
         assert response.status_code == 403
         entry.refresh_from_db()
-        assert entry.tok_ples == "forbidden_update"
+        assert entry.text == "forbidden_update"
 
     def test_delete_entry_forbidden(self, client, english_project, user):
         entry = models.LexiconEntry.objects.create(
-            tok_ples="forbidden_delete",
-            eng="forbidden_delete_gloss",
+            text="forbidden_delete",
             project=english_project,
             checked=False,
             review=0,

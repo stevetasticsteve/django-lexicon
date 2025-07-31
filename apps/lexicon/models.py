@@ -15,7 +15,7 @@ def regex_validator_factory(project, field_name="value"):
     """Build a regex to use for entry validation for a given field."""
 
     def validator(value):
-        pattern = project.tok_ples_validator
+        pattern = project.text_validator
         if pattern:
             try:
                 regex = re.compile(pattern, re.IGNORECASE)
@@ -35,7 +35,7 @@ def regex_validator_factory(project, field_name="value"):
 def normalize_and_validate(value, project, field_name="value"):
     """Apply a regex pattern to a value and apply lowercase enforcement."""
     log.debug(
-        f"Running validation for '{value}'. project = '{project}', regex= '{project.tok_ples_validator}'"
+        f"Running validation for '{value}'. project = '{project}', regex= '{project.text_validator}'"
     )
     value = value.lower()
     validator = regex_validator_factory(project, field_name)
@@ -69,9 +69,9 @@ class LexiconProject(models.Model):
         null=False,
         default=0,
     )
-    tok_ples_validator = models.CharField(
-        verbose_name="Regex Tok ples validator",
-        help_text="An optional regex to represent which characters are allowed in Tok Ples entries. If set entries can only be saved if they only contain these characters. [abc] for example only allows the characters a, b and c.",
+    text_validator = models.CharField(
+        verbose_name="Regex language text validator",
+        help_text="An optional regex to represent which characters are allowed in language entries. If set entries can only be saved if they only contain these characters. [abc] for example only allows the characters a, b and c.",
         blank=True,
         null=True,
         max_length=60,
@@ -95,12 +95,12 @@ NOSUGGEST !""",
 
     def clean(self):
         super().clean()
-        if self.tok_ples_validator:
+        if self.text_validator:
             try:
-                re.compile(self.tok_ples_validator)
+                re.compile(self.text_validator)
             except re.error:
                 raise ValidationError(
-                    {"tok_ples_validator": "This is not a valid regular expression."}
+                    {"text_validator": "This is not a valid regular expression."}
                 )
 
     class Meta:
@@ -120,28 +120,15 @@ class LexiconEntry(models.Model):
         blank=False,
         null=False,
     )
-    tok_ples = models.CharField(
-        verbose_name="Tok Ples",
-        help_text="The language the project is focussed on.",
+    text = models.CharField(
+        verbose_name="Language text",
+        help_text="The lexicon entry text for the entry, in the language of the project.",
         max_length=60,
         null=False,
         blank=False,
     )
     search = models.TextField(
         blank=True, null=True, help_text="automatically generated search terms"
-    )
-    eng = models.CharField(
-        verbose_name="English",
-        max_length=60,
-        null=True,
-        blank=False,
-    )
-    oth_lang = models.CharField(
-        verbose_name="Other language",
-        max_length=60,
-        null=True,
-        blank=True,
-        help_text="Translation in project 2nd language.",
     )
     comments = models.TextField(
         null=True,
@@ -204,7 +191,7 @@ class LexiconEntry(models.Model):
     # Methods
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"Word: {self.tok_ples} in {self.project.language_name}"
+        return f"Word: {self.text} in {self.project.language_name}"
 
     def get_absolute_url(self):
         """What page Django should return if asked to show this entry."""
@@ -216,35 +203,29 @@ class LexiconEntry(models.Model):
     def clean(self):
         """
         Custom validation for the LexiconEntry model.
-        Checks tok_ples against the project's tok_ples_validator regex.
+        Checks text against the project's text_validator regex.
         """
         super().clean()  # Call the parent's clean method first
         if (
             self.project_id
         ):  # Use project_id for existence check during initial creation
-            self.tok_ples = normalize_and_validate(
-                self.tok_ples, self.project, "Tok ples"
-            )
+            self.text = normalize_and_validate(self.text, self.project, "Tok ples")
 
     def save(self, *args, **kwargs):
         """Code that runs whenever a Lexicon entry is saved.
 
-        Lower case should be enforced and the version number updated if the tok_ples
+        Lower case should be enforced and the version number updated if the text
         changes.
         The version number is used mostly to keep track of spell check exports,
         we don't want users downloading new spell checks when no spelling data
         has changed."""
-        self.tok_ples = self.tok_ples.lower()
-        if self.eng:
-            self.eng = self.eng.lower()
-        if self.oth_lang:
-            self.oth_lang = self.oth_lang.lower()
+        self.text = self.text.lower()
 
-        original_tok_ples = None
-        # Fetch original tok_ples only if this is an existing object
+        original_text = None
+        # Fetch original text only if this is an existing object
         if self.pk:
             try:
-                original_tok_ples = LexiconEntry.objects.get(pk=self.pk).tok_ples
+                original_text = LexiconEntry.objects.get(pk=self.pk).text
             except LexiconEntry.DoesNotExist:
                 # Should not happen if self.pk exists, but defensive
                 pass
@@ -254,9 +235,9 @@ class LexiconEntry(models.Model):
         # and to catch any integrity errors before updating project version.
         super(LexiconEntry, self).save(*args, **kwargs)
 
-        # Now check if tok_ples changed from its original (pre-save) value
+        # Now check if text changed from its original (pre-save) value
         # and if it's not a new object (pk exists after save)
-        if original_tok_ples and original_tok_ples != self.tok_ples:
+        if original_text and original_text != self.text:
             self.project.version += 1
             self.project.save()  # Save the project to update its version
 
@@ -264,13 +245,55 @@ class LexiconEntry(models.Model):
         update_lexicon_entry_search_field(self.pk)
 
     class Meta:
-        ordering = ["tok_ples"]
+        ordering = ["text"]
         constraints = [
             models.UniqueConstraint(
-                fields=["project", "tok_ples"], name="unique_tok_ples_per_project"
+                fields=["project", "text"], name="unique_text_per_project"
             )
         ]
         indexes = [models.Index(fields=["search"])]
+
+
+class Sense(models.Model):
+    """A sense of a LexiconEntry, representing a specific meaning or usage of the word."""
+
+    entry = models.ForeignKey(
+        LexiconEntry, on_delete=models.CASCADE, related_name="senses"
+    )
+    eng = models.CharField(
+        verbose_name="English",
+        max_length=60,
+        null=False,
+        blank=False,
+        help_text="English translation for this sense.",
+    )
+    oth_lang = models.CharField(
+        verbose_name="Other language",
+        max_length=60,
+        null=True,
+        blank=True,
+        help_text="Translation in project 2nd language for this sense.",
+    )
+    example = models.TextField(
+        blank=True, null=True, help_text="Example sentence or usage."
+    )
+    order = models.PositiveIntegerField(
+        default=1, help_text="Senses with lower numbers appear first."
+    )
+
+    def __str__(self):
+        return f"Sense {self.order} for {self.entry.text}"
+
+    def save(self, *args, **kwargs):
+        """Ensure lower case"""
+        if self.oth_lang:
+            self.oth_lang = self.oth_lang.lower()
+        if self.eng:
+            self.eng = self.eng.lower()
+        super().save(*args, **kwargs)
+    
+    class Meta:
+        ordering = ["order"]
 
 
 class Variation(models.Model):
@@ -327,7 +350,7 @@ class IgnoreWord(models.Model):
     check extension these can be included with a /NOSUGGEST tag.
     """
 
-    tok_ples = models.CharField(
+    text = models.CharField(
         max_length=60,
         blank=False,
         null=False,
@@ -369,12 +392,12 @@ class IgnoreWord(models.Model):
     def save(self, *args, **kwargs):
         """Code that runs whenever a Lexicon entry is saved."""
         # enforce lower case
-        self.tok_ples = self.tok_ples.lower()
+        self.text = self.text.lower()
         return super(IgnoreWord, self).save(*args, **kwargs)
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
-        return f"Ignore word: {self.tok_ples}"
+        return f"Ignore word: {self.text}"
 
     def get_absolute_url(self):
         """What page Django should return if asked to show this entry."""
@@ -382,11 +405,11 @@ class IgnoreWord(models.Model):
         return reverse("lexicon:ignore-update", args=(self.pk,))
 
     class Meta:
-        ordering = ["tok_ples"]
+        ordering = ["text"]
         constraints = [
             models.UniqueConstraint(
-                fields=["project", "tok_ples"],
-                name="ignore_word_unique_tok_ples_per_project",
+                fields=["project", "text"],
+                name="ignore_word_unique_text_per_project",
             )
         ]
 
@@ -481,7 +504,7 @@ class Conjugation(models.Model):
         # Only validate if word is set (i.e., not a new/empty form)
         if self.word_id:
             project = self.word.project
-            if project and project.tok_ples_validator:
+            if project and project.text_validator:
                 self.conjugation = normalize_and_validate(
                     self.conjugation, project, "conjugation"
                 )

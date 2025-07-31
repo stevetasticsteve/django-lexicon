@@ -6,9 +6,7 @@ from apps.lexicon import forms, models
 
 @pytest.mark.django_db
 def test_variation_list_view(client, english_project):
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     var1 = models.Variation.objects.create(word=word, type="spelling", text="foo1")
     var2 = models.Variation.objects.create(word=word, type="dialect", text="foo2")
     url = reverse(
@@ -22,9 +20,7 @@ def test_variation_list_view(client, english_project):
 
 @pytest.mark.django_db
 def test_variation_edit_get_requires_login(client, english_project):
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     var = models.Variation.objects.create(word=word, type="spelling", text="foo1")
     url = reverse("lexicon:variation_update", kwargs={"lang_code": "eng", "pk": var.pk})
     response = client.get(url)
@@ -35,9 +31,7 @@ def test_variation_edit_get_requires_login(client, english_project):
 @pytest.mark.django_db
 def test_variation_edit_get_and_post(client, permissioned_user, english_project):
     # logged_in_client is a fixture that logs in a user
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     var = models.Variation.objects.create(word=word, type="spelling", text="foo1")
     url = reverse("lexicon:variation_update", kwargs={"lang_code": "eng", "pk": var.pk})
     client.force_login(permissioned_user)
@@ -63,9 +57,7 @@ def test_variation_edit_get_and_post(client, permissioned_user, english_project)
 
 @pytest.mark.django_db
 def test_variation_edit_htmx_response(client, permissioned_user, english_project):
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     client.force_login(permissioned_user)
     var = models.Variation.objects.create(word=word, type="spelling", text="foo1")
     url = reverse("lexicon:variation_update", kwargs={"lang_code": "eng", "pk": var.pk})
@@ -259,9 +251,7 @@ class TestDeleteVariation:
 def test_variation_edit_forbidden_for_unpermissioned_user(
     client, user, english_project
 ):
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     variation = models.Variation.objects.create(word=word, type="spelling", text="v1")
     url = reverse(
         "lexicon:variation_update", kwargs={"lang_code": "eng", "pk": variation.pk}

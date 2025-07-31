@@ -49,6 +49,7 @@ urlpatterns = [
         word_views.DeleteEntry.as_view(),
         name="delete_entry",
     ),
+    path("add-sense-form/", word_views.add_sense_form, name="add-sense-form"),
     # conjugation views that attach and display conjugation grids to words.
     # these return html snippets attached to the word_detail view via htmx.
     # the views are visible on the entry detail page.

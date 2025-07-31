@@ -12,9 +12,7 @@ def test_conjugation_form_validates_and_sets_instance_fields(english_project):
         row_labels=["row1"],
         column_labels=["col1"],
     )
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     form = forms.ConjugationForm(
         data={"conjugation": "valid"},
         paradigm=paradigm,
@@ -29,7 +27,7 @@ def test_conjugation_form_validates_and_sets_instance_fields(english_project):
 @pytest.mark.django_db
 def test_conjugation_form_invalid_regex(english_project):
     # Set a regex that only allows lowercase letters
-    english_project.tok_ples_validator = r"^[a-z]+$"
+    english_project.text_validator = r"^[a-z]+$"
     english_project.save()
     paradigm = models.Paradigm.objects.create(
         name="TestParadigm",
@@ -38,9 +36,7 @@ def test_conjugation_form_invalid_regex(english_project):
         row_labels=["row1"],
         column_labels=["col1"],
     )
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     form = forms.ConjugationForm(
         data={"conjugation": "INVALID123"},
         paradigm=paradigm,
@@ -59,9 +55,7 @@ def test_conjugation_formset_save_creates_and_deletes(english_project):
         row_labels=["row1", "row2"],
         column_labels=["col1", "col2"],
     )
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     # Simulate a POST with two filled cells and two empty
     data = {
         "form-TOTAL_FORMS": "4",
@@ -96,9 +90,7 @@ def test_get_conjugation_formset_initial_data(english_project):
         row_labels=["row1"],
         column_labels=["col1", "col2"],
     )
-    word = models.LexiconEntry.objects.create(
-        project=english_project, tok_ples="foo", eng="bar"
-    )
+    word = models.LexiconEntry.objects.create(project=english_project, text="foo")
     # Create one existing conjugation
     models.Conjugation.objects.create(
         word=word, paradigm=paradigm, row=0, column=1, conjugation="existing"
@@ -180,6 +172,7 @@ def test_paradigm_form_widget_attrs():
     assert "hx-post" in row_widget.attrs
     assert "hx-target" in row_widget.attrs
 
+
 @pytest.mark.django_db
 def test_word_affix_form_renders_affixes(kovol_project):
     models.Affix.objects.create(
@@ -188,9 +181,7 @@ def test_word_affix_form_renders_affixes(kovol_project):
     models.Affix.objects.create(
         project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
     )
-    entry = models.LexiconEntry.objects.create(
-        project=kovol_project, tok_ples="hobol", eng="talk"
-    )
+    entry = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
     form = forms.WordAffixForm(instance=entry)
     html = form.as_p()
     assert "Prefix A" in html

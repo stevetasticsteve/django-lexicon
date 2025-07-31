@@ -3,6 +3,8 @@ import logging
 from django import forms
 from django.forms import BaseModelFormSet, modelformset_factory
 from django.urls import reverse_lazy
+from django.forms import inlineformset_factory
+
 
 from apps.lexicon import models
 
@@ -11,9 +13,7 @@ log = logging.getLogger("lexicon")
 # fields that can be edited for the LexiconEntry object
 # The view references this var setting up generic edit views
 editable_fields = [
-    "tok_ples",
-    "eng",
-    "oth_lang",
+    "text",
     "pos",
     "comments",
     "checked",
@@ -21,6 +21,42 @@ editable_fields = [
     "review_comments",
 ]
 
+class LexiconEntryForm(forms.ModelForm):
+    """A form for editing an LexiconEntry object."""
+    class Meta:
+        model = models.LexiconEntry
+        fields = [
+            "text",
+            "pos",
+            "comments",
+            "checked",
+            "review",
+            "review_comments",
+        ]
+        widgets = {
+            "comments": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "review_comments": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
+
+class SenseForm(forms.ModelForm):
+    class Meta:
+        model = models.Sense
+        fields = ["eng", "oth_lang", "example", "order"]
+        widgets = {
+            "example": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
+SenseFormSet = inlineformset_factory(
+    models.LexiconEntry,
+    models.Sense,
+    form=SenseForm,
+    extra=0,
+    min_num=1,
+    validate_min=True,
+    can_delete=True,
+    can_delete_extra=True,
+)
 
 class ParadigmSelectForm(forms.Form):
     """The form that appears in the paradigm modal.

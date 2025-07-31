@@ -11,7 +11,9 @@ class TestAffixViews:
         english_project.affix_file = "SFX A Y 1\nSFX A 0 ing ."
         english_project.save()
         client.force_login(user)
-        url = reverse("lexicon:project_admin_affix_tester", args=[english_project.language_code])
+        url = reverse(
+            "lexicon:project_admin_affix_tester", args=[english_project.language_code]
+        )
         response = client.get(url)
         assert response.status_code == 200
         assert "affix_file" in response.context
@@ -27,7 +29,9 @@ class TestAffixViews:
             else [],
         )
         client.force_login(user)
-        url = reverse("lexicon:word_affix_results", args=[english_project.language_code])
+        url = reverse(
+            "lexicon:word_affix_results", args=[english_project.language_code]
+        )
         response = client.get(url, {"words": "walk", "affix": "SFX"})
         assert response.status_code == 200
         assert "generated_words" in response.context
@@ -43,7 +47,9 @@ class TestAffixViews:
 
         monkeypatch.setattr("apps.lexicon.utils.hunspell.unmunch", raise_error)
         client.force_login(user)
-        url = reverse("lexicon:word_affix_results", args=[english_project.language_code])
+        url = reverse(
+            "lexicon:word_affix_results", args=[english_project.language_code]
+        )
         response = client.get(url, {"words": "walk", "affix": "bad"})
         assert response.status_code == 500
         assert (
@@ -66,7 +72,7 @@ class TestWordAffixViews:
             project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
         )
         word = models.LexiconEntry.objects.create(
-            project=kovol_project, tok_ples="hobol", eng="talk"
+            project=kovol_project, text="hobol"
         )
         word.affixes.add(affix_a)
         url = reverse(
@@ -94,7 +100,7 @@ class TestWordAffixViews:
             project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
         )
         word = models.LexiconEntry.objects.create(
-            project=kovol_project, tok_ples="hobol", eng="talk"
+            project=kovol_project, text="hobol"
         )
         url = reverse(
             "lexicon:word_update_affixes",
@@ -118,7 +124,7 @@ class TestWordAffixViews:
             project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
         )
         word = models.LexiconEntry.objects.create(
-            project=kovol_project, tok_ples="hobol", eng="talk"
+            project=kovol_project, text="hobol"
         )
         url = reverse(
             "lexicon:word_update_affixes",
@@ -146,7 +152,7 @@ class TestWordAffixViews:
             project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
         )
         word = models.LexiconEntry.objects.create(
-            project=kovol_project, tok_ples="hobol", eng="talk"
+            project=kovol_project, text="hobol"
         )
         word.affixes.set([affix_a, affix_b])
         client.force_login(permissioned_user)
@@ -170,7 +176,7 @@ class TestWordAffixViews:
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
         word = models.LexiconEntry.objects.create(
-            project=kovol_project, tok_ples="hobol", eng="talk"
+            project=kovol_project, text="hobol"
         )
         word.affixes.add(affix_a)
         url = reverse(
@@ -191,7 +197,7 @@ class TestWordAffixViews:
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
         word = models.LexiconEntry.objects.create(
-            project=kovol_project, tok_ples="hobol", eng="talk"
+            project=kovol_project, text="hobol"
         )
         url = reverse(
             "lexicon:word_update_affixes",
@@ -207,7 +213,7 @@ class TestWordAffixViews:
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
         word = models.LexiconEntry.objects.create(
-            project=kovol_project, tok_ples="hobol", eng="talk"
+            project=kovol_project, text="hobol"
         )
         url = reverse(
             "lexicon:word_update_affixes",

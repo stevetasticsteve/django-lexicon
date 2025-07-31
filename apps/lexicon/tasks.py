@@ -28,7 +28,7 @@ def import_dic(dic_data: bytes, lang_code: str) -> None:
             continue
         try:
             models.LexiconEntry.objects.create(
-                tok_ples=w, modified_by="importer", project=project
+                text=w, modified_by="importer", project=project
             )
         except IntegrityError:
             pass
@@ -38,7 +38,7 @@ def import_dic(dic_data: bytes, lang_code: str) -> None:
 def import_csv(csv_data: bytes, lang_code: str) -> None:
     """Import from a csv file and save into the database.
 
-    The csv format is expected to be tok ples, english, pos, comments."""
+    The csv format is expected to be text, english, pos, comments."""
     try:
         project = models.LexiconProject.objects.get(language_code=lang_code)
     except models.LexiconProject.DoesNotExist:
@@ -53,7 +53,7 @@ def import_csv(csv_data: bytes, lang_code: str) -> None:
         try:
             models.LexiconEntry.objects.create(
                 project=project,
-                tok_ples=w[0],
+                text=w[0],
                 eng=w[1],
                 pos=_parse_pos(w[2]),
                 comments=w[3],
@@ -105,7 +105,7 @@ def update_lexicon_entry_search_field(entry_pk: int) -> None:
         ).get(pk=entry_pk)
 
         # Build the search string
-        search_terms = [entry.tok_ples]  # Assuming tok_ples is the main word
+        search_terms = [entry.text]  # Assuming text is the main word
 
         for var in entry.variations.all():
             if var.included_in_search:
@@ -130,3 +130,4 @@ def update_lexicon_entry_search_field(entry_pk: int) -> None:
         log.debug(f"LexiconEntry with pk {entry_pk} not found for search field update.")
     except Exception as e:
         log.error(f"Error updating search field for LexiconEntry {entry_pk}: {e}")
+##

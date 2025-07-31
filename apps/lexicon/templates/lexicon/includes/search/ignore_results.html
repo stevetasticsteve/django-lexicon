@@ -16,7 +16,7 @@
             {% for word in page_obj %}
                 <tr>
                 <th scope="row">
-                    <a href="{% url 'lexicon:update_ignore' word.project.language_code word.pk %}">{{word.tok_ples}}</a> 
+                    <a href="{% url 'lexicon:update_ignore' word.project.language_code word.pk %}">{{word.text}}</a> 
                 <td>
                     {{word.get_type_display}}
                 </td>
@@ -32,6 +32,6 @@
         </table>
     </div>
 
-{% include 'lexicon/includes/pagination.html' %}
+{% include 'lexicon/includes/search/pagination.html' %}
 </div>
 

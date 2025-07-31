@@ -32,6 +32,8 @@ https://dev.codebysteve.com
 - When saving a paradigm a button appears for a split second under the grid.
 - Paradigms and Affixes are currently __all__. There needs to be filtering to only allow attaching to the correct POS.
 - Login rendered in paradigm box on detail page when logged out.
+- If no affixes are set for the project there shouldn't be the option to add them to a word on the detail page
+- simple_form.html not used?
 
 ## UI
 - The header looks off on mobile

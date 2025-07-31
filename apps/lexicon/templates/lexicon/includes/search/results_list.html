@@ -5,7 +5,7 @@
         <div class="row">
         {% for word in page_obj %}
         <!-- add letters as headings when it changes -->
-        {% with letter=word.tok_ples|first %}
+        {% with letter=word.text|first %}
             {% ifchanged %} 
                 </div>
                 <div class="container-fluid text-center bg-light py-2 my-2">
@@ -17,11 +17,11 @@
             <!-- If the counter is even close the last <div> and make a new row -->
             {% if forloop.counter0|divisibleby:2 %}</div> <div class="row">{% endif %}
             <div class="entry col-sm-6 border-right border-bottom my-auto">
-            {% include 'lexicon/includes/lexicon_entry.html' %}
+            {% include 'lexicon/includes/search/single_search_result.html' %}
             </div>
         {% endfor %}
         </div>
 
-{% include 'lexicon/includes/pagination.html' %}
+{% include 'lexicon/includes/search/pagination.html' %}
 </div>
 

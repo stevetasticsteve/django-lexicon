@@ -1,0 +1,90 @@
+{% extends 'lexicon/forms/base_form.html' %}
+{% load static %}
+
+{% block form %}
+<form action="" method="post">
+    {% csrf_token %}
+    {% load crispy_forms_tags %}
+
+    <div class="container mt-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <strong>Word Details</strong>
+            </div>
+            <div class="card-body">
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        {{ form.text|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.pos|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4  d-flex align-items-center">
+                        {{ form.checked|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="row g-3 mt-3">
+                    <div class="col-md-6">
+                        {{ form.comments|as_crispy_field }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.review|as_crispy_field }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.review_comments|as_crispy_field }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <strong>Senses</strong>
+        </div>
+
+        <div class="card-body" id="sense-formset">
+            {{ sense_formset.management_form }}
+            {% for sense_form in sense_formset %}
+                {% include "lexicon/forms/sense_form.html" with sense_form=sense_form form_id=forloop.counter0 %}
+            {% endfor %}
+            <div id="new-sense-forms"></div>
+            <a  href="{% url 'lexicon:add-sense-form' %}?form_count={{ sense_formset.total_form_count }}"
+                hx-get="{% url 'lexicon:add-sense-form' %}?form_count={{ sense_formset.total_form_count }}"
+                hx-target="#new-sense-forms"
+                hx-swap="beforeend"
+                class="svg-button">
+            <img src="{% static '/img/plus.svg' %}" alt="add">
+            </a>
+        </div>
+
+        <div id="new-sense-forms"></div>
+    </div>
+
+         <!-- Sticky submit button -->
+        <div class="sticky-bottom bg-white py-3 border-top" style="z-index: 1020;">
+            <div class="container d-flex justify-content-end">
+                <button type="submit" id="submit-btn" class="btn btn-primary">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target && evt.detail.target.id && evt.detail.target.id.startsWith('new-sense-form')) {
+        let totalForms = document.querySelector('[name="senses-TOTAL_FORMS"]');
+        if (totalForms) {
+            totalForms.value = parseInt(totalForms.value) + 1;
+        }
+        console.log("Sense form added");
+    }
+});
+</script>
+{% endblock %}

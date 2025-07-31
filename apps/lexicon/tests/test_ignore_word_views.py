@@ -8,7 +8,7 @@ from apps.lexicon import models
 @pytest.fixture
 def ignore_word(english_project):
     return models.IgnoreWord.objects.create(
-        tok_ples="ignoreme",
+        text="ignoreme",
         type="tpi",
         eng="test",
         project=english_project,
@@ -43,7 +43,7 @@ class TestIgnoreWordViews:
         client.force_login(permissioned_user)
         url = self.get_create_url(english_project)
         data = {
-            "tok_ples": "newignore",
+            "text": "newignore",
             "type": "tpi",
             "eng": "english",
             "comments": "some comment",
@@ -51,7 +51,7 @@ class TestIgnoreWordViews:
         response = client.post(url, data)
         assert response.status_code == 302  # Redirect after success
         assert models.IgnoreWord.objects.filter(
-            tok_ples="newignore", project=english_project
+            text="newignore", project=english_project
         ).exists()
 
     def test_update_ignore_word(
@@ -61,7 +61,7 @@ class TestIgnoreWordViews:
         client.force_login(permissioned_user)
         url = self.get_update_url(english_project, ignore_word)
         data = {
-            "tok_ples": "ignoreme",
+            "text": "ignoreme",
             "type": "tpi",
             "eng": "updated",
             "comments": "updated comment",
@@ -109,7 +109,7 @@ class TestIgnoreWordViews:
         client.force_login(user)
         url = self.get_create_url(english_project)
         data = {
-            "tok_ples": "forbiddenignore",
+            "text": "forbiddenignore",
             "type": "tpi",
             "eng": "english",
             "comments": "should not be created",
@@ -117,7 +117,7 @@ class TestIgnoreWordViews:
         response = client.post(url, data)
         assert response.status_code == 403
         assert not models.IgnoreWord.objects.filter(
-            tok_ples="forbiddenignore", project=english_project
+            text="forbiddenignore", project=english_project
         ).exists()
 
     def test_update_ignore_word_forbidden(
@@ -127,7 +127,7 @@ class TestIgnoreWordViews:
         client.force_login(user)
         url = self.get_update_url(english_project, ignore_word)
         data = {
-            "tok_ples": "ignoreme",
+            "text": "ignoreme",
             "type": "tpi",
             "eng": "should_not_update",
             "comments": "should not update",
@@ -156,7 +156,7 @@ class TestIgnoreWordViews:
         # Create an ignore word in english_project
         url = self.get_create_url(english_project)
         data = {
-            "tok_ples": "uniqueword",
+            "text": "uniqueword",
             "type": "tpi",
             "eng": "english",
             "comments": "first project",
@@ -164,7 +164,7 @@ class TestIgnoreWordViews:
         response = client.post(url, data)
         assert response.status_code == 302
         assert models.IgnoreWord.objects.filter(
-            tok_ples="uniqueword", project=english_project
+            text="uniqueword", project=english_project
         ).exists()
 
         # Now create the same tok_ples in kovol_project (should succeed)
@@ -173,7 +173,7 @@ class TestIgnoreWordViews:
         response = client.post(url, data)
         assert response.status_code == 302
         assert models.IgnoreWord.objects.filter(
-            tok_ples="uniqueword", project=kovol_project
+            text="uniqueword", project=kovol_project
         ).exists()
 
         # Try to create a duplicate in the same project (should show form error, not crash)
@@ -181,13 +181,14 @@ class TestIgnoreWordViews:
             with transaction.atomic():
                 url = self.get_create_url(english_project)
                 response = client.post(url, data)
-        except transaction.TransactionManagementError: # expected error, just the testing framework
+        except (
+            transaction.TransactionManagementError
+        ):  # expected error, just the testing framework
             pass
         # Should not create a second one for the same project
         assert (
             models.IgnoreWord.objects.filter(
-                tok_ples="uniqueword", project=english_project
+                text="uniqueword", project=english_project
             ).count()
             == 1
         )
-

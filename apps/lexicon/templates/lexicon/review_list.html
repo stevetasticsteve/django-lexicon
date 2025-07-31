@@ -26,7 +26,7 @@
             {% for word in object_list %}
             <tr>
             <th scope="row">
-            <a href="{% url 'lexicon:entry_detail' lang_code word.pk %}">{{word.tok_ples}}</a>
+            <a href="{% url 'lexicon:entry_detail' lang_code word.pk %}">{{word.text}}</a>
                
 
             <td>

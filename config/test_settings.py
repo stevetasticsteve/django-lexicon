@@ -15,7 +15,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "lexicon_app_db",
         "USER": "django",
-        "PASSWORD": os.getenv("DATABASE_PASSWORD", "1234"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "1234"),
         "HOST": "localhost",
         "PORT": 5432,
     }

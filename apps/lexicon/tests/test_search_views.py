@@ -18,7 +18,7 @@ class TestLexiconSearchResults:
 
         response = client.get(url, {"search": "test"})
         assert response.status_code == 200
-        assert response.templates[0].name == "lexicon/includes/search-results.html"
+        assert response.templates[0].name == "lexicon/includes/search/results_list.html"
 
         assert len(response.context["object_list"]) == 1
         content = response.content.decode()
@@ -62,13 +62,11 @@ class TestLexiconSearchResults:
         """
         url = self.get_base_url(english_project.language_code)
         response = client.get(
-            url, data={"search": "test", "eng": "true"}
-        )  # Search for 'sample' in English
+            url, data={"search": "test", "eng": "true"})
 
         assert response.status_code == 200
         assert len(response.context["object_list"]) == 1
-        found_entries_eng = {e.eng for e in response.context["object_list"]}
-        assert "test_word_gloss" in found_entries_eng
+        assert response.context["object_list"][0].text == "test_word"
 
     def test_search_results_filters_by_project_and_search(
         self, client, kovol_project, kovol_words
@@ -82,7 +80,7 @@ class TestLexiconSearchResults:
 
         assert response.status_code == 200
         assert len(response.context["object_list"]) == 1
-        assert response.context["object_list"][0].tok_ples == "hobol"
+        assert response.context["object_list"][0].text == "hobol"
 
     def test_search_results_returns_404_for_invalid_lang_code(self, client):
         """
@@ -98,10 +96,10 @@ class TestIgnoreSearchResults:
     @pytest.fixture
     def ignore_words(self, english_project):
         word1 = models.IgnoreWord.objects.create(
-            tok_ples="ignoreme", type="tpi", eng="test", project=english_project
+            text="ignoreme", type="tpi", eng="test", project=english_project
         )
         word2 = models.IgnoreWord.objects.create(
-            tok_ples="keepme", type="tpi", eng="test", project=english_project
+            text="keepme", type="tpi", eng="test", project=english_project
         )
         return [word1, word2]
 
@@ -135,7 +133,7 @@ class TestIgnoreSearchResults:
         self, client, english_project, kovol_project
     ):
         models.IgnoreWord.objects.create(
-            tok_ples="ignoreme", type="tpi", eng="test", project=kovol_project
+            text="ignoreme", type="tpi", eng="test", project=kovol_project
         )
         url = reverse(
             "lexicon:ignore_search", kwargs={"lang_code": english_project.language_code}

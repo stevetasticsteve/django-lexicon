@@ -21,7 +21,7 @@
     <a href="{% url 'lexicon:delete_entry' project.language_code object.pk %}"><button type="button" class="btn btn-danger">Delete word</button></a> 
     </div>
 
-    <h1 class="my-2">{{object.tok_ples}}</h1>
+    <h1 class="my-2">{{object.text}}</h1>
 
     <!-- Container for dynamically loaded modal -->
     <div class="htmx-action-container">
@@ -40,8 +40,16 @@
         <tbody>
             
             <tr>
-            <th scope="row">English</th>
-            <td>{{object.eng}}</td>
+            <th scope="row">Definition</th>
+            <td>
+                <ol>
+                {% for sense in object.senses.all %}
+                    <li>
+                        {{sense.eng}}{% if sense.oth_lang %}, "{{sense.oth_lang}}" {% endif %}{% if sense.example %}, {{sense.example}} {% endif %}
+                    </li>
+                {% endfor %}
+                </ol>
+            </td>
             </tr>
 
             {% if object.oth_lang %}

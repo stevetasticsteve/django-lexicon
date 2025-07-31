@@ -51,7 +51,6 @@ AUTHENTICATION_BACKENDS = (
 ANONYMOUS_USER_NAME = None  # disables anonymous user object in guardian
 
 ROOT_URLCONF = "config.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -133,7 +132,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "lexicon_app_db",
         "USER": "django",
-        "PASSWORD": os.getenv("DATABASE_PASSWORD", "1234"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "1234"),
         "HOST": "db",
         "PORT": 5432,
     }

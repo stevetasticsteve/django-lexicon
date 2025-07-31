@@ -33,11 +33,13 @@ def english_project():
 def english_words(english_project):
     """Fixture to create test words."""
     word1 = models.LexiconEntry.objects.create(
-        tok_ples="test_word", eng="test_word_gloss", project=english_project
+        text="test_word", project=english_project
     )
+    models.Sense.objects.create(eng="test_sense_1", entry=word1)
     word2 = models.LexiconEntry.objects.create(
-        tok_ples="extra_word", eng="extra_word_gloss", project=english_project
+        text="extra_word", project=english_project
     )
+    models.Sense.objects.create(eng="other_sense", entry=word2)
     return [word1, word2]
 
 
@@ -54,10 +56,10 @@ def kovol_project():
 def english_words_with_paradigm(english_project):
     """Fixture to create test words and a paradigm."""
     word1 = models.LexiconEntry.objects.create(
-        tok_ples="test_word", eng="test_word_gloss", project=english_project
+        text="test_word", project=english_project
     )
     word2 = models.LexiconEntry.objects.create(
-        tok_ples="extra_word", eng="extra_word_gloss", project=english_project
+        text="extra_word", project=english_project
     )
     paradigm = models.Paradigm.objects.create(
         name="Test Paradigm",
@@ -75,12 +77,8 @@ def english_words_with_paradigm(english_project):
 @pytest.fixture
 def kovol_words(kovol_project):
     """Fixture to create test words."""
-    word1 = models.LexiconEntry.objects.create(
-        tok_ples="hobol", eng="talk", project=kovol_project
-    )
-    word2 = models.LexiconEntry.objects.create(
-        tok_ples="bili", eng="good", project=kovol_project
-    )
+    word1 = models.LexiconEntry.objects.create(text="hobol", project=kovol_project)
+    word2 = models.LexiconEntry.objects.create(text="bili", project=kovol_project)
     return [word1, word2]
 
 
@@ -98,8 +96,7 @@ def multirow_paradigm(english_project):
         column_labels=["1", "2"],
     )
     word = models.LexiconEntry.objects.create(
-        tok_ples="multiword",
-        eng="multiword",
+        text="multiword",
         project=english_project,
     )
     # Create conjugations for all cells

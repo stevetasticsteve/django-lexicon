@@ -16,8 +16,9 @@ class ProjectSearchView(ListView):
     Subclasses should define 'model' and a 'search_field'. Search will alternate
     between the provided search_field and English toggle if applicable."""
 
-    template_name = "lexicon/includes/search-results.html"
+    template_name = "lexicon/includes/search/results_list.html"
     paginate_by = 250
+    english_search_field = "eng__icontains"
 
     def get_queryset(self) -> QuerySet:
         search = self.request.GET.get("search")
@@ -29,7 +30,9 @@ class ProjectSearchView(ListView):
         )
         if search:
             user_log.info(f"{self.request.user} used search.")
-            return query.filter(**self.get_filter_kwargs())
+            # A search on related senses can return duplicate LexiconEntry objects.
+            # We use distinct() to avoid this.
+            return query.filter(**self.get_filter_kwargs()).distinct()
         else:
             return query
 
@@ -38,20 +41,24 @@ class ProjectSearchView(ListView):
         search = self.request.GET.get("search")
         is_english = self.request.GET.get("eng") == "true"
 
-        search_field = "eng__icontains" if is_english else self.search_field
+        search_field = self.english_search_field if is_english else self.search_field
         return {search_field: search}
-
 
 class LexiconSearchResults(ProjectSearchView):
     """Search results for lexicon entries."""
 
     model = models.LexiconEntry
     search_field = "search__icontains"
+    english_search_field = "senses__eng__icontains"
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.prefetch_related("senses")
 
 
 class IgnoreSearchResults(ProjectSearchView):
     """Search results for ignore words."""
 
-    template_name = "lexicon/includes/ignore_search_results.html"
+    template_name = "lexicon/includes/search/ignore_results.html"
     model = models.IgnoreWord
-    search_field = "tok_ples__icontains"
+    search_field = "text__icontains"

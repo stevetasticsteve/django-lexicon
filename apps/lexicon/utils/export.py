@@ -3,9 +3,9 @@ import os
 import re
 from zipfile import ZipFile
 
+from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from django.urls import reverse
-from django.db.models.query import QuerySet
 
 from apps.lexicon import models
 
@@ -47,9 +47,7 @@ def check_export_folder() -> None:
         raise PermissionError(f"Export folder {export_folder} is not writable.")
 
 
-def get_entries(
-    project: models.LexiconProject, checked: bool
-) -> QuerySet:
+def get_entries(project: models.LexiconProject, checked: bool) -> QuerySet:
     """Returns the entries to be exported from the database."""
     if checked:
         return models.LexiconEntry.objects.filter(checked=True, project=project)
@@ -70,7 +68,7 @@ def create_dic_file(project: models.LexiconProject, checked: bool) -> str:
     with open(path, "w") as file:
         entries = get_entries(project, checked)
         file.write(str(len(entries)))
-        file.writelines([f"\n{w.tok_ples}" for w in entries])
+        file.writelines([f"\n{w.text}" for w in entries])
     return path
 
 
@@ -86,7 +84,7 @@ def create_xml_file(project: models.LexiconProject, checked: bool) -> str:
         file.write('﻿<?xml version="1.0" encoding="utf-8"?>')
         file.write("\n<SpellingStatus>\n")
         for w in entries:
-            file.write(f'  <Status Word="{w.tok_ples}" State="R" />\n')
+            file.write(f'  <Status Word="{w.text}" State="R" />\n')
         file.write("</SpellingStatus>")
 
     return path
@@ -98,7 +96,7 @@ def create_oxt_package(
     """Creates a Libre office oxt zip file and returns it's path."""
 
     entries = get_entries(project, checked)
-    dic_contents = str(len(entries)) + "".join([f"\n{w.tok_ples}" for w in entries])
+    dic_contents = str(len(entries)) + "".join([f"\n{w.text}" for w in entries])
 
     template_path = os.path.join("apps", "lexicon", "templates", "oxt")
     if not os.path.exists(template_path):

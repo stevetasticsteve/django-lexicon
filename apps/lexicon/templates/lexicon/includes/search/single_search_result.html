@@ -1,0 +1,15 @@
+<div class="container pt-2">
+<h3><a href="{% url 'lexicon:entry_detail' word.project.language_code word.pk %}"
+class="text-decoration-none">{{word.text}}
+</a></h3>
+    {% if word.checked %} Checked {% endif %}
+    <p>
+    {% if word.pos %} <strong>{{word.get_pos_display}}</strong> {% endif %}
+    {% with first_sense=word.senses.all|first %}
+        <strong class="english"><em style="color:dodgerblue">{{first_sense.eng}}</em></strong>
+        {% if first_sense.oth_lang %}<strong style="color:gray">{{first_sense.oth_lang}}</strong>{% endif %}
+        </p>
+    {% endwith %}
+
+
+</div>

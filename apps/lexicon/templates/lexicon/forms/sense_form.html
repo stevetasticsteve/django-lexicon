@@ -1,0 +1,43 @@
+{% load crispy_forms_tags %}
+{% load static %}
+
+<div class="sense-form-row border-bottom pb-3 mb-3 border p-4" id="sense-form-{{ form_id }}">
+    {% for hidden_field in sense_form.hidden_fields %}
+        {{ hidden_field }}
+    {% endfor %}
+    {% if sense_form.non_field_errors %}
+        <div class="text-danger small">{{ sense_form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ sense_form.order|as_crispy_field }}
+        </div>
+        <div class="col-md-3">
+            {{ sense_form.eng|as_crispy_field }}
+            {% if sense_form.eng.errors %}
+                <div class="text-danger small">{{ sense_form.eng.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-3">
+            {{ sense_form.oth_lang|as_crispy_field }}
+            {% if sense_form.oth_lang.errors %}
+                <div class="text-danger small">{{ sense_form.oth_lang.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="row g-3">
+            {{ sense_form.example|as_crispy_field }}
+            {% if sense_form.example.errors %}
+                <div class="text-danger small">{{ sense_form.example.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div>
+            Delete?
+            {% if sense_form.DELETE %}
+                {{ sense_form.DELETE }}
+            {% endif %}
+        </div>
+    </div>
+</div>

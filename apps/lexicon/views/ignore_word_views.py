@@ -31,9 +31,9 @@ class IgnoreWordMixin(
 ):
     """A base class for ignore word forms."""
 
-    template_name = "lexicon/ignore_form.html"
+    template_name = "lexicon/forms/ignore_form.html"
     model = models.IgnoreWord
-    fields = ("tok_ples", "type", "eng", "comments")
+    fields = ("text", "type", "eng", "comments")
 
     def get_success_url(self):
         return reverse(

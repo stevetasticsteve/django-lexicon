@@ -13,7 +13,8 @@ class TestParadigmModal:
         client.force_login(permissioned_user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
-            "lexicon:word_paradigm_modal", args=[english_project.language_code, words[0].pk]
+            "lexicon:word_paradigm_modal",
+            args=[english_project.language_code, words[0].pk],
         )
         response = client.get(url)
         assert response.status_code == 200
@@ -28,7 +29,8 @@ class TestParadigmModal:
         client.force_login(permissioned_user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
-            "lexicon:word_paradigm_modal", args=[english_project.language_code, words[1].pk]
+            "lexicon:word_paradigm_modal",
+            args=[english_project.language_code, words[1].pk],
         )
         data = {"paradigm": paradigm.pk}
         response = client.post(url, data, HTTP_HX_REQUEST="true")
@@ -39,37 +41,45 @@ class TestParadigmModal:
         # Check for HX-Trigger header
         assert response["HX-Trigger"] == "paradigmSaved"
 
-    def test_get_paradigm_modal_forbidden(self, client, user, english_project, english_words_with_paradigm):
+    def test_get_paradigm_modal_forbidden(
+        self, client, user, english_project, english_words_with_paradigm
+    ):
         """Unpermissioned user should not be able to GET the paradigm modal."""
         client.force_login(user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
-            "lexicon:word_paradigm_modal", args=[english_project.language_code, words[0].pk]
+            "lexicon:word_paradigm_modal",
+            args=[english_project.language_code, words[0].pk],
         )
         response = client.get(url)
         assert response.status_code == 403
 
-    def test_post_paradigm_modal_forbidden(self, client, user, english_project, english_words_with_paradigm):
+    def test_post_paradigm_modal_forbidden(
+        self, client, user, english_project, english_words_with_paradigm
+    ):
         """Unpermissioned user should not be able to POST the paradigm modal."""
         client.force_login(user)
         words, paradigm, _ = english_words_with_paradigm
         url = reverse(
-            "lexicon:word_paradigm_modal", args=[english_project.language_code, words[1].pk]
+            "lexicon:word_paradigm_modal",
+            args=[english_project.language_code, words[1].pk],
         )
         data = {"paradigm": paradigm.pk}
         response = client.post(url, data, HTTP_HX_REQUEST="true")
         assert response.status_code == 403
 
-    
-
 
 @pytest.mark.django_db
 class TestConjugationsView:
-    def test_get_paradigm_view(self, client, permissioned_user, english_words_with_paradigm):
+    def test_get_paradigm_view(
+        self, client, permissioned_user, english_words_with_paradigm
+    ):
         """Test that the paradigm view renders correctly."""
         client.force_login(permissioned_user)
         words, paradigm, conjugation = english_words_with_paradigm
-        url = reverse("lexicon:conjugation_grid", args=["eng", words[0].pk, paradigm.pk, "view"])
+        url = reverse(
+            "lexicon:conjugation_grid", args=["eng", words[0].pk, paradigm.pk, "view"]
+        )
         response = client.get(url)
         assert response.status_code == 200
         assert "conjugation_grid" in response.context
@@ -89,7 +99,9 @@ class TestConjugationsView:
         assert "formset" in response.context
         assert "forms_grid" in response.context
 
-    def test_post_paradigm_edit(self, client, permissioned_user, english_words_with_paradigm):
+    def test_post_paradigm_edit(
+        self, client, permissioned_user, english_words_with_paradigm
+    ):
         """Test that the paradigm edit view updates a simple 1x1 conjugation"""
         client.force_login(permissioned_user)
         words, paradigm, conjugation = english_words_with_paradigm
@@ -286,7 +298,7 @@ class TestConjugationsEdit:
         client.force_login(permissioned_user)
 
         word, paradigm, conjugations = multirow_paradigm
-        english_project.tok_ples_validator = "[a-z]+"
+        english_project.text_validator = "[a-z]+"
         english_project.save()
         url = self.get_edit_url(word, paradigm)
         response = client.get(url)
@@ -316,4 +328,3 @@ class TestConjugationsEdit:
             'name="form-5-conjugation" value="changed 123"'
             in post_response.content.decode()
         )
-
