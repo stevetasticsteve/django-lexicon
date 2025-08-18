@@ -14,6 +14,7 @@ from django.views.generic.list import ListView
 
 from apps.lexicon import forms, models
 from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
+from apps.lexicon.utils.hunspell import unmunch
 
 user_log = logging.getLogger("user_log")
 log = logging.getLogger("lexicon")
@@ -67,12 +68,25 @@ class EntryDetail(ProjectContextMixin, DetailView):
     def get_context_data(self, **kwargs) -> dict:
         """Add the conjugations linked to the entry."""
         context = super().get_context_data(**kwargs)
-        context["conjugations"] = models.Conjugation.objects.filter(
+        conjugations = models.Conjugation.objects.filter(
             word=self.object
         ).select_related("paradigm")
+        context["conjugations"] = conjugations
         context["paradigms"] = (
             self.object.paradigms.all()
-        )  # Get all paradigms linked to the word
+        )
+
+        # generate hunspell words. util expects a string
+        affix_letters = [c.affix_letter for c in self.object.affixes.all()]
+        hunspell_dic_words = "\n".join([f"{c.conjugation}/{''.join(affix_letters)}" for c in conjugations])
+        aff = self.object.project.affix_file
+
+        if hunspell_dic_words and aff:
+            hunspell_words = unmunch(
+                hunspell_dic_words, aff
+            )
+            context["hunspell_words"] = hunspell_words
+            context["hunspell_conjugations_number"] = len(hunspell_words)
         return context
 
 

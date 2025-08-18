@@ -20,7 +20,7 @@ def unmunch(dic_content: str, aff_content: str) -> list[str]:
     """
     # Ensure dictionary content has a valid length header
     dic_content = check_length_dic_contents(dic_content)
-
+    log.debug(f"Attempting unmunch with .dic = {dic_content} and .aff = {aff_content}")
     # Create temporary files for the .dic and .aff data
     with (
         tempfile.NamedTemporaryFile(mode="w+", delete=True) as dic_temp,

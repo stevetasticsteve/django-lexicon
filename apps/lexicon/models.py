@@ -80,7 +80,7 @@ class LexiconProject(models.Model):
         blank=False,
         null=False,
         help_text="See https://www.systutorials.com/docs/linux/man/4-hunspell/",
-        default="""# Hunspell affix file for Kovol by NTMPNG
+        default="""# Hunspell affix file for LANGUAGE by NTMPNG
 SET UTF-8
 TRY aeiouAEIOUpbtdkgjmnfsvhlrwyPBTDKGJMNFSVHLRWY
 WORDCHARS -
@@ -291,13 +291,14 @@ class Sense(models.Model):
         if self.eng:
             self.eng = self.eng.lower()
         super().save(*args, **kwargs)
-    
+
     class Meta:
         ordering = ["order"]
 
 
 class Variation(models.Model):
     """An allowed variation for a LexiconEntry."""
+
     # TODO inconsistent naming, word should be entry
     word = models.ForeignKey(
         LexiconEntry, on_delete=models.CASCADE, related_name="variations", null=False
@@ -461,6 +462,7 @@ class Conjugation(models.Model):
     Each instance represents one form of a word based on a paradigm,
     identified by its row and column index in the grid.
     """
+
     # TODO naming inconsistency, should be entry
     word = models.ForeignKey(
         LexiconEntry,
@@ -482,6 +484,7 @@ class Conjugation(models.Model):
     column = models.IntegerField(
         null=False, blank=False, help_text="The column index in the paradigm grid."
     )
+    # TODO rename text?
     conjugation = models.CharField(
         max_length=40,
         null=False,

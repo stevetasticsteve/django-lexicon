@@ -27,7 +27,7 @@ class TestLexiconProjectModel:
         assert project.secondary_language is None
         assert project.text_validator is None
         assert project.affix_file.startswith(
-            "# Hunspell affix file for Kovol by NTMPNG"
+            "# Hunspell affix file for LANGUAGE by NTMPNG"
         )  # Check default affix file
 
     def test_language_name_required(self):
@@ -84,7 +84,7 @@ class TestLexiconProjectModel:
             language_name="Affix Test", language_code="aft"
         )
         assert project.affix_file.startswith(
-            "# Hunspell affix file for Kovol by NTMPNG"
+            "# Hunspell affix file for LANGUAGE by NTMPNG"
         )
         assert "NOSUGGEST !" in project.affix_file
 

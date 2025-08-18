@@ -6,7 +6,6 @@ https://dev.codebysteve.com
 
 # To do
 
-2. Showing Hunspell constructed words in detail view
 3. Affix tester needs linking in project admin
 4. type checker for adding affixes and paradigms
 5. contact form for getting permissions
@@ -22,8 +21,6 @@ https://dev.codebysteve.com
 - Feedback form
 - User documentation throughout site
 
-## Deployment
-- 
   
 ## Bugs
 - Libre office can contact the update server and see updated oxt packages, but downloading them fails.

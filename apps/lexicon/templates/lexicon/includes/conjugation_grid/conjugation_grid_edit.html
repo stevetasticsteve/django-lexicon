@@ -8,7 +8,7 @@
 <div class="htmx-action-container">
   <div class="permission-errors"></div> {# Area to display permission errors #}
 
-  <div class="border rounded-lg p-3" id="paradigm-{{ paradigm.pk }}">
+  <div class="row p-3" id="paradigm-{{ paradigm.pk }}">
     <form>
       {% csrf_token %}
       {{ formset.management_form }}

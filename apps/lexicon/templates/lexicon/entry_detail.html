@@ -105,29 +105,51 @@
 
         </tbody>
         </table>
-        
-        {% include 'lexicon/includes/paradigm_list.html' %}  
-
-        <div
-            class="my-4"
-            hx-get="{% url 'lexicon:variation_list' lang_code object.pk %}"
-            hx-target="#variation-container"
-            hx-trigger="load"
-            hx-swap="innerHTML">
+        <div class="container my-4 py-4 border">
+            {% include 'lexicon/includes/paradigm_list.html' %}  
         </div>
 
-        <div id="variation-container"></div>
+        <div class="container my-4 py-4 border">
+            <!-- Insert variation list by htmx -->
+            <div
+                hx-get="{% url 'lexicon:variation_list' lang_code object.pk %}"
+                hx-target="#variation-container"
+                hx-trigger="load"
+                hx-swap="innerHTML">
+            </div>
 
-        <div
-            class="my-4"
-            hx-get="{% url 'lexicon:word_affix_management' lang_code object.pk %}"
-            hx-target="#affix-container"
-            hx-trigger="load"
-            hx-swap="innerHTML">
+            <div id="variation-container"></div>
+
         </div>
-        <div id="affix-container"></div>
+
+        <!-- Show the automatic affix conjugations and form -->
+        <div class="container my-4 py-4 border">
+            <div
+                class="my-4"
+                hx-get="{% url 'lexicon:word_affix_management' lang_code object.pk %}"
+                hx-target="#affix-container"
+                hx-trigger="load"
+                hx-swap="innerHTML">
+            </div>
+
+            <div id="affix-container"></div> 
+
+            {% if hunspell_words %}
+            <div class="container ">
+                <p class="my-4">The following <strong>{{hunspell_conjugations_number}}</strong> conjugations are automatically conjugated using affix rules:</p>
+                <div class="row">
+                    {% for word in hunspell_words %}
+                        <div class="col-md-4 mb-2">
+                            {{ word }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
 
     </div>
 </div>
+
 
 {% endblock %}
