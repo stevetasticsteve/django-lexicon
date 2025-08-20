@@ -14,33 +14,15 @@ from django.views.generic.list import ListView
 from apps.lexicon import forms, models
 from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
 from apps.lexicon.utils import hunspell
-from apps.lexicon.views.word_views import ProjectContextMixin
 
 user_log = logging.getLogger("user_log")
 log = logging.getLogger("lexicon")
 
 
-@method_decorator(require_http_methods(["GET", "POST"]), name="dispatch")
-class AffixTester(ProjectContextMixin, TemplateView):
-    """A view for submitting a basic form to test affixes at lexicon/<lang-code>/affix-tester.
-
-    Includes AffixResults view via htmx to show the results of the affix generation. Hunspell
-    combines the words and affixes to generate new words."""
-
-    template_name = "lexicon/affix_tester.html"
-
-    def get_context_data(self, **kwargs):
-        """Add affix file information to the template context."""
-        context = super().get_context_data(**kwargs)
-        project = (
-            self.get_project()
-        )  # Manually call get_project from ProjectContextMixin
-        context["affix_file"] = project.affix_file
-        return context
-
-
 @method_decorator(require_http_methods(["GET"]), name="dispatch")
 class AffixResults(TemplateView):
+    """A htmx partial for generating affixes from a list of words."""
+
     template_name = "lexicon/includes/affix_results.html"
 
     def get(self, request, *args, **kwargs):
@@ -61,11 +43,56 @@ class AffixResults(TemplateView):
         user_log.info(f"{self.request.user} requested affix generation")
         context = super().get_context_data(**kwargs)
         words = self.request.GET.get("words")
-        affix = self.request.GET.get("affix")
+        affix = self.request.GET.get("affix_file")
+        log.debug(f"Received words: {words}, affix: {affix}")
         # Call the unmunch function (may raise)
         result = hunspell.unmunch(words, affix)
         context.update({"generated_words": result})
         return context
+
+
+class AffixFileUpdateView(
+    LoginRequiredMixin, ProjectEditPermissionRequiredMixin, UpdateView
+):
+    """
+    A view for updating and testing the affix file of a LexiconProject.
+    """
+
+    template_name = "lexicon/forms/affix_file_form.html"
+    form_class = forms.AffixFileForm
+
+    def get_project(self) -> models.LexiconProject:
+        lang_code = self.kwargs.get("lang_code")
+        return get_object_or_404(models.LexiconProject, language_code=lang_code)
+
+    def get_success_url(self):
+        """
+        Determine the URL to redirect to after successful form submission.
+        """
+        lang_code = self.kwargs.get("lang_code")
+        return reverse("lexicon:project_admin", kwargs={"lang_code": lang_code})
+
+    def get_context_data(self, **kwargs):
+        """
+        Add project and lang_code to the context.
+        """
+        context = super().get_context_data(**kwargs)
+        project = self.get_project()
+        context["project"] = project
+        context["lang_code"] = project.language_code
+        return context
+
+    def get_object(self):
+        """Return the LexiconProject object."""
+        return self.get_project()
+
+    def form_valid(self, form):
+        """Update the affix file."""
+        """Save the form."""
+        project = self.get_project()
+        project.affix_file = form.cleaned_data["affix_file"]
+        project.save()
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class AffixMixin:

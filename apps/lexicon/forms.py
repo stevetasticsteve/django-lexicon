@@ -318,6 +318,14 @@ class WordAffixForm(forms.ModelForm):
             "affixes": forms.CheckboxSelectMultiple,
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["affixes"].label_from_instance = lambda obj: obj.name
+
+class AffixFileForm(forms.ModelForm):
+    """
+    A form for editing the affix_file field of a LexiconProject.
+    """
+
+    class Meta:
+        model = models.LexiconProject
+        fields = ['affix_file']
+        widgets = {'affix_file': forms.Textarea(attrs={"class": "form-select", "rows": 15})}
+

@@ -193,11 +193,10 @@ urlpatterns = [
         project_admin_views.DeleteAffix.as_view(),
         name="project_admin_affix_delete",
     ),
-    # TODO think about location
     path(
-        "<str:lang_code>/project-admin/affix-tester",
-        affix_views.AffixTester.as_view(),
-        name="project_admin_affix_tester",
+        "<str:lang_code>/project-admin/affix-file-update",
+        affix_views.AffixFileUpdateView.as_view(),
+        name="project_admin_affix_file_update",
     ),
     # TODO roll into project-admin?
     # import_export_views

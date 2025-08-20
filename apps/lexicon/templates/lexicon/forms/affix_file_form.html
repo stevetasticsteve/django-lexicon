@@ -11,20 +11,22 @@
         <div class="row">
             <div class="col">
             <h3>Test words</h3>
-            <textarea class="form-control" id="exampleFormControlTextarea1" rows="15" name="words"></textarea>
+            <textarea class="form-control" id="words_input" rows="15" name="words"></textarea>
             </div>
             <div class="col">
             <h3>Your affix file</h3>
-            <textarea class="form-control" id="exampleFormControlTextarea1" rows="15" name="affix">{{affix_file}}</textarea>
+            {{form.affix_file}}
             </div>
         </div>
 
         <button class="btn btn-primary m-4"
             hx-get="{% url 'lexicon:word_affix_results' lang_code %}"
             hx-target="#affix_results"
-            hx-include="[name='words'], [name='affix']">
+            hx-include="[name='words'], [name='affix_file']">
             Generate
-        </button></form>
+        </button>
+        <button type="submit" class="btn btn-success">Save Affix File</button>
+    </form>
 </div>
 
 {% include 'lexicon/includes/affix_results.html' %}
