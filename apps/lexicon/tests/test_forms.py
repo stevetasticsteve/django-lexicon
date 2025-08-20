@@ -184,5 +184,5 @@ def test_word_affix_form_renders_affixes(kovol_project):
     entry = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
     form = forms.WordAffixForm(instance=entry)
     html = form.as_p()
-    assert "Prefix A" in html
-    assert "Prefix B" in html
+    assert "Affix A" in html
+    assert "Affix B" in html

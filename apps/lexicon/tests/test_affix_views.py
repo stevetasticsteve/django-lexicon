@@ -5,19 +5,34 @@ from apps.lexicon import models
 
 
 @pytest.mark.django_db
-class TestAffixViews:
-    def test_affix_tester_renders_affix_file(self, client, english_project, user):
+class TestAffixFileViews:
+    def test_affix_file_update_affix_file(self, client, project_with_affix_file, permissioned_user):
         """Test that the affix tester view renders the affix file."""
-        english_project.affix_file = "SFX A Y 1\nSFX A 0 ing ."
-        english_project.save()
-        client.force_login(user)
+        client.force_login(permissioned_user)
         url = reverse(
-            "lexicon:project_admin_affix_tester", args=[english_project.language_code]
+            "lexicon:project_admin_affix_file_update",
+            args=[project_with_affix_file.language_code],
         )
         response = client.get(url)
         assert response.status_code == 200
-        assert "affix_file" in response.context
-        assert "SFX A" in response.context["affix_file"]
+        assert "SFX A" in response.content.decode()
+        assert "yam" in response.content.decode()
+    
+    def test_affix_file_post_result(
+        self, client, project_with_affix_file, permissioned_user
+    ):
+        """Test that the affix tester view renders the affix file."""
+        client.force_login(permissioned_user)
+        url = reverse(
+            "lexicon:project_admin_affix_file_update",
+            args=[project_with_affix_file.language_code],
+        )
+        response = client.post(url, {"affix_file": "Updated"})
+        assert response.status_code == 302
+        assert "Updated" in models.LexiconProject.objects.get(
+            language_code=project_with_affix_file.language_code
+        ).affix_file
+
 
     def test_affix_results_success(self, client, monkeypatch, english_project, user):
         """Test that the affix results view returns generated words."""
@@ -32,11 +47,24 @@ class TestAffixViews:
         url = reverse(
             "lexicon:word_affix_results", args=[english_project.language_code]
         )
-        response = client.get(url, {"words": "walk", "affix": "SFX"})
+        response = client.get(url, {"words": "walk", "affix_file": "SFX"})
         assert response.status_code == 200
         assert "generated_words" in response.context
         assert "walked" in response.context["generated_words"]
         assert "walking" in response.context["generated_words"]
+    
+    def test_affix_results_with_unmunch(self, client, project_with_affix_file, user):
+        """Same test but using the unmunch function directly."""
+        client.force_login(user)
+        url = reverse(
+            "lexicon:word_affix_results", args=[project_with_affix_file.language_code]
+        )
+        affix_file = models.LexiconProject.objects.get(language_code=project_with_affix_file.language_code).affix_file
+        response = client.get(url, {"words": "libigom/A", "affix_file": affix_file})
+        assert response.status_code == 200
+        assert "generated_words" in response.context
+        assert "libigom" in response.context["generated_words"]
+        assert "libigomyam" in response.context["generated_words"]
 
     def test_affix_results_error(self, client, monkeypatch, english_project, user):
         """Test that the affix results view handles errors gracefully."""

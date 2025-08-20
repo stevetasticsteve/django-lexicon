@@ -78,8 +78,15 @@ class EntryDetail(ProjectContextMixin, DetailView):
 
         # generate hunspell words. util expects a string
         affix_letters = [c.affix_letter for c in self.object.affixes.all()]
-        hunspell_dic_words = "\n".join([f"{c.conjugation}/{''.join(affix_letters)}" for c in conjugations])
+        # create a list of conjugation words for hunspell
+        hunspell_dic_words = [f"{c.conjugation}/{''.join(affix_letters)}" for c in conjugations]
+        # append the main word to the list
+        hunspell_dic_words.append(f"{self.object.text}/{''.join(affix_letters)}")
+        # convert into a string
+        hunspell_dic_words = "\n".join(hunspell_dic_words)
         aff = self.object.project.affix_file
+        log.debug(f"Affix file: {aff}")
+        log.debug(f"Hunspell dic words: {hunspell_dic_words}")
 
         if hunspell_dic_words and aff:
             hunspell_words = unmunch(

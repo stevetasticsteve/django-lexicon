@@ -198,7 +198,6 @@ urlpatterns = [
         affix_views.AffixFileUpdateView.as_view(),
         name="project_admin_affix_file_update",
     ),
-    # TODO roll into project-admin?
     # import_export_views
     path(
         "<str:lang_code>/import",

@@ -77,8 +77,8 @@ def english_words_with_paradigm(english_project):
 @pytest.fixture
 def kovol_words(kovol_project):
     """Fixture to create test words."""
-    word1 = models.LexiconEntry.objects.create(text="hobol", project=kovol_project)
-    word2 = models.LexiconEntry.objects.create(text="bili", project=kovol_project)
+    word1 = models.LexiconEntry.objects.create(text="hobol", project=kovol_project, pos="n")
+    word2 = models.LexiconEntry.objects.create(text="bili", project=kovol_project, pos="n")
     return [word1, word2]
 
 
@@ -127,3 +127,19 @@ def permissioned_user(user, english_project, kovol_project):
     assign_perm("edit_lexiconproject", user, english_project)
     assign_perm("edit_lexiconproject", user, kovol_project)
     return user
+
+@pytest.fixture
+def project_with_affix_file(kovol_project, kovol_words):
+    """Fixture to create a project with an affix file."""
+    kovol_project.affix_file = "SFX A Y 1\nSFX A 0 yam ."
+    kovol_project.save()
+    yam_affix = models.Affix.objects.create(
+        project=kovol_project,
+        name="yam affix",
+        affix_letter="A",
+        applies_to="n",
+    )
+    for w in kovol_words:
+        w.affixes.add(yam_affix)
+        w.save()
+    return kovol_project

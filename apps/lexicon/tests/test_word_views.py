@@ -210,6 +210,18 @@ class TestEntryDetail:
         assert conjugation in response.context["conjugations"]
         assert paradigm in response.context["paradigms"]
 
+    def test_hunspell_conjugations_shown(self, client, project_with_affix_file, kovol_words):
+        entry = kovol_words[0]  # Use the first word for testing
+        url = reverse(
+            "lexicon:entry_detail",
+            kwargs={"lang_code": project_with_affix_file.language_code, "pk": entry.pk},
+        )
+        response = client.get(url)
+        assert response.status_code == 200
+        assert "hunspell_words" in response.context
+        assert "hobolyam" in response.context["hunspell_words"]
+        assert "hobol" in response.content.decode()
+        assert "hobolyam" in response.content.decode()
 
 @pytest.mark.django_db
 class TestCreateEntry:
@@ -588,7 +600,6 @@ class TestUpdateEntry:
             "senses-1-DELETE": "on",  # Mark for deletion
         }
         response = client.post(url, data)
-        print(models.Sense.objects.all())
 
         assert response.status_code == 302
         assert not models.Sense.objects.filter(pk=delete_sense.pk).exists()
@@ -663,7 +674,6 @@ class TestUpdateEntry:
 
         # 3. Assert status code is 200 (form re-rendered with errors)
         assert response.status_code == 200
-        print(response.content.decode())
 
         # 4. Assert the validation error message is present
         assert (

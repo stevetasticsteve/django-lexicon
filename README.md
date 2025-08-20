@@ -5,8 +5,6 @@ An app for centrally managing and then exporting useful formats of a dictionary 
 https://dev.codebysteve.com
 
 # To do
-
-3. Affix tester needs linking in project admin
 4. type checker for adding affixes and paradigms
 5. contact form for getting permissions
 6. per project backup
@@ -31,6 +29,7 @@ https://dev.codebysteve.com
 - Login rendered in paradigm box on detail page when logged out.
 - If no affixes are set for the project there shouldn't be the option to add them to a word on the detail page
 - simple_form.html not used?
+- word variations are not included in EntryDetail page hunspell conjugations
 
 ## UI
 - The header looks off on mobile
@@ -51,6 +50,7 @@ https://dev.codebysteve.com
 - Currently exports are located inside the running container. This won't work for round robin load sharing, a volume needs to be mapped.
 - Give the creation of export files to a celery scheduler. Model saves can trigger a scheduled recreation of exports for project. Then when a user clicks download the file doesn't need to be generated on request, it will already exist.
 - Be able to export your lexicon project to be imported into a self hosted instance
+- Exports not using hunspell
 
 ## Imports
 - Import from .csv (spreadsheet)
