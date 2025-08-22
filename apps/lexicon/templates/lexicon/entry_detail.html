@@ -105,9 +105,11 @@
 
         </tbody>
         </table>
-        <div class="container my-4 py-4 border">
-            {% include 'lexicon/includes/paradigm_list.html' %}  
-        </div>
+        {% if paradigms %}
+            <div class="container my-4 py-4 border">
+                {% include 'lexicon/includes/paradigm_list.html' %}  
+            </div>
+        {% endif %}
 
         <div class="container my-4 py-4 border">
             <!-- Insert variation list by htmx -->

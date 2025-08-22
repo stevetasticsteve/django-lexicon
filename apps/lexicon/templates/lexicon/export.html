@@ -9,14 +9,13 @@
 <div class="container">
     <h1>Export</h1>
 
-    <h4>Current lexicon version </h4>
-    <p>{{project.version}}</p>
+    <h4 class="my-4">Current lexicon version: {{project.version}}</h4>
 
-    <form action="" method="post">
+    <form action="" method="post" class="m-4 p-4">
         {% csrf_token %}
         {{form|crispy}}
 
-        <button type="input" id="submit-btn" class="btn btn-primary">Download</button></form>
+        <button type="input" id="submit-btn" class="btn btn-primary my-4">Download</button></form>
 </div>
 
 {% endblock %}

@@ -142,4 +142,12 @@ def project_with_affix_file(kovol_project, kovol_words):
     for w in kovol_words:
         w.affixes.add(yam_affix)
         w.save()
+    # add a word with no affixes
+    models.LexiconEntry.objects.create(
+        text="no_affix_word", project=kovol_project, pos="n"
+    )
+    models.LexiconEntry.objects.create(
+        text="checked_word", project=kovol_project, pos="n", checked=True
+    )
+    models.IgnoreWord.objects.create(text="ignoreme", project=kovol_project, type="tpi")
     return kovol_project

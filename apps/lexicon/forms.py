@@ -90,6 +90,12 @@ class ExportForm(forms.Form):
     checked = forms.BooleanField(
         label="Limit export to only checked entries?", initial=True, required=False
     )
+    include_hunspell = forms.BooleanField(
+        label="Include hunspell conjugations?", initial=True, required=False
+    )
+    include_ignore = forms.BooleanField(
+        label="Include ignore words?", initial=True, required=False
+    )
     export_type = forms.ChoiceField(
         label="File format for export",
         required=False,

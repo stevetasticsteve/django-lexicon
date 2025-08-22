@@ -171,6 +171,7 @@ class LexiconEntry(models.Model):
             ("com", "compound verb"),
             ("prn", "pronoun"),
             ("rel", "relator/preposition"),
+            ("ph", "phrase"),
             ("uk", "uknown"),
         ),
     )
@@ -469,6 +470,7 @@ class Conjugation(models.Model):
         on_delete=models.CASCADE,
         help_text="The word that this conjugation belongs to.",
         blank=False,
+        related_name="conjugations",
         null=False,
     )
     paradigm = models.ForeignKey(

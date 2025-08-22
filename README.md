@@ -46,11 +46,9 @@ https://dev.codebysteve.com
 - Eventually use office 365 logins and have integration with member services
 
 ## Exports
-- Clean up of created exports
 - Currently exports are located inside the running container. This won't work for round robin load sharing, a volume needs to be mapped.
 - Give the creation of export files to a celery scheduler. Model saves can trigger a scheduled recreation of exports for project. Then when a user clicks download the file doesn't need to be generated on request, it will already exist.
 - Be able to export your lexicon project to be imported into a self hosted instance
-- Exports not using hunspell
 
 ## Imports
 - Import from .csv (spreadsheet)

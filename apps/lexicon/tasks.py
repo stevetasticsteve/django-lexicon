@@ -101,7 +101,7 @@ def update_lexicon_entry_search_field(entry_pk: int) -> None:
     This task is called on LexiconEntry save(), in formset.is_valid() in conjugations and on Variation save()"""
     try:
         entry = models.LexiconEntry.objects.prefetch_related(
-            "variations", "conjugation_set"
+            "variations", "conjugations"
         ).get(pk=entry_pk)
 
         # Build the search string
@@ -111,10 +111,8 @@ def update_lexicon_entry_search_field(entry_pk: int) -> None:
             if var.included_in_search:
                 search_terms.append(var.text)
 
-        for conj in entry.conjugation_set.all():
-            search_terms.append(
-                conj.conjugation
-            )
+        for conj in entry.conjugations.all():
+            search_terms.append(conj.conjugation)
 
         new_search_field_value = " ".join(
             filter(None, search_terms)
@@ -130,4 +128,6 @@ def update_lexicon_entry_search_field(entry_pk: int) -> None:
         log.debug(f"LexiconEntry with pk {entry_pk} not found for search field update.")
     except Exception as e:
         log.error(f"Error updating search field for LexiconEntry {entry_pk}: {e}")
+
+
 ##

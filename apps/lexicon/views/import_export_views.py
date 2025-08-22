@@ -60,8 +60,10 @@ class ExportPage(ProjectContextMixin, FormView):
             get_object_or_404(
                 models.LexiconProject, language_code=self.kwargs.get("lang_code")
             ),
-            form.cleaned_data["checked"],
             self.request,
+            checked=form.cleaned_data["checked"],
+            hunspell=form.cleaned_data["include_hunspell"],
+            ignore_word_flag=form.cleaned_data["include_ignore"],
         )
         response = FileResponse(
             open(file, "rb"), as_attachment=True, filename=os.path.basename(file)
