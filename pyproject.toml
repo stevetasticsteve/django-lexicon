@@ -1,6 +1,6 @@
 [project]
 name = "lexicon"
-version = "0.19"
+version = "0.2"
 description = "A django app for hosting multiple minority language lexions"
 readme = "README.md"
 requires-python = ">=3.12"
