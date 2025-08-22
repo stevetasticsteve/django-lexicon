@@ -124,7 +124,12 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # django-registration settings
 ACCOUNT_ACTIVATION_DAYS = 7  # One-week activation window
-REGISTRATION_OPEN = os.getenv("REGISTRATION_OPEN", "True").lower() in ("true", "1", "t", "yes")
+REGISTRATION_OPEN = os.getenv("REGISTRATION_OPEN", "True").lower() in (
+    "true",
+    "1",
+    "t",
+    "yes",
+)
 
 # postgres settings
 DATABASES = {
@@ -257,8 +262,7 @@ if not DEBUG:
     CSRF_TRUSTED_ORIGINS = [f"https://{site}" for site in ALLOWED_HOSTS]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
-
+    SECURE_SSL_REDIRECT = False  # Handled by nginx
 
     sentry_sdk.init(
         dsn=os.getenv("SENTRY_DSN", ""),
@@ -272,5 +276,3 @@ if not DEBUG:
             "continuous_profiling_auto_start": True,
         },
     )
-
-
