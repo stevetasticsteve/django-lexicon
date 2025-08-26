@@ -1,4 +1,5 @@
 # lexicon/templatetags/dict_utils.py
+# These template tags make the conjugation grid view possible.
 
 from django import template
 
