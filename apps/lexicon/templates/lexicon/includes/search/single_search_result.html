@@ -3,12 +3,13 @@
     <h3 style="display: flex; align-items: center; justify-content: space-between;">
         <a href="{% url 'lexicon:entry_detail' word.project.language_code word.pk %}"
            class="text-decoration-none">
-            {{word.text}}
+            {{word.text}} {% if word.disambiguation %} <small>({{word.disambiguation}})</small> {% endif %}
         </a>
         {% if word.checked %}
             <img src="{% static '/img/check.svg' %}" alt="Checked" style="width:20px; height:20px; fill: green;">
         {% endif %}
     </a></h3>
+    
     <p>
     {% if word.pos %} <strong>{{word.get_pos_display}}</strong> {% endif %}
     {% with first_sense=word.senses.all|first %}

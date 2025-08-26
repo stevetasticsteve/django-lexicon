@@ -65,5 +65,6 @@ https://dev.codebysteve.com
 
 ## Logging
 
+## Kovol data import
 Manual Kovol data import command:
 podman-compose -f docker/docker-compose.dev.yml exec web1 uv run import_kovol_data.py

@@ -127,6 +127,13 @@ class LexiconEntry(models.Model):
         null=False,
         blank=False,
     )
+    disambiguation = models.CharField(
+        max_length=60,
+        blank=True,
+        help_text='A short disambiguation tag if entries need to have the same headword (e.g., "to see" vs. "to be"). Leave blank if not needed.',
+        null=False,
+        default="",  # Null in SQL doesn't trigger the unique constraint properly
+    )
     search = models.TextField(
         blank=True, null=True, help_text="automatically generated search terms"
     )
@@ -249,7 +256,8 @@ class LexiconEntry(models.Model):
         ordering = ["text"]
         constraints = [
             models.UniqueConstraint(
-                fields=["project", "text"], name="unique_text_per_project"
+                fields=["project", "text", "disambiguation"],
+                name="unique_text_per_project",
             )
         ]
         indexes = [models.Index(fields=["search"])]

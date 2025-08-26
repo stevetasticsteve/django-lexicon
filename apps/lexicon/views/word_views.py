@@ -2,6 +2,7 @@ import datetime
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -72,14 +73,14 @@ class EntryDetail(ProjectContextMixin, DetailView):
             word=self.object
         ).select_related("paradigm")
         context["conjugations"] = conjugations
-        context["paradigms"] = (
-            self.object.paradigms.all()
-        )
+        context["paradigms"] = self.object.paradigms.all()
 
         # generate hunspell words. util expects a string
         affix_letters = [c.affix_letter for c in self.object.affixes.all()]
         # create a list of conjugation words for hunspell
-        hunspell_dic_words = [f"{c.conjugation}/{''.join(affix_letters)}" for c in conjugations]
+        hunspell_dic_words = [
+            f"{c.conjugation}/{''.join(affix_letters)}" for c in conjugations
+        ]
         # append the main word to the list
         hunspell_dic_words.append(f"{self.object.text}/{''.join(affix_letters)}")
         # convert into a string
@@ -89,9 +90,7 @@ class EntryDetail(ProjectContextMixin, DetailView):
         log.debug(f"Hunspell dic words: {hunspell_dic_words}")
 
         if hunspell_dic_words and aff:
-            hunspell_words = unmunch(
-                hunspell_dic_words, aff
-            )
+            hunspell_words = unmunch(hunspell_dic_words, aff)
             context["hunspell_words"] = hunspell_words
             context["hunspell_conjugations_number"] = len(hunspell_words)
         return context
@@ -131,22 +130,29 @@ class CreateEntry(
 
     def form_valid(self, form, **kwargs) -> HttpResponse:
         """Add user, project and sense formset to LexiconEntry."""
-        log.info(self.request.POST)
         context = self.get_context_data()
         sense_formset = context["sense_formset"]
-        if sense_formset.is_valid():
-            obj = form.save(commit=False)
-            obj.modified_by = self.request.user.username
-            obj.project = self.get_project()
-            obj.save()
-            sense_formset.instance = obj
-            sense_formset.save()
-            user_log.info(
-                f"{self.request.user} created an entry in {obj.project} lexicon."
-            )
-            return super().form_valid(form, **kwargs)
-        else:
-            log.info(f"Sense formset is invalid: '{sense_formset.errors}'")
+        try:
+            if sense_formset.is_valid():
+                obj = form.save(commit=False)
+                obj.modified_by = self.request.user.username
+                obj.project = self.get_project()
+                obj.save()
+                sense_formset.instance = obj
+                sense_formset.save()
+                user_log.info(
+                    f"{self.request.user} created an entry in {obj.project} lexicon."
+                )
+                return super().form_valid(form, **kwargs)
+            else:
+                log.info(f"Sense formset is invalid: '{sense_formset.errors}'")
+                return self.form_invalid(form)
+        except IntegrityError as e:
+            log.debug(f"IntegrityError: {e}")
+            error_msg = "Word already exists, use the disambiguation field."
+            if self.request.headers.get("HX-Request") == "true":
+                return HttpResponse(error_msg, status=400)
+            form.add_error(None, error_msg)
             return self.form_invalid(form)
 
 
@@ -181,22 +187,30 @@ class UpdateEntry(
         log.info(self.request.POST)
         context = self.get_context_data()
         sense_formset = context["sense_formset"]
+        try:
+            if sense_formset.is_valid():
+                obj = form.save(commit=False)
+                obj.modified_by = self.request.user.username
+                if "review" in form.changed_data:
+                    obj.review_user = self.request.user.username
+                    obj.review_time = datetime.date.today()
+                obj.save()
+                sense_formset.instance = obj
+                sense_formset.save()
+                user_log.info(
+                    f"{self.request.user} edited an entry in {obj.project} lexicon."
+                )
+                return super().form_valid(form)
+            else:
+                log.info(f"Sense formset is invalid: '{sense_formset.errors}'")
+                return self.form_invalid(form)
 
-        if sense_formset.is_valid():
-            obj = form.save(commit=False)
-            obj.modified_by = self.request.user.username
-            if "review" in form.changed_data:
-                obj.review_user = self.request.user.username
-                obj.review_time = datetime.date.today()
-            obj.save()
-            sense_formset.instance = obj
-            sense_formset.save()
-            user_log.info(
-                f"{self.request.user} edited an entry in {obj.project} lexicon."
-            )
-            return super().form_valid(form)
-        else:
-            log.info(f"Sense formset is invalid: '{sense_formset.errors}'")
+        except IntegrityError as e:
+            log.debug(f"IntegrityError: {e}")
+            error_msg = "Word already exists, use the disambiguation field."
+            if self.request.headers.get("HX-Request") == "true":
+                return HttpResponse(error_msg, status=400)
+            form.add_error(None, error_msg)
             return self.form_invalid(form)
 
 

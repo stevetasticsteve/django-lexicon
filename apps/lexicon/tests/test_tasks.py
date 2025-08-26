@@ -64,9 +64,7 @@ def test_update_search_field_entry_does_not_exist():
 @pytest.mark.django_db
 def test_update_search_field_handles_empty_fields(english_project):
     """Test that the search field is set to empty if the entry text is empty."""
-    entry = models.LexiconEntry.objects.create(
-        project=english_project, text=""
-    )
+    entry = models.LexiconEntry.objects.create(project=english_project, text="")
     update_lexicon_entry_search_field(entry.pk)
     entry.refresh_from_db()
     assert entry.search == ""

@@ -78,7 +78,6 @@ class ConjugationGridView(ProjectContextMixin, LoginRequiredMixin, View):
     view_template = "lexicon/includes/conjugation_grid/conjugation_grid_view.html"
     edit_template = "lexicon/includes/conjugation_grid/conjugation_grid_edit.html"
 
-
     def get(self, request, lang_code, word_pk, paradigm_pk, edit):
         log.debug(f"lexicon:conjugation_grid view GET request. {lang_code}")
         context = self._context_lookup(word_pk, paradigm_pk)
@@ -94,11 +93,13 @@ class ConjugationGridView(ProjectContextMixin, LoginRequiredMixin, View):
         project = word.project
 
         if not self.request.user.has_perm("edit_lexiconproject", project):
-            log.debug(f"User {request.user} does not have permission to edit {project}.")
-            html = render_to_string("lexicon/includes/403_permission_error.html", request=request)
+            log.debug(
+                f"User {request.user} does not have permission to edit {project}."
+            )
+            html = render_to_string(
+                "lexicon/includes/403_permission_error.html", request=request
+            )
             return HttpResponse(html, status=403)
-
-        
 
         formset = self._get_or_create_formset_context(word, paradigm, request.POST)
         log.debug(

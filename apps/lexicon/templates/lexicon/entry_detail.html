@@ -52,6 +52,13 @@
             </td>
             </tr>
 
+            {% if object.disambiguation %}
+            <tr>
+            <th scope="row">Disambiguation</th>
+            <td>{{object.disambiguation}}</td>
+            </tr>
+            {% endif %}
+
             {% if object.oth_lang %}
             <tr>
             <th scope="row">2nd language</th>

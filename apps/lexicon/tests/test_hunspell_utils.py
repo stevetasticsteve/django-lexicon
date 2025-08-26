@@ -35,6 +35,7 @@ def test_check_length_dic_contents_empty():
 
 def test_unmunch_success(monkeypatch):
     """Test that unmunch processes words correctly."""
+
     # Mock subprocess.run to simulate unmunch output
     class DummyResult:
         def __init__(self):
@@ -51,6 +52,7 @@ def test_unmunch_success(monkeypatch):
 
 def test_unmunch_failure(monkeypatch):
     """Test that unmunch raises an error on failure."""
+
     # Mock subprocess.run to simulate a failure
     class DummyResult:
         def __init__(self):

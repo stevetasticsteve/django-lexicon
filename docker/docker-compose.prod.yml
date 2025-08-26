@@ -13,9 +13,9 @@ services:
     container_name: lexicon_app1
     restart: always
     volumes:
-      - ./data/logs:/app/data/logs
+      - ./data:/app/data
     ports:
-      - 8000:8000
+      - 127.0.0.1:8000:8000 # Bind to localhost only for security - use nginx as a reverse proxy
     env_file:
       - .env
     depends_on:

@@ -12,6 +12,7 @@ def dict_get(d, key):
         return d.get(key, "")
     return ""
 
+
 @register.filter
 def index(sequence, position):
     """Return the item at the given position in the sequence."""

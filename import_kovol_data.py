@@ -151,7 +151,7 @@ def import_verb_data(kovol_project, data, log):
             verb = models.LexiconEntry.objects.create(
                 project=kovol_project,
                 text=kv["fields"]["future_1s"],
-                checked=False, 
+                checked=False,
                 pos="v",
                 comments=lexicon_entry["fields"]["comments"],
                 review=lexicon_entry["fields"]["review"],
@@ -162,137 +162,145 @@ def import_verb_data(kovol_project, data, log):
                 modified=lexicon_entry["fields"]["modified"],
                 modified_by=lexicon_entry["fields"]["modified_by"],
             )
-            # add the verb paradigms
-            verb.paradigms.add(verb_paradigm)
 
-            # Add all the conjugations
-            conjugation_map = {
-                "past_1s": (0, 0),
-                "past_2s": (1, 0),
-                "past_3s": (2, 0),
-                "past_1p": (3, 0),
-                "past_2p": (4, 0),
-                "past_3p": (5, 0),
-                "present_1s": (0, 1),
-                "present_2s": (1, 1),
-                "present_3s": (2, 1),
-                "present_1p": (3, 1),
-                "present_2p": (4, 1),
-                "present_3p": (5, 1),
-                "future_1s": (0, 2),
-                "future_2s": (1, 2),
-                "future_3s": (2, 2),
-                "future_1p": (3, 2),
-                "future_2p": (4, 2),
-                "future_3p": (5, 2),
-            }
-            for c in conjugation_map:
-                if kv["fields"][c]:
-                    models.Conjugation.objects.create(
-                        word=verb,
-                        paradigm=verb_paradigm,
-                        row=conjugation_map[c][0],
-                        column=conjugation_map[c][1],
-                        conjugation=kv["fields"][c],
-                    )
-                if kv["fields"][f"{c}_checked"]:
-                    checked_counter += 1
-            # add the enclitics
-            verb.paradigms.add(enclitic_paradigm)
-            enclitic_map = {
-                "enclitic_same_actor": (4, 0),
-                "enclitic_1s": (0, 0),
-                "enclitic_1p": (1, 0),
-                "enclitic_2s": (2, 0),
-                "enclitic_2p": (3, 0),
-            }
-            for c in enclitic_map:
-                if kv["fields"][c]:
-                    models.Conjugation.objects.create(
-                        word=verb,
-                        paradigm=enclitic_paradigm,
-                        row=enclitic_map[c][0],
-                        column=enclitic_map[c][1],
-                        conjugation=kv["fields"][c],
-                    )
-                if kv["fields"][f"{c}_checked"]:
-                    checked_counter += 1
-            # add the imperatives
-            verb.paradigms.add(imperatives_paradigm)
-            imperative_map = {
-                "sg_imp": (0, 0),
-                "pl_imp": (1, 0),
-                "nominalizer": (0, 1),
-                "iguwot": (0, 2),
-            }
-            for c in imperative_map:
-                if kv["fields"][c]:
-                    models.Conjugation.objects.create(
-                        word=verb,
-                        paradigm=imperatives_paradigm,
-                        row=imperative_map[c][0],
-                        column=imperative_map[c][1],
-                        conjugation=kv["fields"][c],
-                    )
-                if kv["fields"][f"{c}_checked"]:
-                    checked_counter += 1
-            # set the checked status
-            if checked_counter >= 9:
-                verb.checked = True
-                verb.save()
-            # Add the main sense
-            models.Sense.objects.create(
-                entry=verb,
-                eng=lexicon_entry["fields"]["eng"],
-                oth_lang=lexicon_entry["fields"]["tpi"],
-            )
-            # get the additional senses
-            senses = [s for s in data["lexicon.verbsense"] if s["fields"]["verb"] == pk]
-            if senses:
-                for sense in senses:
-                    models.Sense.objects.create(
-                        entry=verb, eng=sense["fields"]["sense"]
-                    )
-
-            # get the spelling variations
-            spelling_variations = [
-                sv
-                for sv in data["lexicon.verbspellingvariation"]
-                if sv["fields"]["verb"] == pk
-            ]
-            # TODO losing the variation conjugation information here.
-            for sv in spelling_variations:
-                models.Variation.objects.create(
-                    word=verb,
-                    type="spelling",
-                    text=sv["fields"]["spelling_variation"],
-                    included_in_spellcheck=True,
-                    included_in_search=True,
-                )
-
-            # add the verb affixes
-            verb.affixes.add(affixes["A"])
-            verb.affixes.add(affixes["B"])
-            verb.affixes.add(affixes["C"])
-            # Map the integer prefixes from the old data to the new affix letters
-            prefix_map = {1: "D", 2: "E", 3: "F", 4: "G"}
-            prefix_numbers = kv["fields"].get("prefixes", [])
-            # Get the corresponding Affix objects
-            affixes_to_add = [
-                affixes[prefix_map[num]] for num in prefix_numbers if num in prefix_map
-            ]
-            if affixes_to_add:
-                verb.affixes.add(*affixes_to_add)
-
-        # Catch the IntegrityError for the 1s future tense
+            # Catch the IntegrityError for the 1s future tense
         except django.db.utils.IntegrityError:
-            clash = models.LexiconEntry.objects.filter(
-                text=kv["fields"]["future_1s"],
+            verb = models.LexiconEntry.objects.create(
                 project=kovol_project,
-            ).first()
-            log.error(
-                f"ERROR: IntegrityError for verb with pk: {pk}: {kv['fields']['future_1s']}, eng = {lexicon_entry['fields']['eng']}. It is clashing with {clash}"
+                text=kv["fields"]["future_1s"],
+                checked=False,
+                pos="v",
+                disambiguation="DISAMBIGUATION NEEDED",
+                comments=lexicon_entry["fields"]["comments"],
+                review=lexicon_entry["fields"]["review"],
+                review_comments=lexicon_entry["fields"]["review_comments"],
+                review_user=lexicon_entry["fields"]["review_user"],
+                review_time=lexicon_entry["fields"]["review_time"],
+                created=lexicon_entry["fields"]["created"],
+                modified=lexicon_entry["fields"]["modified"],
+                modified_by=lexicon_entry["fields"]["modified_by"],
             )
+            log.info(f"{verb} created with disambiguation needed. pk={verb.pk}")
+
+        # add the verb paradigms
+        verb.paradigms.add(verb_paradigm)
+
+        # Add all the conjugations
+        conjugation_map = {
+            "past_1s": (0, 0),
+            "past_2s": (1, 0),
+            "past_3s": (2, 0),
+            "past_1p": (3, 0),
+            "past_2p": (4, 0),
+            "past_3p": (5, 0),
+            "present_1s": (0, 1),
+            "present_2s": (1, 1),
+            "present_3s": (2, 1),
+            "present_1p": (3, 1),
+            "present_2p": (4, 1),
+            "present_3p": (5, 1),
+            "future_1s": (0, 2),
+            "future_2s": (1, 2),
+            "future_3s": (2, 2),
+            "future_1p": (3, 2),
+            "future_2p": (4, 2),
+            "future_3p": (5, 2),
+        }
+        for c in conjugation_map:
+            if kv["fields"][c]:
+                models.Conjugation.objects.create(
+                    word=verb,
+                    paradigm=verb_paradigm,
+                    row=conjugation_map[c][0],
+                    column=conjugation_map[c][1],
+                    conjugation=kv["fields"][c],
+                )
+            if kv["fields"][f"{c}_checked"]:
+                checked_counter += 1
+        # add the enclitics
+        verb.paradigms.add(enclitic_paradigm)
+        enclitic_map = {
+            "enclitic_same_actor": (4, 0),
+            "enclitic_1s": (0, 0),
+            "enclitic_1p": (1, 0),
+            "enclitic_2s": (2, 0),
+            "enclitic_2p": (3, 0),
+        }
+        for c in enclitic_map:
+            if kv["fields"][c]:
+                models.Conjugation.objects.create(
+                    word=verb,
+                    paradigm=enclitic_paradigm,
+                    row=enclitic_map[c][0],
+                    column=enclitic_map[c][1],
+                    conjugation=kv["fields"][c],
+                )
+            if kv["fields"][f"{c}_checked"]:
+                checked_counter += 1
+        # add the imperatives
+        verb.paradigms.add(imperatives_paradigm)
+        imperative_map = {
+            "sg_imp": (0, 0),
+            "pl_imp": (1, 0),
+            "nominalizer": (0, 1),
+            "iguwot": (0, 2),
+        }
+        for c in imperative_map:
+            if kv["fields"][c]:
+                models.Conjugation.objects.create(
+                    word=verb,
+                    paradigm=imperatives_paradigm,
+                    row=imperative_map[c][0],
+                    column=imperative_map[c][1],
+                    conjugation=kv["fields"][c],
+                )
+            if kv["fields"][f"{c}_checked"]:
+                checked_counter += 1
+        # set the checked status
+        if checked_counter >= 9:
+            verb.checked = True
+            verb.save()
+        # Add the main sense
+        models.Sense.objects.create(
+            entry=verb,
+            eng=lexicon_entry["fields"]["eng"],
+            oth_lang=lexicon_entry["fields"]["tpi"],
+        )
+        # get the additional senses
+        senses = [s for s in data["lexicon.verbsense"] if s["fields"]["verb"] == pk]
+        if senses:
+            for sense in senses:
+                models.Sense.objects.create(entry=verb, eng=sense["fields"]["sense"])
+
+        # get the spelling variations
+        spelling_variations = [
+            sv
+            for sv in data["lexicon.verbspellingvariation"]
+            if sv["fields"]["verb"] == pk
+        ]
+        # TODO losing the variation conjugation information here.
+        for sv in spelling_variations:
+            models.Variation.objects.create(
+                word=verb,
+                type="spelling",
+                text=sv["fields"]["spelling_variation"],
+                included_in_spellcheck=True,
+                included_in_search=True,
+            )
+
+        # add the verb affixes
+        verb.affixes.add(affixes["A"])
+        verb.affixes.add(affixes["B"])
+        verb.affixes.add(affixes["C"])
+        # Map the integer prefixes from the old data to the new affix letters
+        prefix_map = {1: "D", 2: "E", 3: "F", 4: "G"}
+        prefix_numbers = kv["fields"].get("prefixes", [])
+        # Get the corresponding Affix objects
+        affixes_to_add = [
+            affixes[prefix_map[num]] for num in prefix_numbers if num in prefix_map
+        ]
+        if affixes_to_add:
+            verb.affixes.add(*affixes_to_add)
 
 
 def get_paradigm_objects(kovol_project):
@@ -436,6 +444,7 @@ def import_og_suffix(kovol_project, data):
         word.affixes.add(affix)
         word.save()
 
+
 def import_phrases(kovol_project, data):
     for p in data["lexicon.phraseentry"]:
         pk = p["pk"]
@@ -450,14 +459,15 @@ def import_phrases(kovol_project, data):
         phrase = models.LexiconEntry.objects.create(
             project=kovol_project,
             text=p["fields"]["kgu"],
-            pos="ph",)
-        
+            pos="ph",
+        )
+
         models.Sense.objects.create(
             entry=phrase,
             eng=lexicon_entry["fields"]["eng"],
             oth_lang=lexicon_entry["fields"]["tpi"],
         )
-        
+
         if p["fields"]["matat"]:
             models.Variation.objects.create(
                 word=phrase,
@@ -465,9 +475,11 @@ def import_phrases(kovol_project, data):
                 text=p["fields"]["matat"],
             )
 
+
 def update_search_index():
     for e in models.LexiconEntry.objects.all():
         update_lexicon_entry_search_field(e.pk)
+
 
 def __main__():
     log = logging.getLogger("lexicon")
@@ -491,9 +503,6 @@ def __main__():
     import_og_suffix(kovol_project, data)
     import_phrases(kovol_project, data)
     update_search_index()
-
-    # TODO
-    # 1s future IntegrityErrors
 
 
 if __name__ == "__main__":

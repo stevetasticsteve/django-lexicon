@@ -61,8 +61,7 @@ class TestLexiconSearchResults:
         Test filtering by 'eng' field when 'eng=true' is provided.
         """
         url = self.get_base_url(english_project.language_code)
-        response = client.get(
-            url, data={"search": "test", "eng": "true"})
+        response = client.get(url, data={"search": "test", "eng": "true"})
 
         assert response.status_code == 200
         assert len(response.context["object_list"]) == 1

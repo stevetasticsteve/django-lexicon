@@ -6,7 +6,9 @@ from apps.lexicon import models
 
 @pytest.mark.django_db
 class TestAffixFileViews:
-    def test_affix_file_update_affix_file(self, client, project_with_affix_file, permissioned_user):
+    def test_affix_file_update_affix_file(
+        self, client, project_with_affix_file, permissioned_user
+    ):
         """Test that the affix tester view renders the affix file."""
         client.force_login(permissioned_user)
         url = reverse(
@@ -17,7 +19,7 @@ class TestAffixFileViews:
         assert response.status_code == 200
         assert "SFX A" in response.content.decode()
         assert "yam" in response.content.decode()
-    
+
     def test_affix_file_post_result(
         self, client, project_with_affix_file, permissioned_user
     ):
@@ -29,10 +31,12 @@ class TestAffixFileViews:
         )
         response = client.post(url, {"affix_file": "Updated"})
         assert response.status_code == 302
-        assert "Updated" in models.LexiconProject.objects.get(
-            language_code=project_with_affix_file.language_code
-        ).affix_file
-
+        assert (
+            "Updated"
+            in models.LexiconProject.objects.get(
+                language_code=project_with_affix_file.language_code
+            ).affix_file
+        )
 
     def test_affix_results_success(self, client, monkeypatch, english_project, user):
         """Test that the affix results view returns generated words."""
@@ -52,14 +56,16 @@ class TestAffixFileViews:
         assert "generated_words" in response.context
         assert "walked" in response.context["generated_words"]
         assert "walking" in response.context["generated_words"]
-    
+
     def test_affix_results_with_unmunch(self, client, project_with_affix_file, user):
         """Same test but using the unmunch function directly."""
         client.force_login(user)
         url = reverse(
             "lexicon:word_affix_results", args=[project_with_affix_file.language_code]
         )
-        affix_file = models.LexiconProject.objects.get(language_code=project_with_affix_file.language_code).affix_file
+        affix_file = models.LexiconProject.objects.get(
+            language_code=project_with_affix_file.language_code
+        ).affix_file
         response = client.get(url, {"words": "libigom/A", "affix_file": affix_file})
         assert response.status_code == 200
         assert "generated_words" in response.context
@@ -99,9 +105,7 @@ class TestWordAffixViews:
         affix_b = models.Affix.objects.create(
             project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
         )
-        word = models.LexiconEntry.objects.create(
-            project=kovol_project, text="hobol"
-        )
+        word = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
         word.affixes.add(affix_a)
         url = reverse(
             "lexicon:word_affix_list",
@@ -127,9 +131,7 @@ class TestWordAffixViews:
         models.Affix.objects.create(
             project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
         )
-        word = models.LexiconEntry.objects.create(
-            project=kovol_project, text="hobol"
-        )
+        word = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
         url = reverse(
             "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
@@ -151,9 +153,7 @@ class TestWordAffixViews:
         affix_b = models.Affix.objects.create(
             project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
         )
-        word = models.LexiconEntry.objects.create(
-            project=kovol_project, text="hobol"
-        )
+        word = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
         url = reverse(
             "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
@@ -179,9 +179,7 @@ class TestWordAffixViews:
         affix_b = models.Affix.objects.create(
             project=kovol_project, name="Prefix B", applies_to="n", affix_letter="B"
         )
-        word = models.LexiconEntry.objects.create(
-            project=kovol_project, text="hobol"
-        )
+        word = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
         word.affixes.set([affix_a, affix_b])
         client.force_login(permissioned_user)
         url = reverse(
@@ -203,9 +201,7 @@ class TestWordAffixViews:
         affix_a = models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
-        word = models.LexiconEntry.objects.create(
-            project=kovol_project, text="hobol"
-        )
+        word = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
         word.affixes.add(affix_a)
         url = reverse(
             "lexicon:word_update_affixes",
@@ -224,9 +220,7 @@ class TestWordAffixViews:
         models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
-        word = models.LexiconEntry.objects.create(
-            project=kovol_project, text="hobol"
-        )
+        word = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
         url = reverse(
             "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},
@@ -240,9 +234,7 @@ class TestWordAffixViews:
         affix = models.Affix.objects.create(
             project=kovol_project, name="Prefix A", applies_to="n", affix_letter="A"
         )
-        word = models.LexiconEntry.objects.create(
-            project=kovol_project, text="hobol"
-        )
+        word = models.LexiconEntry.objects.create(project=kovol_project, text="hobol")
         url = reverse(
             "lexicon:word_update_affixes",
             kwargs={"lang_code": kovol_project.language_code, "pk": word.pk},

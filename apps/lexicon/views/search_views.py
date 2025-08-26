@@ -44,6 +44,7 @@ class ProjectSearchView(ListView):
         search_field = self.english_search_field if is_english else self.search_field
         return {search_field: search}
 
+
 class LexiconSearchResults(ProjectSearchView):
     """Search results for lexicon entries."""
 

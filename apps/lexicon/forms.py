@@ -21,8 +21,10 @@ editable_fields = [
     "review_comments",
 ]
 
+
 class LexiconEntryForm(forms.ModelForm):
     """A form for editing an LexiconEntry object."""
+
     class Meta:
         model = models.LexiconEntry
         fields = [
@@ -30,12 +32,15 @@ class LexiconEntryForm(forms.ModelForm):
             "pos",
             "comments",
             "checked",
+            "disambiguation",
             "review",
             "review_comments",
         ]
         widgets = {
             "comments": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "review_comments": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "review_comments": forms.Textarea(
+                attrs={"class": "form-control", "rows": 3}
+            ),
         }
 
 
@@ -47,6 +52,7 @@ class SenseForm(forms.ModelForm):
             "example": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
 
+
 SenseFormSet = inlineformset_factory(
     models.LexiconEntry,
     models.Sense,
@@ -57,6 +63,7 @@ SenseFormSet = inlineformset_factory(
     can_delete=True,
     can_delete_extra=True,
 )
+
 
 class ParadigmSelectForm(forms.Form):
     """The form that appears in the paradigm modal.
@@ -332,6 +339,7 @@ class AffixFileForm(forms.ModelForm):
 
     class Meta:
         model = models.LexiconProject
-        fields = ['affix_file']
-        widgets = {'affix_file': forms.Textarea(attrs={"class": "form-select", "rows": 15})}
-
+        fields = ["affix_file"]
+        widgets = {
+            "affix_file": forms.Textarea(attrs={"class": "form-select", "rows": 15})
+        }
