@@ -19,9 +19,10 @@ services:
     volumes:
       - ../apps:/app/apps:ro
       - ../config:/app/config:ro
-      - ../data/logs:/app/data/logs
+      - ../data:/app/data
       - ../templates:/app/templates:ro
       - ../import_kovol_data.py:/app/import_kovol_data.py:ro
+      - ../import_kuyu_data.py:/app/import_kuyu_data.py:ro
     ports:
       - 8000:8000
     env_file:
