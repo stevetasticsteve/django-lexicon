@@ -6,13 +6,13 @@
     <div class="col">{{ variation.text }}</div>
     <div class="col">{{ variation.get_type_display }}</div>
     <div class="col text-center svg-button">
-        {% if variation.included_in_spellcheck %} <img src="{% static '/img/check.svg' %}" alt="tick">
-        {% else %} <img src="{% static '/img/xmark.svg' %}" alt="cross">
+        {% if variation.included_in_spellcheck %} <img src="{% static 'img/check.svg' %}" alt="tick">
+        {% else %} <img src="{% static 'img/xmark.svg' %}" alt="cross">
         {% endif %}
     </div>
     <div class="col text-center svg-button">
-        {% if variation.included_in_search %} <img src="{% static '/img/check.svg' %}" alt="tick">
-        {% else %} <img src="{% static '/img/xmark.svg' %}" alt="cross">
+        {% if variation.included_in_search %} <img src="{% static 'img/check.svg' %}" alt="tick">
+        {% else %} <img src="{% static 'img/xmark.svg' %}" alt="cross">
         {% endif %}
     </div>
     <div class="col-auto">
@@ -21,14 +21,14 @@
            hx-target="#variation-{{ variation.pk }}"
            hx-swap="outerHTML"
            class="svg-button text-decoration-none">
-            <img src="{% static '/img/pencil.svg' %}" alt="Edit">
+            <img src="{% static 'img/pencil.svg' %}" alt="Edit">
         </a>
         <a href="{% url 'lexicon:variation_delete' lang_code variation.pk %}"
            hx-get="{% url 'lexicon:variation_delete' lang_code variation.pk %}"
            hx-target="#variation-container"
            hx-swap="outerHTML"
            class="svg-button">
-            <img src="{% static '/img/trash-can.svg' %}" alt="Edit">
+            <img src="{% static 'img/trash-can.svg' %}" alt="Edit">
         </a>
     </div>
 </div>

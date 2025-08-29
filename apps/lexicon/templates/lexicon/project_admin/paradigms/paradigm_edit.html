@@ -19,14 +19,14 @@
     <div class="col text-center">{{ form.row_labels }}
     <div class="col-auto">
         <button id="submit-btn" type="submit" class="svg-button px-2" disabled>
-            <img src="{% static '/img/check.svg' %}" alt="Save">
+            <img src="{% static 'img/check.svg' %}" alt="Save">
         </button>
         <a href="{% url 'lexicon:project_admin_paradigm_list' lang_code %}"
            hx-get="{% url 'lexicon:project_admin_paradigm_list' lang_code %}"
            hx-target="#paradigm-container"
            hx-swap="innerHTML"
            class="svg-button px-2">
-            <img src="{% static '/img/ban.svg' %}" alt="Cancel">
+            <img src="{% static 'img/ban.svg' %}" alt="Cancel">
         </a>
     </div>
 </form>

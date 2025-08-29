@@ -9,14 +9,14 @@
            hx-target="#affix-{{ affix.pk }}"
            hx-swap="outerHTML"
            class="svg-button text-decoration-none">
-            <img src="{% static '/img/pencil.svg' %}" alt="Edit">
+            <img src="{% static 'img/pencil.svg' %}" alt="Edit">
         </a>
         <a href="{% url 'lexicon:project_admin_affix_delete' lang_code affix.pk %}"
            hx-get="{% url 'lexicon:project_admin_affix_delete' lang_code affix.pk %}"
            hx-target="#affix-container"
            hx-swap="outerHTML"
            class="svg-button">
-            <img src="{% static '/img/trash-can.svg' %}" alt="Edit">
+            <img src="{% static 'img/trash-can.svg' %}" alt="Edit">
         </a>
     </div>
 </div>

@@ -10,14 +10,14 @@
            hx-target="#paradigm-{{ paradigm.pk }}"
            hx-swap="outerHTML"
            class="svg-button text-decoration-none">
-            <img src="{% static '/img/pencil.svg' %}" alt="Edit">
+            <img src="{% static 'img/pencil.svg' %}" alt="Edit">
         </a>
         <a href="{% url 'lexicon:project_admin_paradigm_delete' lang_code paradigm.pk %}"
            hx-get="{% url 'lexicon:project_admin_paradigm_delete' lang_code paradigm.pk %}"
            hx-target="#paradigm-container"
            hx-swap="outerHTML"
            class="svg-button">
-            <img src="{% static '/img/trash-can.svg' %}" alt="Edit">
+            <img src="{% static 'img/trash-can.svg' %}" alt="Edit">
         </a>
     </div>
 </div>

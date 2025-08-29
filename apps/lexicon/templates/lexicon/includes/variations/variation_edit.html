@@ -17,14 +17,14 @@
     <div class="col text-center">{{ form.included_in_search }}</div>
     <div class="col-auto">
         <button type="submit" class="svg-button px-2">
-            <img src="{% static '/img/check.svg' %}" alt="Save">
+            <img src="{% static 'img/check.svg' %}" alt="Save">
         </button>
         <a href="{% url 'lexicon:variation_list' lang_code word.pk %}"
            hx-get="{% url 'lexicon:variation_list' lang_code word.pk %}"
            hx-target="#variation-container"
            hx-swap="innerHTML"
            class="svg-button px-2">
-            <img src="{% static '/img/ban.svg' %}" alt="Cancel">
+            <img src="{% static 'img/ban.svg' %}" alt="Cancel">
         </a>
     </div>
 </form>

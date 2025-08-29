@@ -19,14 +19,14 @@
     <div class="col text-center">{{ form.affix_letter }}
     <div class="col-auto">
         <button id="submit-btn" type="submit" class="svg-button px-2">
-            <img src="{% static '/img/check.svg' %}" alt="Save">
+            <img src="{% static 'img/check.svg' %}" alt="Save">
         </button>
         <a href="{% url 'lexicon:project_admin_affix_list' lang_code %}"
            hx-get="{% url 'lexicon:project_admin_affix_list' lang_code %}"
            hx-target="#affix-container"
            hx-swap="innerHTML"
            class="svg-button px-2">
-            <img src="{% static '/img/ban.svg' %}" alt="Cancel">
+            <img src="{% static 'img/ban.svg' %}" alt="Cancel">
         </a>
         <p id="non_field_errors" class="text-danger mb-2"></p>
     </div>
