@@ -28,5 +28,6 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("", ProjectList.as_view(), name="project_list"),
     path("lexicon/", include("apps.lexicon.urls")),
+    path("feedback/", include("apps.feedback.urls")), 
     path("json-validate", views.JsonValidation.as_view(), name="json_validation"),
 ]

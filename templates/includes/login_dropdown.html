@@ -9,10 +9,15 @@
                     {% if user.is_superuser %}
                     <li><a class="dropdown-item" href="{% url 'admin:index' %}">Django Admin</a></li>
                     {% endif %}
+                    
                     {% if lang_code %}
                     <li><a class="dropdown-item" href="{% url 'lexicon:project_admin' lang_code %}">{{lang_code}} Admin</a></li>
                     {% endif %}
+                    
                     <li><a class="dropdown-item" href="{% url 'password_change' %}">Change password</a></li>
+                    
+                    <li><a class="dropdown-item" href="{% url 'feedback' %}">Submit Feedback</a></li>
+
                     <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
                         <li><button type="submit" class="btn btn-light">Log Out</button></li>

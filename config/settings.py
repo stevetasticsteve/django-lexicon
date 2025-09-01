@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "apps.lexicon",
+    "apps.feedback",
     "guardian",
     "django_registration",
 ]
