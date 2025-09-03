@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block header %}
+{% include 'includes/header.html' %}
+{% endblock %}
+
+{% block page_content %}
+
+<div class="container row mt-4">
+    <div class="container col-md-2" id="toc">
+        <h4>Contents</h4>
+        <div class="list-group">
+        {% for page_name in toc %}
+            <a href="{% url 'docs:doc_page' page_name.file %}" class="list-group-item list-group-item-action">{{ page_name.name }}</a>
+        {% endfor %}
+        </div>
+    </div>
+    <div class="container col-md-10 p-4" id="doc-content">
+        {{ content|safe }}
+    </div>
+</div>
+{% endblock %}

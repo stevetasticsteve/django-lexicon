@@ -16,7 +16,11 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 p-2 mx-4">
 
                 {% block project_links %}{% endblock %}
+                <li class="nav-item">
+                    <a class="nav-link mx-1" href="{% url 'docs:doc_page' '01_About' %}">Help</a>
+                </li>
             </ul>
+            
             {% include 'includes/login_dropdown.html' %}
         </div>
     </div>

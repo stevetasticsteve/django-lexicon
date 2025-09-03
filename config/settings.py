@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "apps.lexicon",
     "apps.feedback",
+    "apps.docs",
     "guardian",
     "django_registration",
 ]
