@@ -10,15 +10,15 @@ What we name the rows and columns is flexible. We do want to ensure that we mark
 
 We then go to our libinim entry. We click on "add a paradigm".
 
-![libinim](/static/docs/img/libinim.png)
+![libinim_entry](/static/docs/img/libinim.png)
 
 In the modal that pops up we add the paradigm we just created:
 
-![libinim](/static/docs/img/libinim_add_paradigm.png)
+![libinim_paradigm](/static/docs/img/libinim_add_paradigm.png)
 
 Once we have done this the paradigm is associated with the lexicon entry. A conjugations area will appear on the entry's page and we can edit the conjugations as we need to.
 
-![libinim](/static/docs/img/libinim_conjugations.png)
+![libinim_conjugations](/static/docs/img/libinim_conjugations.png)
 
 All of the conjugations included in this grid will be exported into the spellcheck. All the conjugations will also combine with Hunspell affixes.
 
