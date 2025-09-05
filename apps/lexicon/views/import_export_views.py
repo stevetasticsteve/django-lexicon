@@ -97,6 +97,6 @@ def oxt_update_service(request, lang_code) -> HttpResponse:
     xml = xml.replace("$IDENTIFIER", f"NTMPNG {lang_code} extension")
     xml = xml.replace(
         "$DOWNLOAD_URL",
-        request.build_absolute_uri(reverse("lexicon:latest-oxt", args=[lang_code])),
+        request.build_absolute_uri(reverse("lexicon:latest_oxt", args=[lang_code])),
     )
     return HttpResponse(xml, content_type="text/xml")
