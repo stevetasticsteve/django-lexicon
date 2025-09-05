@@ -107,6 +107,7 @@ NOSUGGEST !""",
         permissions = [
             ("edit_lexiconproject", "Can edit this lexicon project"),
         ]
+        ordering = ["language_name"]
 
 
 class LexiconEntry(models.Model):

@@ -2,11 +2,10 @@
 
 An app for centrally managing and then exporting useful formats of a dictionary in a minority language.
 
-https://dev.codebysteve.com
+https://lexicon.reachkovol.com
 
 # To do
 4. type checker for adding affixes and paradigms
-5. contact form for getting permissions
 6. per project backup
 
 ## Features to implement
@@ -16,7 +15,6 @@ https://dev.codebysteve.com
 - A way to automate the updating of a paratext spellingstatus file.
 - Backup and export of projects. Allow project admins to rollback
 - Bulk changes to characters (phonetics -> orthography)
-- Feedback form
 - User documentation throughout site
 
   
