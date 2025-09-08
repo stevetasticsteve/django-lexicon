@@ -11,22 +11,18 @@ https://lexicon.reachkovol.com
 ## Features to implement
 - Common misspellings for words. To be used for searches in lexicon and to help spelling suggestions in hunspell
 - Find a way to centrally host .xml and .dic files and have Libre office/word use them. In other words automated updating of spell checks on multiple machines.
-- The oxt extension can define an update url. A http endpoint has been defined that correctly returns an xml with update information. Libre office can now see that there are updates for the extension, but can't download it.
 - A way to automate the updating of a paratext spellingstatus file.
 - Backup and export of projects. Allow project admins to rollback
 - Bulk changes to characters (phonetics -> orthography)
-- User documentation throughout site
 
   
 ## Bugs
-- Libre office can contact the update server and see updated oxt packages, but downloading them fails.
 - The save method on the models that updates the version number should only change if the tok ples changes, and it should only go up a single version number on import
 - Pagination doesn't work in main view, htmx request doesn't have pagination info attached.
 - When saving a paradigm a button appears for a split second under the grid.
 - Paradigms and Affixes are currently __all__. There needs to be filtering to only allow attaching to the correct POS.
 - Login rendered in paradigm box on detail page when logged out.
 - If no affixes are set for the project there shouldn't be the option to add them to a word on the detail page
-- simple_form.html not used?
 - word variations are not included in EntryDetail page hunspell conjugations
 
 ## UI
@@ -37,11 +33,7 @@ https://lexicon.reachkovol.com
 - The Affix and Paradigm tables need template work
 
 ## Auth
-- Password change requires templates
-- templates/registration/password_change_form.html
-- templates/registration/password_change_done.html
-- sign up form. Need a registration app
-- Eventually use office 365 logins and have integration with member services
+- Password change still using Django default template, despite seeming proper config of custom templates
 
 ## Exports
 - Currently exports are located inside the running container. This won't work for round robin load sharing, a volume needs to be mapped.
@@ -59,10 +51,3 @@ https://lexicon.reachkovol.com
 
 ## Testing
 - check test coverage
-- import and export
-
-## Logging
-
-## Kovol data import
-Manual Kovol data import command:
-podman-compose -f docker/docker-compose.dev.yml exec web1 uv run import_kovol_data.py

@@ -7,3 +7,4 @@ apps/lexicon/utils/upload.py
 *.sh
 .vscode/
 .coverage
+notes.md
