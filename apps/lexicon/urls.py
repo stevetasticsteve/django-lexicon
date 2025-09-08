@@ -215,13 +215,13 @@ urlpatterns = [
         name="export_page",
     ),
     path(
-        "<str:lang_code>/latest-oxt",
-        import_export_views.latest_oxt,
-        name="latest_oxt",
+        "<str:lang_code>/oxt-deliver.oxt",
+        import_export_views.oxt_update_deliver,
+        name="oxt_update_deliver",
     ),
     path(
         "<str:lang_code>/oxt-update",
-        import_export_views.oxt_update_service,
-        name="update_oxt",
+        import_export_views.oxt_update_notify,
+        name="oxt_update_notify",
     ),
 ]

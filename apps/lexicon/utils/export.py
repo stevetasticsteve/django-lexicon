@@ -298,7 +298,7 @@ def _create_oxt_package(
             desc_contents = desc_contents.replace(
                 "$UPDATE_URL",
                 request.build_absolute_uri(
-                    reverse("lexicon:update_oxt", args=[project.language_code])
+                    reverse("lexicon:oxt_update_notify", args=[project.language_code])
                 ),
             )
     except IOError as e:

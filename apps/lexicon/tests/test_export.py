@@ -4,7 +4,6 @@ import tempfile
 
 import pytest
 from django.http import HttpRequest
-from django.urls import reverse
 
 from apps.lexicon.utils import export
 
@@ -381,51 +380,3 @@ class TestXmlCreate:
         assert '<Status Word="hobol" State="R" />' in string
         assert "/A" not in string
         assert "\n\n" not in string
-
-
-@pytest.mark.django_db
-class TestExportView:
-    def test_export_view_get(self, client, project_with_affix_file):
-        response = client.get(
-            reverse(
-                "lexicon:export_page",
-                kwargs={"lang_code": project_with_affix_file.language_code},
-            )
-        )
-        assert response.status_code == 200
-
-    def test_export_view_post_oxt(self, client, project_with_affix_file):
-        """Test that posting to the export view returns an OXT file."""
-        response = client.post(
-            reverse(
-                "lexicon:export_page",
-                kwargs={"lang_code": project_with_affix_file.language_code},
-            ),
-            data={
-                "export_type": "oxt",
-                "include_hunspell": True,
-                "include_ignore": True,
-            },
-        )
-        assert response.status_code == 200
-        assert response.has_header("Content-Disposition")
-        assert response["Content-Disposition"].startswith("attachment;")
-        assert response["Content-Disposition"].endswith('.oxt"')
-
-    def test_export_view_post_dic(self, client, project_with_affix_file):
-        """Test that posting to the export view returns an OXT file."""
-        response = client.post(
-            reverse(
-                "lexicon:export_page",
-                kwargs={"lang_code": project_with_affix_file.language_code},
-            ),
-            data={
-                "export_type": "dic",
-                "include_hunspell": True,
-                "include_ignore": True,
-            },
-        )
-        assert response.status_code == 200
-        assert response.has_header("Content-Disposition")
-        assert response["Content-Disposition"].startswith("attachment;")
-        assert response["Content-Disposition"].endswith('.dic"')

@@ -1,3 +1,4 @@
+import logging
 import os
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -11,7 +12,11 @@ from apps.lexicon.permissions import ProjectEditPermissionRequiredMixin
 from apps.lexicon.utils import export
 from apps.lexicon.views.word_views import ProjectContextMixin
 
+log = logging.getLogger("lexicon")
 
+
+# v0.3 import was hidden from public use.
+# import views are untested
 class ImportPage(
     LoginRequiredMixin,
     ProjectEditPermissionRequiredMixin,
@@ -45,6 +50,7 @@ class ImportSuccess(ProjectContextMixin, TemplateView):
 
     template_name = "lexicon/upload_result.html"
 
+# export views below are in use
 
 class ExportPage(ProjectContextMixin, FormView):
     """Lists the export options at lexicon/<lang code>/export.
@@ -71,21 +77,32 @@ class ExportPage(ProjectContextMixin, FormView):
         return response
 
 
-def latest_oxt(request, lang_code) -> FileResponse:
+def oxt_update_deliver(request, lang_code) -> FileResponse:
     """Respond to requests for the latest oxt file."""
+    log.debug(f"oxt download request for language code {lang_code}")
     file = export.export_entries(
         "oxt",
         get_object_or_404(models.LexiconProject, language_code=lang_code),
-        True,
         request,
     )
-    response = FileResponse(open(file, "rb"), as_attachment=False)
+    log.debug(f"oxt file located at {file}")
+
+    # Open the file and serve with proper headers
+    response = FileResponse(
+        open(file, "rb"),
+        content_type="application/vnd.openoffice.extension",
+    )
+    # Suggest filename for LibreOffice to save/install
+    filename = f"{lang_code}.oxt"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
     return response
 
 
-def oxt_update_service(request, lang_code) -> HttpResponse:
+def oxt_update_notify(request, lang_code) -> HttpResponse:
     """Respond to requests for an oxt update with xml update info."""
     # load the xml template
+    log.debug(f"oxt update request for language code {lang_code}")
     with open(
         os.path.join("apps", "lexicon", "templates", "oxt", "update.xml")
     ) as xml_file:
@@ -95,8 +112,9 @@ def oxt_update_service(request, lang_code) -> HttpResponse:
 
     xml = xml.replace("$VERSION", str(project.version))
     xml = xml.replace("$IDENTIFIER", f"NTMPNG {lang_code} extension")
-    xml = xml.replace(
-        "$DOWNLOAD_URL",
-        request.build_absolute_uri(reverse("lexicon:latest_oxt", args=[lang_code])),
+    download_url = request.build_absolute_uri(
+        reverse("lexicon:oxt_update_deliver", args=[lang_code])
     )
+    xml = xml.replace("$DOWNLOAD_URL", download_url)
+    log.debug(f"oxt download xml: {xml}")
     return HttpResponse(xml, content_type="text/xml")
