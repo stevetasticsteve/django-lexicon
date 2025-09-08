@@ -271,7 +271,7 @@ wheels = [
 
 [[package]]
 name = "lexicon"
-version = "0.2"
+version = "0.3"
 source = { virtual = "." }
 dependencies = [
     { name = "celery" },

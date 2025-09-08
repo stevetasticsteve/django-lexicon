@@ -2,9 +2,11 @@ The export page will allow lexicon data to be exported in different formats. The
 
 The current supported formats are:
 
- - Libre Office .oxt
- - Paratext .xml
- - Microsoft word .dic
+ - [Libre Office](/docs/31_Libre office spellcheck) .oxt
+ - [Paratext](/docs/32_Paratext spellcheck) .xml
+ - [Microsoft word](/docs/33_Microsoft Word spellcheck) .dic
+
+**Libre office is recommended as a word processor**. Libre Office uses hunspell and offers the best spellchecking features. 
 
 ![export](/static/docs/img/export.png)
 

@@ -1,1 +1,3 @@
-# Todo
+Regular individual project backups with import and export is a planned feature. Being able to backup a project before a batch operation and easily roll back if it doesn't work is an important feature.
+
+For the moment all Lexicon data is stored in a Postgres database that is backed up. Some manual data processing will be needed to pull lexicon data from these backups. Submit a [help request](/feedback/) to have this done.

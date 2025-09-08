@@ -27,7 +27,6 @@ class DocPageView(TemplateView):
         doc_files = [{"file": f, "name": f.split("_")[1]} for f in doc_files]
         # Sort the list by the file name
         doc_files.sort(key=lambda x: x["file"])
-        log.debug(f"Available documentation pages: {doc_files}")
         return doc_files
 
     def get_context_data(self, **kwargs):
