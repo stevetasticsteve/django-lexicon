@@ -29,7 +29,9 @@ class ProjectSearchView(ListView):
             project=self.project
         )
         if search:
-            user_log.info(f"'{self.request.user}' searched '{search}' in '{self.project}'.")
+            user_log.info(
+                f"'{self.request.user}' searched '{search}' in '{self.project}'."
+            )
             # A search on related senses can return duplicate LexiconEntry objects.
             # We use distinct() to avoid this.
             return query.filter(**self.get_filter_kwargs()).distinct()

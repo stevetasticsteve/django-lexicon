@@ -192,7 +192,6 @@ class TestAffixAdminViews:
             applies_to="n",
             affix_letter="B",
         )
-        print(affix.pk)
         url = reverse(
             "lexicon:project_admin_affix_update",
             kwargs={"lang_code": english_project.language_code, "pk": affix.pk},

@@ -113,9 +113,7 @@ class TestWordAffixViews:
         )
         response = logged_in_client.get(url)
         assert response.status_code == 200
-        html = response.content.decode()
-        print(html)
-        # Both affixes should be present
+        html = response.content.decode()        # Both affixes should be present
         assert "Prefix A" in html
         assert "Prefix B" in html
         # Only affix_a should be checked
