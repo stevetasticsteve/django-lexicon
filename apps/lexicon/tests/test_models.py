@@ -441,14 +441,42 @@ class TestLexiconEntryModel:
         assert "Tok ples" in excinfo.value.message_dict["__all__"][0]
         assert "Invalid regex pattern" in excinfo.value.message_dict["__all__"][0]
 
-    # --- `save()` Method Tests (Version Increment, Timestamps) ---
-
-    def test_version_not_incremented_on_new_entry(self, english_project):
+    def test_version_incremented_on_new_entry(self, english_project):
         """Project version should not increment on initial entry creation."""
         initial_version = english_project.version
         models.LexiconEntry.objects.create(project=english_project, text="newentry")
         english_project.refresh_from_db()  # Refresh project to get latest version
-        assert english_project.version == initial_version
+        assert english_project.version == initial_version + 1, (
+            "New entry does not increment version"
+        )
+
+    def test_version_incremented_when_marked_checked(
+        self, english_project, english_words
+    ):
+        """Project version should increment when entry marked as checked."""
+        initial_version = english_project.version
+        entry = english_words[0]
+        entry.checked = True
+        entry.save()
+        english_project.refresh_from_db()  # Refresh project to get latest version
+        assert english_project.version == initial_version + 1, (
+            "Changing checked does not increment version"
+        )
+
+    def test_version_incremented_when_entry_deleted(
+        self, english_project, english_words
+    ):
+        """Project version should increment when entry marked as checked."""
+        initial_version = english_project.version
+        entry = english_words[0]
+        entry.delete()
+        english_project.refresh_from_db()  # Refresh project to get latest version
+        assert (
+            len(models.LexiconEntry.objects.filter(project=english_project)) == 1
+        )  # assert deleted
+        assert english_project.version == initial_version + 1, (
+            "Deleting entry does not increment version"
+        )
 
     def test_version_incremented_on_text_change(self, english_project):
         """Project version should increment when text is changed."""
@@ -458,11 +486,129 @@ class TestLexiconEntryModel:
         initial_version = english_project.version
 
         entry.text = "changed"
-        entry.save()  # Call save()
+        entry.save()
         english_project.refresh_from_db()
 
-        assert english_project.version == initial_version + 1
+        assert english_project.version == initial_version + 1, (
+            "Updating headword does not increment version number"
+        )
         assert entry.text == "changed"  # Verify change took effect
+
+    def test_version_incremented_on_affix_file_change(self, project_with_affix_file):
+        """Project version should increment when affix file is changed."""
+        models.LexiconEntry.objects.create(
+            project=project_with_affix_file, text="original"
+        )
+        initial_version = project_with_affix_file.version
+
+        project_with_affix_file.affix_file = "new affix file"
+        project_with_affix_file.save()
+        project_with_affix_file.refresh_from_db()
+
+        assert project_with_affix_file.version == initial_version + 1, (
+            "Updating affix file does not increment version number"
+        )
+        assert (
+            project_with_affix_file.affix_file == "new affix file"
+        )  # Verify change took effect
+
+    def test_version_incremented_on_conjugation_change(
+        self, english_project, english_words_with_paradigm
+    ):
+        """Project version should increment when any conjugation is changed."""
+
+        initial_version = english_project.version
+        words, paradigm, conjugation = english_words_with_paradigm
+        conjugation.conjugation = "changed"
+        conjugation.save()
+        english_project.refresh_from_db()
+
+        assert conjugation.conjugation == "changed"
+
+        assert english_project.version == initial_version + 1, (
+            "Updating conjugation does not increment version number"
+        )
+        
+
+    def test_version_incremented_on_conjugation_delete(
+        self, english_project, english_words_with_paradigm
+    ):
+        """Project version should increment when any conjugation is deleted."""
+
+        initial_version = english_project.version
+        words, paradigm, conjugation = english_words_with_paradigm
+        assert len(words[0].conjugations.all()) == 1
+        conjugation.delete()
+        assert len(words[0].conjugations.all()) == 0
+        english_project.refresh_from_db()
+
+        assert english_project.version == initial_version + 1, (
+            "Deleting conjugation does not increment version number"
+        )
+
+    def test_version_incremented_on_conjugation_create(
+        self, english_project, english_words_with_paradigm
+    ):
+        """Project version should increment when any conjugation is created."""
+
+        initial_version = english_project.version
+        words, paradigm, conjugation = english_words_with_paradigm
+        assert len(models.Conjugation.objects.filter(word=words[0])) == 1
+        models.Conjugation.objects.create(
+            word=words[0],
+            paradigm=paradigm,
+            row=0,
+            column=1,
+            conjugation="new conjugation",
+        )
+        english_project.refresh_from_db()
+
+        assert (
+            len(models.Conjugation.objects.filter(word=words[0])) == 2
+        )  # Verify conjugation creation
+
+        assert english_project.version == initial_version + 1, (
+            "Creating conjugation does not increment version number"
+        )
+
+    def test_version_incremented_on_entry_affix_removal(
+        self, kovol_project, kovol_words, project_with_affix_file
+    ):
+        """Project version should increment when any affix is removed from entry."""
+
+        initial_version = kovol_project.version
+        word = kovol_words[0]
+        yam_affix = models.Affix.objects.filter(affix_letter="A")[0]
+        assert yam_affix in word.affixes.all()
+        word.affixes.remove(yam_affix)
+
+        project_with_affix_file.refresh_from_db()
+
+        assert len(word.affixes.all()) == 0
+
+        assert project_with_affix_file.version == initial_version + 1, (
+            "removing Affix from entry does not increment version number"
+        )
+
+    def test_version_incremented_on_entry_affix_addition(
+        self, kovol_project, kovol_words, project_with_affix_file
+    ):
+        """Project version should increment when any entry has an affix assigned."""
+
+        entry = models.LexiconEntry.objects.create(
+            project=project_with_affix_file, text="original"
+        )
+        initial_version = kovol_project.version
+        yam_affix = models.Affix.objects.filter(affix_letter="A")[0]
+        assert yam_affix not in entry.affixes.all()
+        entry.affixes.add(yam_affix)
+        assert yam_affix in entry.affixes.all()
+
+        project_with_affix_file.refresh_from_db()
+
+        assert project_with_affix_file.version == initial_version + 1, (
+            "Adding Affix to entry does not increment version number"
+        )
 
     def test_version_not_incremented_on_other_field_change(self, english_project):
         """Project version should not increment when other fields are changed."""
@@ -470,10 +616,49 @@ class TestLexiconEntryModel:
             project=english_project, text="stable"
         )
         initial_version = english_project.version
+        entry.comments = "New comment"
         entry.save()
         english_project.refresh_from_db()
         assert english_project.version == initial_version
+    
+    def test_version_incremented_on_ignore_create(self, english_project):
+        """Project version should increment when ignore word is created."""
 
+        initial_version = english_project.version
+        ignore = models.IgnoreWord.objects.create(
+            project=english_project, text="ignore", type="tpi"
+        )
+
+        assert english_project.version == initial_version + 1, "Version not incremented when ignore word created."
+
+    def test_version_incremented_on_ignore_delete(self, english_project):
+        """Project version should increment when ignore word is created."""
+
+        ignore = models.IgnoreWord.objects.create(
+            project=english_project, text="ignore", type="tpi"
+        )
+        initial_version = english_project.version
+
+        ignore.delete()
+        assert english_project.version == initial_version + 1, (
+            "Version not incremented when ignore word deleted."
+        )
+
+    def test_version_incremented_on_ignore_update(self, english_project):
+        """Project version should increment when ignore word is updated."""
+
+        ignore = models.IgnoreWord.objects.create(
+            project=english_project, text="ignore", type="tpi"
+        )
+        initial_version = english_project.version
+
+        ignore.text="changed"
+        ignore.save()
+        assert english_project.version == initial_version + 1, (
+            "Version not incremented when ignore word updated."
+        )
+
+        
     def test_created_and_modified_timestamps(self, english_project):
         """created should be set on creation, modified updated on changes."""
         entry = models.LexiconEntry.objects.create(

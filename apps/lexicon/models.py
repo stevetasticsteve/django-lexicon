@@ -89,6 +89,29 @@ NOSUGGEST !""",
     )
 
     # methods
+
+    def increment_version(self):
+        """Helper function to increment the version number by 1."""
+        self.version += 1
+        self.save()
+        return self.version
+
+    def save(self, *args, **kwargs):
+        """Overwrite save method to increment version on affix file change."""
+
+        original_affix_file = None
+        if self.pk:
+            try:
+                original_affix_file = LexiconProject.objects.get(pk=self.pk).affix_file
+                if self.affix_file != original_affix_file:
+                    # Don't call the helper function to avoid recursion
+                    self.version += 1
+            except LexiconProject.DoesNotExist:
+                # Should not happen if self.pk exists, but defensive
+                pass
+
+        super(LexiconProject, self).save(*args, **kwargs)
+
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
         return f"{self.language_name} lexicon project"
@@ -229,12 +252,16 @@ class LexiconEntry(models.Model):
         we don't want users downloading new spell checks when no spelling data
         has changed."""
         self.text = self.text.lower()
-
-        original_text = None
+        original_values = None
         # Fetch original text only if this is an existing object
         if self.pk:
             try:
-                original_text = LexiconEntry.objects.get(pk=self.pk).text
+                original = LexiconEntry.objects.get(pk=self.pk)
+                original_values = {
+                    "text": original.text,
+                    "checked": original.checked,
+                    "affixes": list(original.affixes.all())
+                }
             except LexiconEntry.DoesNotExist:
                 # Should not happen if self.pk exists, but defensive
                 pass
@@ -246,12 +273,25 @@ class LexiconEntry(models.Model):
 
         # Now check if text changed from its original (pre-save) value
         # and if it's not a new object (pk exists after save)
-        if original_text and original_text != self.text:
-            self.project.version += 1
-            self.project.save()  # Save the project to update its version
+        increment_version = False
+
+        if not original_values:
+            increment_version = True  # This is a new entry
+        elif original_values["text"] != self.text:
+            increment_version = True
+        elif original_values["checked"] != self.checked:
+            increment_version = True
+
+        if increment_version:
+            self.project.increment_version()
 
         # trigger a celery task to update the search field
         update_lexicon_entry_search_field(self.pk)
+
+    def delete(self):
+        """Increment project version on delete"""
+        self.project.increment_version()
+        return super().delete()
 
     class Meta:
         ordering = ["text"]
@@ -404,7 +444,13 @@ class IgnoreWord(models.Model):
         """Code that runs whenever a Lexicon entry is saved."""
         # enforce lower case
         self.text = self.text.lower()
+        self.project.increment_version()
         return super(IgnoreWord, self).save(*args, **kwargs)
+    
+    def delete(self):
+        """Increment the project version number on delete."""
+        self.project.increment_version()
+        return super().delete()
 
     def __str__(self):
         """What Python calls this object when it shows it on screen."""
@@ -526,9 +572,24 @@ class Conjugation(models.Model):
     def save(self, *args, **kwargs):
         """Only save lower case."""
         self.full_clean()
+
         if self.conjugation:
             self.conjugation = self.conjugation.lower()
+
+        original_text = None
+        if self.pk:
+            if self.conjugation != original_text:
+                self.word.project.increment_version()
+        else:
+            # This is a new conjugation
+            self.word.project.increment_version()
+
         super().save(*args, **kwargs)
+
+    def delete(self):
+        """Update project version on conjugation delete."""
+        self.word.project.increment_version()
+        super().delete()
 
     def get_position_display(self):
         """Return a human-readable string representing the grid position."""
