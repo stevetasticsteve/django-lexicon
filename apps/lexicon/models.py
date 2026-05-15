@@ -243,7 +243,7 @@ class LexiconEntry(models.Model):
         ):  # Use project_id for existence check during initial creation
             self.text = normalize_and_validate(self.text, self.project, "Tok ples")
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, skip_side_effects=False, **kwargs):
         """Code that runs whenever a Lexicon entry is saved.
 
         Lower case should be enforced and the version number updated if the text
@@ -273,20 +273,22 @@ class LexiconEntry(models.Model):
 
         # Now check if text changed from its original (pre-save) value
         # and if it's not a new object (pk exists after save)
-        increment_version = False
+        # Don;t trigger side effects if skip_side_effects is True (e.g., when called from a data migration)
+        if not skip_side_effects:
+            increment_version = False
 
-        if not original_values:
-            increment_version = True  # This is a new entry
-        elif original_values["text"] != self.text:
-            increment_version = True
-        elif original_values["checked"] != self.checked:
-            increment_version = True
+            if not original_values:
+                increment_version = True  # This is a new entry
+            elif original_values["text"] != self.text:
+                increment_version = True
+            elif original_values["checked"] != self.checked:
+                increment_version = True
 
-        if increment_version:
-            self.project.increment_version()
+            if increment_version:
+                self.project.increment_version()
 
-        # trigger a celery task to update the search field
-        update_lexicon_entry_search_field(self.pk)
+            # trigger a celery task to update the search field
+            update_lexicon_entry_search_field(self.pk)
 
     def delete(self):
         """Increment project version on delete"""

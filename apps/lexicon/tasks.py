@@ -130,4 +130,17 @@ def update_lexicon_entry_search_field(entry_pk: int) -> None:
         log.error(f"Error updating search field for LexiconEntry {entry_pk}: {e}")
 
 
-##
+@shared_task
+def update_project_search_fields(lang_code: str) -> None:
+    """Updates the search field for all entries in a project.
+
+    This is used when the text validator changes, to update the search fields with the new validator."""
+    try:
+        project = models.LexiconProject.objects.get(language_code=lang_code)
+        entries = models.LexiconEntry.objects.filter(project=project)
+        for entry in entries:
+            update_lexicon_entry_search_field(entry.pk)
+    except models.LexiconProject.DoesNotExist:
+        log.debug(f"LexiconProject with language_code {lang_code} not found for search field update.")
+    except Exception as e:
+        log.error(f"Error updating search fields for project {lang_code}: {e}")
