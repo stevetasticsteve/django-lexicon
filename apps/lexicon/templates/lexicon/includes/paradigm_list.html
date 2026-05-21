@@ -1,15 +1,20 @@
 {% if paradigms %}
-    <h3>Conjugations</h3>
+    {% if user.is_authenticated %}
+        <h3>Conjugations</h3>
 
-    {% for p in paradigms %}
-        <div 
-        id="paradigm-{{ forloop.counter }}" 
-        class="border rounded-lg p-3"
-        hx-get="{% url 'lexicon:conjugation_grid' lang_code object.pk p.pk 'view' %}"
-        hx-trigger="load"
-        hx-target="#paradigm-{{ forloop.counter }}"
-        hx-swap="innerHTML">
-        </div>
-    {% endfor %}
+        {% for p in paradigms %}
+            <div 
+            id="paradigm-{{ forloop.counter }}" 
+            class="border rounded-lg p-3"
+            hx-get="{% url 'lexicon:conjugation_grid' lang_code object.pk p.pk 'view' %}"
+            hx-trigger="load"
+            hx-target="#paradigm-{{ forloop.counter }}"
+            hx-swap="innerHTML">
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>You need to <a href="{% url 'login' %}">login</a> to view the conjugation grid.</p>
+        {% endif %}
+
 
 {% endif %}
