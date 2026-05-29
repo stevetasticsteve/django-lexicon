@@ -8,3 +8,4 @@ apps/lexicon/utils/upload.py
 .vscode/
 .coverage
 notes.md
+update_local.sh
