@@ -1,7 +1,8 @@
-from django.core.management.base import BaseCommand
-from apps.lexicon.project_import_export import export_project_to_json
-
 import os
+
+from django.core.management.base import BaseCommand
+
+from apps.lexicon.utils.project_import_export import export_project_to_json
 
 
 class Command(BaseCommand):

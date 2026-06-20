@@ -12,7 +12,7 @@ from apps.lexicon.models import (
     Sense,
     Variation,
 )
-from apps.lexicon.project_import_export import (
+from apps.lexicon.utils.project_import_export import (
     export_project,
     export_project_to_json,
     import_project,

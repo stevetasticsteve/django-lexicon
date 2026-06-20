@@ -1,3 +1,7 @@
+# This module contains user facing export options. These can be triggered in a view
+# with files to be downloaded by users
+
+import json
 import logging
 import os
 import re
@@ -8,6 +12,7 @@ from django.urls import reverse
 
 from apps.lexicon import models
 from apps.lexicon.utils.hunspell import unmunch
+from apps.lexicon.utils.project_import_export import export_project_to_json
 
 log = logging.getLogger("lexicon")
 export_folder = os.path.join("data", "exports")
@@ -50,6 +55,13 @@ def export_entries(
                 hunspell=hunspell,
                 ignore_word_flag=ignore_word_flag,
             )
+        # TODO write a test case
+        case "jsn":
+            data = export_project_to_json(project.pk)
+            path = os.path.join(export_folder, f"{project.language_code}.json")
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            return path
 
 
 # Helper functions for creating file names and paths.

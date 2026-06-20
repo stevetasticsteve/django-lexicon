@@ -1,10 +1,12 @@
+# This module is for admins to import and export projects via a django management command
+
 import json
 import logging
 from datetime import datetime, timezone
 
 from django.db import transaction
 
-from .models import (
+from apps.lexicon.models import (
     Affix,
     Conjugation,
     IgnoreWord,

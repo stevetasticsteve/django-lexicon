@@ -1,7 +1,8 @@
 # management/commands/import_project.py
 from django.core.management.base import BaseCommand
+
 from apps.lexicon.tasks import update_project_search_fields
-from apps.lexicon.project_import_export import import_project_from_json
+from apps.lexicon.utils.project_import_export import import_project_from_json
 
 
 class Command(BaseCommand):
