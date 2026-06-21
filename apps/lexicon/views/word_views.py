@@ -38,10 +38,16 @@ class ProjectContextMixin:
         return get_object_or_404(models.LexiconProject, language_code=lang_code)
 
     def get_context_data(self, **kwargs) -> dict:
-        """Add project and lang_code to the context."""
+        """Add project, affixes and lang_code to the context."""
         context = super().get_context_data(**kwargs)
         project = self.get_project()
-        context.update({"lang_code": project.language_code, "project": project})
+        context.update(
+            {
+                "lang_code": project.language_code,
+                "project": project,
+                "affixes_available": project.affixes.all(),  # used to conditionally show affixes in detail view
+            }
+        )
         return context
 
 

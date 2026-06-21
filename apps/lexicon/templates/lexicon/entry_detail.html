@@ -1,164 +1,180 @@
 {% extends 'base.html' %}
 {% block header %}
-{% include 'lexicon/includes/project_header.html' %}
+    {% include 'lexicon/includes/project_header.html' %}
 {% endblock %}
 {% block page_content %}
 
-{% include "lexicon/includes/403_js_response.html" %}
+    {% include "lexicon/includes/403_js_response.html" %}
 
-<div class="container">
+    <div class="container">
 
-    <div class="btn-group my-4" role="group">
-    <a href="{% url 'lexicon:entry_list' project.language_code %}"><button type="button" class="btn btn-primary">Return to Lexicon</button></a>
-    <a href="{% url 'lexicon:update_entry' project.language_code object.pk %}"><button type="button" class="btn btn-secondary">Update entry</button></a>
-    <button 
-    type="button" 
-    class="btn btn-secondary"
-    hx-get="{% url 'lexicon:word_paradigm_modal' project.language_code object.pk %}"
-    hx-target="#modal-container"
-    hx-trigger="click">
-    Add a paradigm</button>
-    <a href="{% url 'lexicon:delete_entry' project.language_code object.pk %}"><button type="button" class="btn btn-danger">Delete word</button></a> 
-    </div>
-
-    <h1 class="my-2">{{object.text}}</h1>
-
-    <!-- Container for dynamically loaded modal -->
-    <div class="htmx-action-container">
-        <div class="permission-errors"></div> {# Area to display permission errors #}
-        <div id="modal-container"></div>
-    </div>
-
-    <div class="container p-2">
-        <table class="table table-striped">
-        <thead>
-            <tr>
-            <th scope="col">Details</th>
-            <th scope="col"></th>
-            </tr>
-        </thead>
-        <tbody>
-            
-            <tr>
-            <th scope="row">Definition</th>
-            <td>
-                <ol>
-                {% for sense in object.senses.all %}
-                    <li>
-                        {{sense.eng}}{% if sense.oth_lang %}, "{{sense.oth_lang}}" {% endif %}{% if sense.example %}, {{sense.example}} {% endif %}
-                    </li>
-                {% endfor %}
-                </ol>
-            </td>
-            </tr>
-
-            {% if object.disambiguation %}
-            <tr>
-            <th scope="row">Disambiguation</th>
-            <td>{{object.disambiguation}}</td>
-            </tr>
-            {% endif %}
-
-            {% if object.oth_lang %}
-            <tr>
-            <th scope="row">2nd language</th>
-            <td>{{object.secondary_language}}</td>
-            </tr>
-            {% endif %}
-
-            {% if object.pos %}
-            <tr>
-            <th scope="row">POS</th>
-            <td>{{object.pos}}</td>
-            </tr>
-            {% endif %}
-
-
-            {% if object.comments %}
-            <tr>
-            <th scope="row">Comments</th>
-            <td>{{object.comments}}</td>
-            </tr>
-            {% endif %}
-
-            <tr>
-            <th scope="row">Created</th>
-            <td>{{object.created}}</td>
-            </tr>
-
-            <tr>
-            <th scope="row">Last modified by</th>
-            <td>{{object.modified_by}}, {{object.modified}}</td>
-            </tr>
-
-            <tr>
-            <th scope="row">Spelling checked</th>
-            {% if object.checked %}
-            <td>Checked</td>
-            {% else %}
-            <td>Nope</td>
-            {% endif %}
-            </tr>
-
-            {% if object.review != "0" %}
-            <tr>
-            <th scope="row">Review</th>
-            <td><ul class="list-unstyled">
-                <li>{{object.get_review_display}}</li>
-                <li>{{object.review_comments}}</li>
-            </ul></td>
-            </tr>
-            {% endif %}
-
-        </tbody>
-        </table>
-        {% if paradigms %}
-            <div class="container my-4 py-4 border">
-                {% include 'lexicon/includes/paradigm_list.html' %}  
-            </div>
-        {% endif %}
-
-        <div class="container my-4 py-4 border">
-            <!-- Insert variation list by htmx -->
-            <div
-                hx-get="{% url 'lexicon:variation_list' lang_code object.pk %}"
-                hx-target="#variation-container"
-                hx-trigger="load"
-                hx-swap="innerHTML">
-            </div>
-
-            <div id="variation-container"></div>
-
+        <div class="btn-group my-4" role="group">
+            <a href="{% url 'lexicon:entry_list' project.language_code %}">
+                <button type="button" class="btn btn-primary">Return to Lexicon</button>
+            </a>
+            <a href="{% url 'lexicon:update_entry' project.language_code object.pk %}">
+                <button type="button" class="btn btn-secondary">Update entry</button>
+            </a>
+            <button
+                    type="button"
+                    class="btn btn-secondary"
+                    hx-get="{% url 'lexicon:word_paradigm_modal' project.language_code object.pk %}"
+                    hx-target="#modal-container"
+                    hx-trigger="click">
+                Add a paradigm
+            </button>
+            <a href="{% url 'lexicon:delete_entry' project.language_code object.pk %}">
+                <button type="button" class="btn btn-danger">Delete word</button>
+            </a>
         </div>
 
-        <!-- Show the automatic affix conjugations and form -->
-        <div class="container my-4 py-4 border">
-            <div
-                class="my-4"
-                hx-get="{% url 'lexicon:word_affix_management' lang_code object.pk %}"
-                hx-target="#affix-container"
-                hx-trigger="load"
-                hx-swap="innerHTML">
-            </div>
+        <h1 class="my-2">{{ object.text }}</h1>
 
-            <div id="affix-container"></div> 
+        <!-- Container for dynamically loaded modal -->
+        <div class="htmx-action-container">
+            <div class="permission-errors"></div>
+            {# Area to display permission errors #}
+            <div id="modal-container"></div>
+        </div>
 
-            {% if hunspell_words %}
-            <div class="container ">
-                <p class="my-4">The following <strong>{{hunspell_conjugations_number}}</strong> conjugations are automatically conjugated using affix rules:</p>
-                <div class="row">
-                    {% for word in hunspell_words %}
-                        <div class="col-md-4 mb-2">
-                            {{ word }}
-                        </div>
-                    {% endfor %}
+        <div class="container p-2">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Details</th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr>
+                    <th scope="row">Definition</th>
+                    <td>
+                        <ol>
+                            {% for sense in object.senses.all %}
+                                <li>
+                                    {{ sense.eng }}{% if sense.oth_lang %}, "{{ sense.oth_lang }}" {% endif %}
+                                    {% if sense.example %}, {{ sense.example }} {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    </td>
+                </tr>
+
+                {% if object.disambiguation %}
+                    <tr>
+                        <th scope="row">Disambiguation</th>
+                        <td>{{ object.disambiguation }}</td>
+                    </tr>
+                {% endif %}
+
+                {% if object.oth_lang %}
+                    <tr>
+                        <th scope="row">2nd language</th>
+                        <td>{{ object.secondary_language }}</td>
+                    </tr>
+                {% endif %}
+
+                {% if object.pos %}
+                    <tr>
+                        <th scope="row">POS</th>
+                        <td>{{ object.pos }}</td>
+                    </tr>
+                {% endif %}
+
+
+                {% if object.comments %}
+                    <tr>
+                        <th scope="row">Comments</th>
+                        <td>{{ object.comments }}</td>
+                    </tr>
+                {% endif %}
+
+                <tr>
+                    <th scope="row">Created</th>
+                    <td>{{ object.created }}</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Last modified by</th>
+                    <td>{{ object.modified_by }}, {{ object.modified }}</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Spelling checked</th>
+                    {% if object.checked %}
+                        <td>Checked</td>
+                    {% else %}
+                        <td>Nope</td>
+                    {% endif %}
+                </tr>
+
+                {% if object.review != "0" %}
+                    <tr>
+                        <th scope="row">Review</th>
+                        <td>
+                            <ul class="list-unstyled">
+                                <li>{{ object.get_review_display }}</li>
+                                <li>{{ object.review_comments }}</li>
+                            </ul>
+                        </td>
+                    </tr>
+                {% endif %}
+
+                </tbody>
+            </table>
+            {% if paradigms %}
+                <div class="container my-4 py-4 border">
+                    {% include 'lexicon/includes/paradigm_list.html' %}
                 </div>
-            </div>
             {% endif %}
-        </div>
 
+            {% if affixes_available %}
+                <div class="container my-4 py-4 border">
+                    <!-- Insert variation list by htmx -->
+                    <div
+                            hx-get="{% url 'lexicon:variation_list' lang_code object.pk %}"
+                            hx-target="#variation-container"
+                            hx-trigger="load"
+                            hx-swap="innerHTML">
+                    </div>
+
+                    <div id="variation-container"></div>
+
+                </div>
+
+                <!-- Show the automatic affix conjugations and form -->
+
+                <div class="container my-4 py-4 border">
+                    <div
+                            class="my-4"
+                            hx-get="{% url 'lexicon:word_affix_management' lang_code object.pk %}"
+                            hx-target="#affix-container"
+                            hx-trigger="load"
+                            hx-swap="innerHTML">
+                    </div>
+
+                    <div id="affix-container"></div>
+
+                    {% if hunspell_words %}
+                        <div class="container ">
+                            <p class="my-4">The following <strong>{{ hunspell_conjugations_number }}</strong>
+                                conjugations
+                                are automatically conjugated using affix rules:</p>
+                            <div class="row">
+                                {% for word in hunspell_words %}
+                                    <div class="col-md-4 mb-2">
+                                        {{ word }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+        </div>
     </div>
-</div>
 
 
 {% endblock %}
