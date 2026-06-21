@@ -12,6 +12,7 @@ class LexiconConfig(AppConfig):
     name = "apps.lexicon"
 
     def ready(self):
+        import apps.lexicon.signals  # noqa
         log = logging.getLogger("lexicon")
 
         # Determine process type by inspecting sys.argv

@@ -260,7 +260,6 @@ class LexiconEntry(models.Model):
                 original_values = {
                     "text": original.text,
                     "checked": original.checked,
-                    "affixes": list(original.affixes.all())
                 }
             except LexiconEntry.DoesNotExist:
                 # Should not happen if self.pk exists, but defensive
