@@ -9,3 +9,5 @@ apps/lexicon/utils/upload.py
 .coverage
 notes.md
 update_local.sh
+.junie
+.idea
