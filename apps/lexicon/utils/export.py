@@ -57,10 +57,10 @@ def export_entries(
             )
         # TODO write a test case
         case "jsn":
-            data = export_project_to_json(project.pk)
+            json_string = export_project_to_json(project.pk)
             path = os.path.join(export_folder, f"{project.language_code}.json")
             with open(path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+                f.write(json_string)
             return path
 
 

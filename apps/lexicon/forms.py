@@ -1,10 +1,8 @@
 import logging
 
 from django import forms
-from django.forms import BaseModelFormSet, modelformset_factory
+from django.forms import BaseModelFormSet, inlineformset_factory, modelformset_factory
 from django.urls import reverse_lazy
-from django.forms import inlineformset_factory
-
 
 from apps.lexicon import models
 
@@ -109,15 +107,19 @@ class ExportForm(forms.Form):
         choices=(
             (
                 "oxt",
-                "libre office .oxt",
+                "Libre office .oxt",
             ),
             (
                 "dic",
-                "word .dic",
+                "Word .dic",
             ),
             (
                 "xml",
-                "paratext .xml",
+                "Paratext .xml",
+            ),
+            (
+                "jsn",
+                "Lexicon app .json (includes all project data)",
             ),
         ),
     )

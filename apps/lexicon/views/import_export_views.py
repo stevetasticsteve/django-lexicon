@@ -50,7 +50,9 @@ class ImportSuccess(ProjectContextMixin, TemplateView):
 
     template_name = "lexicon/upload_result.html"
 
+
 # export views below are in use
+
 
 class ExportPage(ProjectContextMixin, FormView):
     """Lists the export options at lexicon/<lang code>/export.
@@ -71,8 +73,15 @@ class ExportPage(ProjectContextMixin, FormView):
             hunspell=form.cleaned_data["include_hunspell"],
             ignore_word_flag=form.cleaned_data["include_ignore"],
         )
+        content_type = None
+        if form.cleaned_data["export_type"] == "jsn":
+            content_type = "application/json"
+
         response = FileResponse(
-            open(file, "rb"), as_attachment=True, filename=os.path.basename(file)
+            open(file, "rb"),
+            as_attachment=True,
+            filename=os.path.basename(file),
+            content_type=content_type,
         )
         return response
 
