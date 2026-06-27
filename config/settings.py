@@ -198,6 +198,14 @@ LOGGING = {
             "backupCount": 3,  # Keep 5 backup log files
             "formatter": "standard",
         },
+        "backup_log_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(LOGGING_DIR, "backups.log"),
+            "maxBytes": 1024 * 1024 * 5,  # 5 MB
+            "backupCount": 5,
+            "formatter": "standard",
+        },
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
@@ -212,6 +220,11 @@ LOGGING = {
         },
         "user_log": {
             "handlers": ["user_log_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "lexicon.backup": {
+            "handlers": ["backup_log_file", "console"],
             "level": "INFO",
             "propagate": False,
         },
@@ -247,6 +260,13 @@ CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = os.getenv("TIME_ZONE", "Pacific/Port_Moresby")
+
+CELERY_BEAT_SCHEDULE = {
+    "backup-projects-daily": {
+        "task": "apps.lexicon.tasks.backup_projects",
+        "schedule": 86400.0,  # 24 hours in seconds
+    },
+}
 
 # load the version from pyproject.toml
 try:

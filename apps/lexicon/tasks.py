@@ -1,12 +1,22 @@
 import csv
+import json
 import logging
+import os
+from datetime import datetime
 
 from celery import shared_task
+from django.conf import settings
+from django.core.management import call_command
 from django.db import DataError, IntegrityError
 
 from apps.lexicon import models
 
 log = logging.getLogger("lexicon")
+backup_log = logging.getLogger("lexicon.backup")
+
+BACKUP_DIR = getattr(
+    settings, "BACKUP_DIR", os.path.join(settings.BASE_DIR, "data", "backups")
+)
 
 
 @shared_task
@@ -141,6 +151,85 @@ def update_project_search_fields(lang_code: str) -> None:
         for entry in entries:
             update_lexicon_entry_search_field(entry.pk)
     except models.LexiconProject.DoesNotExist:
-        log.debug(f"LexiconProject with language_code {lang_code} not found for search field update.")
+        log.debug(
+            f"LexiconProject with language_code {lang_code} not found for search field update."
+        )
     except Exception as e:
         log.error(f"Error updating search fields for project {lang_code}: {e}")
+
+
+@shared_task
+def backup_projects() -> None:
+    """Runs the export project management command to backup all projects as .json files.
+
+    Each project will have its own folder in BACKUP_DIR based on its language code.
+    A new backup is only created if the project's version is greater than the version
+    in the latest existing backup.
+    """
+    if not os.path.exists(BACKUP_DIR):
+        os.makedirs(BACKUP_DIR)
+
+    backup_log.info("Starting project backups.")
+
+    for project in models.LexiconProject.objects.all():
+        project_backup_dir = os.path.join(BACKUP_DIR, project.language_code)
+        if not os.path.exists(project_backup_dir):
+            os.makedirs(project_backup_dir)
+
+        # Find latest backup
+        backups = [
+            f
+            for f in os.listdir(project_backup_dir)
+            if f.endswith(".json")
+            and os.path.isfile(os.path.join(project_backup_dir, f))
+        ]
+        backups.sort(reverse=True)
+
+        should_backup = True
+        if backups:
+            latest_backup_path = os.path.join(project_backup_dir, backups[0])
+            try:
+                with open(latest_backup_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    last_version = data.get("project", {}).get("version", 0)
+                    if project.version <= last_version:
+                        should_backup = False
+                        backup_log.info(
+                            f"Backup not required for {project.language_code}. "
+                            f"Current version {project.version} matches or is less than latest backup version {last_version}."
+                        )
+            except (json.JSONDecodeError, KeyError, IOError) as e:
+                log.error(f"Error reading latest backup {latest_backup_path}: {e}")
+                backup_log.error(
+                    f"Error reading latest backup for {project.language_code}: {e}"
+                )
+
+        if should_backup:
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            filename = f"{project.language_code}_backup_{timestamp}.json"
+            # We bypass the management command's default pathing because it's too restrictive
+            # and use the utility directly, or we can use call_command if we ensure path is absolute.
+            # The management command export_project.py uses os.path.join("data", output)
+            # which is not what we want here if we want it in data/backups/<lang>/
+            # Let's use call_command with an absolute path if possible,
+            # but export_project command prepends "data/".
+
+            # Since the management command is simple, let's just use the utility it uses.
+            from apps.lexicon.utils.project_import_export import export_project_to_json
+
+            try:
+                data = export_project_to_json(project.pk)
+                output_path = os.path.join(project_backup_dir, filename)
+                with open(output_path, "w", encoding="utf-8") as f:
+                    f.write(data)
+                log.info(f"Created backup for {project.language_code} at {output_path}")
+                backup_log.info(
+                    f"Created backup for {project.language_code} at {output_path}. Version: {project.version}"
+                )
+            except Exception as e:
+                log.error(f"Failed to create backup for {project.language_code}: {e}")
+                backup_log.error(
+                    f"Failed to create backup for {project.language_code}: {e}"
+                )
+
+    backup_log.info("Project backups completed.")
