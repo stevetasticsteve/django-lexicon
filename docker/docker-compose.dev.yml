@@ -1,5 +1,5 @@
 services:
-   db:
+  db:
     image: postgres:17
     container_name: database_lexicon_app
     restart: always
@@ -10,7 +10,7 @@ services:
     env_file:
       - .env
   
-   web1:
+  web1:
     container_name: lexicon_app1
     restart: always
     build:
@@ -24,14 +24,15 @@ services:
       - ../config:/app/config
       - ../data:/app/data
       - ../templates:/app/templates
+      - ../import_uruwa_data.py:/app/import_uruwa_data.py
     ports:
       - 8000:8000
     env_file:
       - .env
     depends_on:
       - db
-   
-   celery:
+
+  celery:
     container_name: celery_lexicon
     build:
       context: ../
@@ -50,11 +51,31 @@ services:
       - web1
       - redis
       - db
-    
-   redis:
+
+  celery-beat:
+    container_name: celery_beat_lexicon
+    build:
+      context: ../
+      dockerfile: docker/CeleryDockerfile
+    volumes:
+      - ../apps:/app/apps:ro
+      - ../config:/app/config:ro
+      - ../data/logs:/app/data/logs
+      - ../templates:/app/templates:ro
+    restart: always
+    command: celery -A config beat -l info
+    env_file:
+      - .env
+
+    depends_on:
+      - web1
+      - redis
+      - db
+
+  redis:
     image: redis
     container_name: redis_lexicon
     restart: always
-   
+
 volumes:
   lexicon_postgres:
