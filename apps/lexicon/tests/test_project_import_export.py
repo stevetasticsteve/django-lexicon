@@ -1,4 +1,5 @@
 import json
+from datetime import date
 
 import pytest
 
@@ -166,6 +167,13 @@ class TestExport:
         json_str = export_project_to_json(full_project.pk)
         parsed = json.loads(json_str)
         assert parsed["project"]["language_code"] == "kgu"
+
+    def test_export_serializes_review_time_as_iso_string(self, entry):
+        entry.review_time = date(2026, 7, 8)
+        entry.save(update_fields=["review_time"])
+
+        data = export_project(entry.project.pk)
+        assert data["entries"][0]["review_time"] == "2026-07-08"
 
     def test_empty_project_exports_cleanly(self, project):
         data = export_project(project.pk)

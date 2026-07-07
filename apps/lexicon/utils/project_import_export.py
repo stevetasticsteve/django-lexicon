@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from django.db import transaction
 
@@ -18,6 +18,14 @@ from apps.lexicon.models import (
 )
 
 log = logging.getLogger("lexicon")
+
+
+def _serialize_date(value):
+    return value.isoformat() if value is not None else None
+
+
+def _deserialize_date(value):
+    return date.fromisoformat(value) if isinstance(value, str) else value
 
 
 def export_project(project_pk: int) -> dict:
@@ -72,6 +80,11 @@ def export_project(project_pk: int) -> dict:
             "review_comments": e.review_comments,
             "pos": e.pos,
             "checked": e.checked,
+            "created": _serialize_date(e.created),
+            "modified": _serialize_date(e.modified),
+            "modified_by": e.modified_by,
+            "review_user": e.review_user,
+            "review_time": _serialize_date(e.review_time),
             "paradigm_local_ids": list(e.paradigms.values_list("pk", flat=True)),
             "affix_local_ids": list(e.affixes.values_list("pk", flat=True)),
             "senses": [
@@ -199,6 +212,11 @@ def import_project(data: dict, overwrite: bool = False) -> LexiconProject:
             review_comments=e.get("review_comments"),
             pos=e.get("pos"),
             checked=e.get("checked", False),
+            created=_deserialize_date(e.get("created")),
+            modified=_deserialize_date(e.get("modified")),
+            modified_by=e.get("modified_by"),
+            review_user=e.get("review_user"),
+            review_time=_deserialize_date(e.get("review_time")),
         )
         # Bypass the custom save() to avoid version bumps and Celery tasks
         # during a bulk restore. Call super().save() via the base class directly.
