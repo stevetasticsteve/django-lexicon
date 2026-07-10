@@ -144,3 +144,96 @@ class TestIgnoreSearchResults:
             "ignoreme" not in response.content.decode()
             or "kgu" not in response.content.decode()
         )
+
+
+@pytest.mark.django_db
+class TestLexiconSearchResultsRegex:
+    def get_base_url(self, lang_code):
+        return reverse("lexicon:lexicon_search", kwargs={"lang_code": lang_code})
+
+    def test_regex_search_matches_pattern(self, client, kovol_project, kovol_words):
+        """'^ho' should match 'hobol' but not 'bili'."""
+        url = self.get_base_url(kovol_project.language_code)
+        response = client.get(url, {"search": "^ho", "regex": "true"})
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "hobol" in content
+        assert "bili" not in content
+
+    def test_regex_search_is_case_insensitive(self, client, kovol_project, kovol_words):
+        """iregex is used, so uppercase pattern still matches lowercase text."""
+        url = self.get_base_url(kovol_project.language_code)
+        response = client.get(url, {"search": "^HO", "regex": "true"})
+        assert response.status_code == 200
+        assert "hobol" in response.content.decode()
+
+    def test_regex_search_alternation(self, client, kovol_project, kovol_words):
+        """Pattern should match either word via alternation."""
+        url = self.get_base_url(kovol_project.language_code)
+        response = client.get(url, {"search": "^(hobol|bili)$", "regex": "true"})
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "hobol" in content
+        assert "bili" in content
+
+    def test_regex_search_character_class_and_anchor(self, client, kovol_project):
+        """The motivating example: [ie]nd$ should match 'ind' and 'end' endings."""
+        models.LexiconEntry.objects.create(text="fasind", project=kovol_project)
+        models.LexiconEntry.objects.create(text="lokend", project=kovol_project)
+        models.LexiconEntry.objects.create(text="wapan", project=kovol_project)
+
+        url = self.get_base_url(kovol_project.language_code)
+        response = client.get(url, {"search": "[ie]nd$", "regex": "true"})
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "fasind" in content
+        assert "lokend" in content
+        assert "wapan" not in content
+
+    def test_invalid_regex_returns_error_not_500(
+        self, client, kovol_project, kovol_words
+    ):
+        """An unclosed bracket is invalid Python regex and should be caught
+        before hitting the DB."""
+        url = self.get_base_url(kovol_project.language_code)
+        response = client.get(url, {"search": "[invalid", "regex": "true"})
+        assert response.status_code == 200
+        assert response.context["search_error"] is not None
+        assert "Invalid regex" in response.context["search_error"]
+        assert len(response.context["object_list"]) == 0
+
+    def test_regex_search_too_long_returns_error(
+        self, client, kovol_project, kovol_words
+    ):
+        url = self.get_base_url(kovol_project.language_code)
+        long_search = "a" * 200
+        response = client.get(url, {"search": long_search, "regex": "true"})
+        assert response.status_code == 200
+        assert response.context["search_error"] is not None
+        assert "too long" in response.context["search_error"]
+        assert len(response.context["object_list"]) == 0
+
+    def test_regex_search_on_english_field(
+        self, client, english_project, english_words
+    ):
+        """regex=true combined with eng=true should search senses.eng."""
+        url = self.get_base_url(english_project.language_code)
+        response = client.get(url, {"search": "^test", "eng": "true", "regex": "true"})
+        assert response.status_code == 200
+        assert len(response.context["object_list"]) == 1
+        assert response.context["object_list"][0].text == "test_word"
+
+    def test_non_regex_search_treats_special_chars_literally(
+        self, client, kovol_project
+    ):
+        """When regex is off, icontains should not interpret regex metacharacters —
+        guards against regex=false accidentally taking the regex path."""
+        models.LexiconEntry.objects.create(text="a.b", project=kovol_project)
+        models.LexiconEntry.objects.create(text="axb", project=kovol_project)
+
+        url = self.get_base_url(kovol_project.language_code)
+        response = client.get(url, {"search": "a.b"})  # no regex param
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "a.b" in content
+        assert "axb" not in content  # would match if '.' were treated as regex wildcard

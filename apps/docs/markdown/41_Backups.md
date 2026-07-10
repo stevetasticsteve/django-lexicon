@@ -1,3 +1,6 @@
-Regular individual project backups with import and export is a planned feature. Being able to backup a project before a batch operation and easily roll back if it doesn't work is an important feature.
+# Automated backups
 
-For the moment all Lexicon data is stored in a Postgres database that is backed up. Some manual data processing will be needed to pull lexicon data from these backups. Submit a [help request](/feedback/) to have this done.
+Projects are automatically backed up daily if changes have been made to them since the last backup.
+[Contat an admin](/feedback/) if a rollback to an earlier backup is required for a project.
+
+.json exports can also be imported into other instances of the lexicon app.

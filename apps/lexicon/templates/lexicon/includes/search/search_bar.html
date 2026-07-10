@@ -3,20 +3,24 @@
 <div class="container-fluid w-75 mt-4">
     <form id="search-form">
         {% csrf_token %}
-        
+
         <!-- Radio Selectors for Language -->
         <div class="mb-2 px-4">
             <label>
-                <input type="radio" name="language" value="{{project.language_name}}" checked>
-                {{project.language_name}}
+                <input type="radio" name="language" value="{{ project.language_name }}" checked>
+                {{ project.language_name }}
             </label>
             <label class="ms-3 px-4">
                 <input type="radio" name="language" value="english">
                 English
             </label>
+            <label>
+                <input type="checkbox" name="regex" value="regex">
+                Advanced search <a href="{% url 'docs:doc_page' '09_Advanced search' %}">?</a>
+            </label>
         </div>
-        
-        
+
+
         <!-- Search Input -->
         <input class="form-control" type="search"
                name="search" placeholder="Begin typing to search entries..."
@@ -31,13 +35,29 @@
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('search-form');
         const radios = form.querySelectorAll('input[name="language"]');
+        const regexCheckbox = form.querySelector('input[name="regex"]');
         const searchInput = form.querySelector('input[type="search"]');
+
+        const state = {eng: false, regex: false};
+
+        function updateVals() {
+            searchInput.setAttribute('data-hx-vals', JSON.stringify(state));
+        }
 
         radios.forEach(radio => {
             radio.addEventListener('change', function () {
-                const isEnglish = this.value === 'english';
-                searchInput.setAttribute('data-hx-vals', JSON.stringify({ eng: isEnglish }));
+                state.eng = this.value === 'english';
+                updateVals();
+                htmx.trigger(searchInput, 'search');
             });
         });
+
+        regexCheckbox.addEventListener('change', function () {
+            state.regex = this.checked;
+            updateVals();
+            htmx.trigger(searchInput, 'search');
+        });
+
+        updateVals();
     });
 </script>
